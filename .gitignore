@@ -1,3 +1,4 @@
 # Ignore Visual Studio Solution Files
 *.pyproj
 *.sln
+*.suo
