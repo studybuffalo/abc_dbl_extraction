@@ -14,7 +14,7 @@ def check_url(session, url, scriptHeader):
         error.write(url + "\n")
         return None
 
-def scrape_urls(config, today):
+def scrape_urls(config, today, crawlDelay):
     """Cycles through product IDs to find active URLs
         args:
             config: config object holding extraction details
