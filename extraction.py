@@ -117,72 +117,16 @@ if can_crawl:
     
 # SCRAPES DATA FROM ACTIVE URLS
 if len(urlList):
-	from data_extraction import extract_content
+    from data_extraction import extract_content
     content = extract_content(pubCon, urlList, today, crawlDelay)
-		
-		
-	
 
-print("Crawling and Processing Complete!\n\n")
-
-# Closes files
-price_file.close()
-coverage_file.close()
-special_file.close()
-ptc_file.close()
-atc_file.close()
-extra_file.close()
 
 # UPLOAD INFORMATION TO DATABASE
-print ("UPLOADING TO DATABASE")
-print ("---------------------")
-
 # Connect to database
-mysql_user = config.get('mysql_user_abc_ent', 'user')
-mysql_password = config.get('mysql_user_abc_ent', 'password')
-mysql_db = config.get('mysql_db_abc_dbl', 'db')
-mysql_host = config.get('mysql_db_abc_dbl', 'host')
+if content:
+    from data_upload import upload_data
+    upload_data(content, priCon)
 
-conn = pymysql.connect(user = mysql_user,
-					   passwd = mysql_password,
-					   db = mysql_db, 
-					   host = mysql_host,
-					   charset='utf8',
-					   use_unicode=True)
-cursor = conn.cursor()
-
-table_list = [["abc_price", price_list],
-			  ["abc_coverage", coverage_list],
-			  ["abc_special_authorization", special_list],
-			  ["abc_ptc", ptc_list],
-			  ["abc_atc", atc_list],
-			  ["abc_extra_information", extra_list]]
-
-# Upload each list to the appropriate database table
-for upload_item in table_list:			  
-	print (("Uploading to '%s' table... " % upload_item[0]), end='')
-	
-	#Truncates table to prepare for new entries
-	try:
-		cursor.execute("TRUNCATE %s" % upload_item[0])
-		conn.commit()
-	except MySQLdb.Error as e:
-		print ("Error Truncating Table: %s" % e)
-		pass
-
-	# Generates MySQL statement and loads into database
-	statement = generate_statement(upload_item[0])
-	
-	# Attempts insertion into database
-	try:
-		cursor.executemany(statement, upload_item[1])
-		conn.commit()
-		print ("Complete!")
-	except MySQLdb.Error as e:
-		print ("Error trying insert entry %s into database: %s" % (i, e))
-		pass
-
-print("\n")
 
 # UPDATE WEBSITE DETAILS
 print ("WEBSITE UPDATE")
