@@ -33,15 +33,17 @@
 '''
 
 import sys
-import os
 from unipath import Path
+import configparser
+import python_logging
 import datetime
 from urllib import robotparser, request
-import requests
+
+import csv
 import codecs
 import math
 import pymysql
-import configparser
+
 import time
 from bs4 import BeautifulSoup
 from ftplib import FTP
@@ -56,146 +58,65 @@ def setup_config():
 	return config
 
 
-def get_date():
-	today = datetime.date.today()
-	year = today.year
-	month = "%02d" % today.month
-	day = "%02d" % today.day
-	date = "%s-%s-%s" % (year, month, day)
-
-	return date
+def get_today():
+    today = datetime.date.today()
+    year = today.year
+    month = "%02d" % today.month
+    day = "%02d" % today.day
+    
+    today = "%s-%s-%s" % (year, month, day)
+    
+    return today
 
 
 def get_permission():
-	robot = robotparser.RobotFileParser()
-	robot.set_url("https://www.ab.bluecross.ca/robots.txt")
-	robot.read()
+    textURL = "https://www.ab.bluecross.ca/robots.txt"
+    pageURL = "https://idbl.ab.bluecross.ca/idbl/load.do"
 
-	can_crawl = robot.can_fetch(
-		"Study Buffalo Data Extraction (http://www.studybuffalo.com/dataextraction/)",
-		"https://idbl.ab.bluecross.ca/idbl/load.do")
+    robot = robotparser.RobotFileParser()
+    robot.set_url(textURL)
+    robot.read()
+    
+    can_crawl = robot.can_fetch(userAgent, pageURL)
 
-	return can_crawl
-
-
-def check_url(session, url, scriptHeader, active, error):
-	'''Checks URL and saves/returns active ones.'''
-	try:
-		response = session.head(url, headers=scriptHeader, allow_redirects=False)
-		code = response.status_code
-	except:
-		code = 0
-	
-	if code == 200:
-		active.write(url + "\n")
-		return url
-	elif code != 302:
-		error.write(url + "\n")
-		return None
-
-
-def progress_bar(title, curPos, start, stop):
-	'''Generates progress bar in console.'''
-
-	# Normalize start, stop, curPos
-	curPos = (curPos - start) + 1
-	stop = (stop - start) + 1 
-	start = 1
-
-	# Determine current progress
-	prog = 100.00 * (curPos / stop)
-	
-	if prog != 100:
-		progComp = "#" * math.floor(prog / 2)
-		progRem = " " * (50 - math.floor(prog / 2))
-		prog = "%.2f%%" % prog
-		print(("%s [%s%s] %s  \r" % (title, progComp, progRem, prog)), end='')
-		sys.stdout.flush()
-	else:
-		progComp = "#" * 50
-		print("%s [%s] Complete!" % (title, progComp))
-	
+    return can_crawl
 
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
-root = Path("/", "home", "joshua", "scripts", "abc_price")
+root = Path(sys.argv[1])
 
-# Setup config file
-config = setup_config()
+# Get the public config file
+pubCon = configparser.ConfigParser()
+pubCon = root.child("abc_config.cfg")
+
+# Get the private config file
+priCon = configparser.ConfigParser()
+priCon = Path(pubCon.get("misc", "private_config"))
+
+# Set up logging
+log = python_logging.start(priCon)
 
 # Get Current Date
-date = get_date()
+today = get_today()
 
+# Get robot details
+userAgent = pubCon.get("robot", "user_agent", raw=True)
+userAgentContact = pubCon.get("robot", "user_email")
+crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 
-'''Crawls the website looking for active URLs'''
-# Creates file path (and folder if needed) to save active urls
-listLocation = root.child("active_urls", date)
-
-if not listLocation.exists():
-	os.mkdir(listLocation.absolute())
-
-# Generates .txt files with all the valid URLs and the URLs with errors
-active_list = listLocation.child("active.txt").absolute()
-error_list = listLocation.child("error.txt").absolute()
-
-
-print ("\nALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL")
-print ("----------------------------------------------------")
-print ("Created by Joshua Torrance, 2017-02-19\n\n")
-
+log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
 # Checking the robots.txt file for permission to crawl
-print ("CHECKING PERMISSIONS")
-print ("--------------------")
-print("Checking robot.txt for permission to crawl")
-	
 can_crawl = get_permission()
-# can_crawl = True
 
-# If crawling is permitted, begins crawling URLs to look for active ones
-if can_crawl == True:
-	print ("Permission Granted!\n\n")
-
-	print ("URL LIST GENERATION")
-	print ("-------------------")
-	print ("Screening URLs and generating lists")
-	
-	# Script header to identify script
-	scriptHeader = {
-		'User-Agent': 'Study Buffalo Data Extraction (http://www.studybuffalo.com/dataextraction/)',
-		'From': 'studybuffalo@studybuffalo.com'
-	}
-	
-	# Session to request HTML headers
-	session = requests.Session()
-	
-	# Variables to generate urls
-	base = "https://idbl.ab.bluecross.ca/idbl/lookupDinPinDetail.do?productID="
-	start = 0
-	end = 85000
-	url_list = []
-	
-	# Goes through each URL; saves active ones to text file and list
-	with open(active_list, 'w') as active, open(error_list, 'w') as error:
-		for i in range (start, end + 1):
-			url = "%s%010d" % (base, i)
-			
-			temp_url = check_url(session, url, scriptHeader, active, error)
-			
-			if temp_url != None:
-				url_list.append(temp_url)
-			
-			# Progress Bar
-			progress_bar("Screening", i, start, end)
-
-			time.sleep(0.25)
-	
-	print("List generated\n\n")
-	
-
+# If crawling is permitted, run url scraper
+if can_crawl:
+    from url_scrape import scrape_urls
+    urlList = scrape_urls(pubCon)
+    
 '''Scrapes the active URLs, processes them, and saves them.'''
 # Creates folder for extracted data if necessary
-save_location = root.child("extracted_data", date)
+save_location = root.child("extracted_data", today)
 	
 if not save_location.exists():
 	os.mkdir(save_location.absolute())
@@ -468,7 +389,7 @@ with open('details.php', 'w') as file:
 			   "of medications for your patient. Also identifies "
 			   "any requirements for drug coverage under Alberta "
 			   "Blue Cross.';\n"
-			   "\t$update = '%s';" % date)
+			   "\t$update = '%s';" % today)
 
 # Access the details file to upload
 phpFile = open('details.php', 'rb')
