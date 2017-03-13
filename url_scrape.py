@@ -14,7 +14,7 @@ def check_url(session, url, scriptHeader):
         error.write(url + "\n")
         return None
 
-def scrape_urls(config):
+def scrape_urls(config, today):
     """Cycles through product IDs to find active URLs
         args:
             config: config object holding extraction details
@@ -45,8 +45,8 @@ def scrape_urls(config):
     # Set where to save the extracted url data
     urlLoc = Path(pubCon.get("misc", "url_location"))
 
-    activeList = urlLoc.child("active.txt").absolute()
-    errorList = urlLoc.child("error.txt").absolute()
+    activeList = urlLoc.child("%s_active.txt" % today).absolute()
+    errorList = urlLoc.child("%s_error.txt" % today).absolute()
 
     # Identify Robot
     userAgent = config.get("robot", "user_agent", raw=True)

@@ -106,6 +106,7 @@ crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
+# SCRAPE ACTIVE URLS FROM WEBSITE
 # Checking the robots.txt file for permission to crawl
 can_crawl = get_permission()
 
@@ -114,12 +115,9 @@ if can_crawl:
     from url_scrape import scrape_urls
     urlList = scrape_urls(pubCon)
     
-'''Scrapes the active URLs, processes them, and saves them.'''
-# Creates folder for extracted data if necessary
-save_location = root.child("extracted_data", today)
-	
-if not save_location.exists():
-	os.mkdir(save_location.absolute())
+# SCRAPES DATA FROM ACTIVE URLS
+# Gets folder path to save files to
+dataLocation = pubCon.get("misc", "data_location")
 
 # Opens text files to save extracted data
 price_file_path = save_location.child("price.txt").absolute()
@@ -315,7 +313,7 @@ ptc_file.close()
 atc_file.close()
 extra_file.close()
 
-'''Uploading the parsed lists to the appropriate databases.'''
+# UPLOAD INFORMATION TO DATABASE
 print ("UPLOADING TO DATABASE")
 print ("---------------------")
 
@@ -366,7 +364,7 @@ for upload_item in table_list:
 
 print("\n")
 
-'''Connects to website server to update $update in details.php.'''
+# UPDATE WEBSITE DETAILS
 print ("WEBSITE UPDATE")
 print ("--------------")
 
