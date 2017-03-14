@@ -37,15 +37,15 @@ from unipath import Path
 import configparser
 import python_logging
 import datetime
-from urllib import robotparser, request
+from urllib import robotparser
+import requests
 
 import csv
 import codecs
 import math
 import pymysql
 
-import time
-from bs4 import BeautifulSoup
+
 from ftplib import FTP
 import parse
 from upload import generate_statement
@@ -104,6 +104,10 @@ userAgent = pubCon.get("robot", "user_agent", raw=True)
 userAgentContact = pubCon.get("robot", "user_email")
 crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 
+# Create a requests session for use to access data
+session = requests.Session()
+session.headers.update(scriptHeader)
+
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
 # SCRAPE ACTIVE URLS FROM WEBSITE
@@ -113,16 +117,16 @@ can_crawl = get_permission()
 # If crawling is permitted, run url scraper
 if can_crawl:
     from url_scrape import scrape_urls
-    urlList = scrape_urls(pubCon, today)
-    
+    urlList = scrape_urls(pubCon, session, today, crawlDelay)
+   
+     
 # SCRAPES DATA FROM ACTIVE URLS
 if len(urlList):
     from data_extraction import extract_content
-    content = extract_content(pubCon, urlList, today, crawlDelay)
+    content = collect_content(pubCon, session, urlList, today, crawlDelay)
 
 
 # UPLOAD INFORMATION TO DATABASE
-# Connect to database
 if content:
     from data_upload import upload_data
     upload_data(content, priCon)

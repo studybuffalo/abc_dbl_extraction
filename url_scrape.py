@@ -1,7 +1,7 @@
-def check_url(session, url, scriptHeader):
+def check_url(session, url):
     """Checks the provided URL for an active status code"""
     try:
-        response = session.head(url, headers=scriptHeader, allow_redirects=False)
+        response = session.head(url, allow_redirects=False)
         code = response.status_code
     except Exception as e:
         log.warn("Unable to retriever header for %s: %s" % (url, e))
@@ -14,7 +14,7 @@ def check_url(session, url, scriptHeader):
         error.write(url + "\n")
         return None
 
-def scrape_urls(config, today, crawlDelay):
+def scrape_urls(config, session, today, crawlDelay):
     """Cycles through product IDs to find active URLs
         args:
             config: config object holding extraction details
@@ -26,16 +26,11 @@ def scrape_urls(config, today, crawlDelay):
             none.
     """
     from unipath import Path
-    from urllib import request
-    import requests
     import time
 
     log.info("Permissing granted to crawl site")
     log.info("Starting URL extraction")
 
-    # Session to request HTML headers
-    session = requests.Session()
-    
 	# Variables to generate urls
     base = ("https://idbl.ab.bluecross.ca/idbl/"
             "lookupDinPinDetail.do?productID=")
@@ -52,7 +47,10 @@ def scrape_urls(config, today, crawlDelay):
     userAgent = config.get("robot", "user_agent", raw=True)
     userAgentContact = config.get("robot", "user_email")
     scriptHeader = {"User-Agent": userAgent, "From": userAgentContact}
-        
+    
+    # Session to request HTML headers
+    
+
 	# Goes through each URL; saves active ones to text file and list
     urlList = []
 
@@ -60,7 +58,7 @@ def scrape_urls(config, today, crawlDelay):
         for i in range (start, end + 1):
             url = "%s%010d" % (base, i)
             
-            tempUrl = check_url(session, url, scriptHeader)
+            tempUrl = check_url(session, url)
             
             if tempUrl:
                 urlList.append(tempUrl)
