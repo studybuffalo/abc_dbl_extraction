@@ -2338,15 +2338,13 @@ def collect_content(config, session, urlList, today, crawlDelay):
     errorPath = dataLocation.child("%s_price.txt" % today).absolute()
     
     with open(pricePath, "w") as priceCSV,\
-            open(coveragePath, "w") as coverageCSV,\
-            open(specialPath, "w") as specialCSV,\
-            open(ptcPath, "w") as ptcCSV,\
-            open(atcPath, "w") as atcCSV,\
-            open(extraPath, "w") as extraCSV,\
-            open(errorPath, "w") as errorText:
+         open(coveragePath, "w") as coverageCSV,\
+         open(specialPath, "w") as specialCSV,\
+         open(ptcPath, "w") as ptcCSV,\
+         open(atcPath, "w") as atcCSV,\
+         open(extraPath, "w") as extraCSV,\
+         open(errorPath, "w") as errorText:
 
-        # DOWNLOAD WEB PAGE CONTENT
-        
         for url in urlList:
             try:
                 page = download_page(session, url)
@@ -2365,81 +2363,10 @@ def collect_content(config, session, urlList, today, crawlDelay):
 
             if pageContent:
                 content.append(pageContent)
+                
                 # Write content to file
+                write_price(pageContent, priceCSV)
 
-        return content
-"""
-        
-		# Parsing HTML content into formatted lists
-        price_data = parse.price_data(url, din, brand_name,
-                                      generic_name, unit_price, lca,
-                                      unit_issue)
+            time.sleep(0.25)
 
-        coverage_data = parse.coverage_data(url, coverage, clients,
-                                            coverage_criteria,
-                                            coverage_criteria_sa,
-                                            coverage_criteria_p)
-
-        special_data = parse.special_auth_data(url, special_auth,
-                                               special_auth_link)
-        
-        ptc_data = parse.ptc_data(url, ptc)
-        
-        atc_data = parse.atc_data(url, atc)
-        
-        extra_data = parse.extra_data(url, date_listed, 
-                                      date_discontinued, manufacturer,
-                                      schedule, interchangeable)
-        
-        # Adding parsed lists to list for database upload/saving to .txt
-        price_list.append(price_data)
-        coverage_list.append(coverage_data)
-        ptc_list.append(ptc_data)
-        atc_list.append(atc_data)
-        extra_list.append(extra_data)
-        
-        for item in special_data:
-            special_list.append(item)
-
-		# Saving parsed lists to .txt files
-        price_file.write(('"%s","%s","%s","%s","%s","%s","%s","%s",'
-                          '"%s","%s","%s"\n') % 
-                         (price_data[0], price_data[1], price_data[2],
-                          price_data[3], price_data[4], price_data[5],
-                          price_data[6], price_data[7], price_data[8],
-                          price_data[9], price_data[10]))
-        
-        coverage_file.write(('"%s","%s","%s","%s","%s","%s","%s","%s",'
-                             '"%s","%s","%s","%s","%s","%s","%s",'
-                             '"%s"\n') % 
-                            (coverage_data[0], coverage_data[1],
-                             coverage_data[2], coverage_data[3],
-                             coverage_data[4], coverage_data[5],
-                             coverage_data[6], coverage_data[7],
-                             coverage_data[8], coverage_data[9],
-                             coverage_data[10], coverage_data[11],
-                             coverage_data[12], coverage_data[13],
-                             coverage_data[14], coverage_data[15]))
-        
-        for item in special_data:
-            special_file.write('"%s","%s","%s"\n' % 
-                               (item[0], item[1], item[2]))
-        
-        ptc_file.write(('"%s","%s","%s","%s","%s","%s","%s","%s","%s"'
-                        '\n') %
-                       (ptc_data[0], ptc_data[1], ptc_data[2],
-                        ptc_data[3], ptc_data[4], ptc_data[5],
-                        ptc_data[6], ptc_data[7], ptc_data[8]))
-        
-        atc_file.write(('"%s","%s","%s","%s","%s","%s","%s","%s",'
-                        '"%s","%s","%s"\n') % 
-                       (atc_data[0], atc_data[1], atc_data[2], 
-                        atc_data[3], atc_data[4], atc_data[5], 
-                        atc_data[6], atc_data[7], atc_data[8], 
-                        atc_data[9], atc_data[10]))
-        
-        extra_file.write(('"%s","%s","%s","%s","%s","%s"\n') % 
-                         (extra_data[0], extra_data[1], extra_data[2],
-                          extra_data[3], extra_data[4], extra_data[5]))
-        time.sleep(0.25)
-"""
+    return content
