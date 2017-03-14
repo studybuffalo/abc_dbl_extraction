@@ -47,8 +47,6 @@ import pymysql
 
 
 from ftplib import FTP
-import parse
-from upload import generate_statement
 
 
 def setup_config():
@@ -87,11 +85,11 @@ root = Path(sys.argv[1])
 
 # Get the public config file
 pubCon = configparser.ConfigParser()
-pubCon = root.child("abc_config.cfg")
+pubCon.read(root.child("abc_config.cfg").absolute())
 
 # Get the private config file
 priCon = configparser.ConfigParser()
-priCon = Path(pubCon.get("misc", "private_config"))
+priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
 
 # Set up logging
 log = python_logging.start(priCon)
@@ -101,12 +99,12 @@ today = get_today()
 
 # Get robot details
 userAgent = pubCon.get("robot", "user_agent", raw=True)
-userAgentContact = pubCon.get("robot", "user_email")
+userFrom = pubCon.get("robot", "from", raw=True)
 crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 
 # Create a requests session for use to access data
 session = requests.Session()
-session.headers.update(scriptHeader)
+session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
@@ -117,13 +115,14 @@ can_crawl = get_permission()
 # If crawling is permitted, run url scraper
 if can_crawl:
     from url_scrape import scrape_urls
-    urlList = scrape_urls(pubCon, session, today, crawlDelay)
+    urlList = scrape_urls(pubCon, session, today, crawlDelay, log)
    
      
 # SCRAPES DATA FROM ACTIVE URLS
 if len(urlList):
-    from data_extraction import extract_content
-    content = collect_content(pubCon, session, urlList, today, crawlDelay)
+    from data_extraction import collect_content
+    #content = collect_content(pubCon, session, urlList, today, crawlDelay)
+    content = None
 
 
 # UPLOAD INFORMATION TO DATABASE
@@ -134,4 +133,4 @@ if content:
 
 # UPDATE WEBSITE DETAILS
 from update_website import update_details
-update_details(priCon, today)
+#update_details(priCon, today)

@@ -1,4 +1,4 @@
-def check_url(session, url):
+def check_url(session, url, active, error, log):
     """Checks the provided URL for an active status code"""
     try:
         response = session.head(url, allow_redirects=False)
@@ -9,12 +9,20 @@ def check_url(session, url):
     
     if code == 200:
         active.write(url + "\n")
+
+        log.debug("%s active" % url)
+
         return url
+    elif code == 302:
+        log.debug("%s inactive" % url)
     elif code != 302:
         error.write(url + "\n")
+        
+        log.warn("Unexpected %d error with %s" % (code, url))
+        
         return None
 
-def scrape_urls(config, session, today, crawlDelay):
+def scrape_urls(config, session, today, crawlDelay, log):
     """Cycles through product IDs to find active URLs
         args:
             config: config object holding extraction details
@@ -38,19 +46,11 @@ def scrape_urls(config, session, today, crawlDelay):
     end = config.getint("url_extraction", "url_end")
     
     # Set where to save the extracted url data
-    urlLoc = Path(pubCon.get("misc", "url_location"))
+    urlLoc = Path(config.get("url_extraction", "url_location"))
 
     activeList = urlLoc.child("%s_active.txt" % today).absolute()
     errorList = urlLoc.child("%s_error.txt" % today).absolute()
-
-    # Identify Robot
-    userAgent = config.get("robot", "user_agent", raw=True)
-    userAgentContact = config.get("robot", "user_email")
-    scriptHeader = {"User-Agent": userAgent, "From": userAgentContact}
     
-    # Session to request HTML headers
-    
-
 	# Goes through each URL; saves active ones to text file and list
     urlList = []
 
@@ -58,7 +58,7 @@ def scrape_urls(config, session, today, crawlDelay):
         for i in range (start, end + 1):
             url = "%s%010d" % (base, i)
             
-            tempUrl = check_url(session, url)
+            tempUrl = check_url(session, url, active, error, log)
             
             if tempUrl:
                 urlList.append(tempUrl)
