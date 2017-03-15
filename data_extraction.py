@@ -321,7 +321,7 @@ def extract_page_content(page):
 
             return text
         
-        def split_brand_name(text):
+        def split_brand_strength_route_form(text):
             """Extracts brand name, strength, route, dosage form from string
 	            Args:
 	                text: the extracted text from the html
@@ -391,9 +391,9 @@ def extract_page_content(page):
                     dosageForm = None
                 
                 # Splits the brandStrength at the first number 
-                # encountered with text  behind it (assumed to 
-                # be a strength)
-                search = re.search(r"\s\d.+$", text)
+                # encountered with text behind it (assumed to 
+                # be a unit)
+                search = re.search(r"\b\d.+$", text)
 
                 if search:
                     split = search.start()
@@ -416,8 +416,7 @@ def extract_page_content(page):
 
         bsrf = html.find_all('tr', class_="idblTable")[1].td.div.string.strip()
         
-        return extract_brand_strength_route_form(bsrf)
-
+        return split_brand_strength_route_form(bsrf)
 
     def extract_generic_name():
         """"""
