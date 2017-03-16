@@ -2,6 +2,21 @@ class PageContent(object):
     def __init__(self, din):
         self.din = din
         
+class PTC(object):
+    def __init__(self, list):
+        # Pad list to 8 items
+        while i < 8 - len(list):
+            list.append(None)
+
+        self.num1 = list[0]
+        self.text1 = list[1]
+        self.num2 = list[2]
+        self.text2 = list[3]
+        self.num3 = list[4]
+        self.text3 = list[5]
+        self.num4 = list[6]
+        self.text4 = list[7]
+
 class BSRF(object):
     def __init__(self, brand, strength, route, form):
         self.brand = brand
@@ -46,62 +61,67 @@ def extract_page_content(page):
         return din
 
     def extract_ptc():
-        """"""
-        ptc = html.find_all('tr', class_="idblTable")[0].td.div.p.get_text().strip()
-
-        def parse_ptc(text):
-            '''Splits text into a list containing PTC codes and titles.'''
-            pre_list = text.split("\n")
-            post_list = []
-            output = []
-            number_last = False
+        """Extracts the PTC numbers and descriptions"""
+        def parse_ptc(ptcString):
+            """Separates out each number and formats descriptions"""
 
             # Removes blank list entries
-            for line in pre_list:
+            rawList = []
+
+            for line in ptcString.split("\n"):
                 line = line.strip()
 
-            if line != "":
-                post_list.append(line)
+                if line:
+                    rawList.append(line)
 
-            # Properly organizes & formats list
-            for line in post_list:
-                search = re.search(r"\d{4,}", line)
+            # Identfies numbers vs. text to propery arrange list
+            numPrev = False
 
-                if search != None:
-                    # Entry is a number
-                    if number_last == False:
-                        output.append(line)
-                        number_last = True
+            newList = []
+
+            for line in rawList:
+                # Check if this entry is a number
+                # All codes have at least 4 digits
+                match = re.match(r"\d{4}", line)
+
+                # Entry is number
+                if match:
+                    # Check if the previous line was a number
+                    if numPrev:
+                        # Previous entry was number, therefore it did 
+                        # not have a text description and needs to be 
+                        # flagged as None before adding this number
+                        ptcList.append(None)
+                        ptcList.append(line)
                     else:
-                        # Last entry was a number; append none for the 
-                        # text field
-                        output.append(None)
-                        output.append(line)
+                        # Previous line was text, can just add number
+                        ptcList.append(line)
+                        numPrev = True
+                
+                # Entry is text        
                 else:
-                    # Entry is text - formats it properly
-                    line = line.title()
+                    # NEED TO ACTUALLY CODE THIS
+                    exceptionList = []
+                    
+                    for item in exceptionList:
+                        if item.original == line:
+                            line = item.correction
+                            exception = True
+                            break
 
-                    line = re.sub(r"\b5-Ht3\b", "5-HT3", line)
-                    line = re.sub(r"\bComt\b", "COMT", line)
-                    line = re.sub(r"\bCox-2\b", "COX-2", line)
-                    line = re.sub(r"\bDpp-4\b", "DPP-4", line)
-                    line = re.sub(r"\bEent\b", "EENT", line)
-                    line = re.sub(r"\bIi\b", "II", line)
-                    line = re.sub(r"\bIii\b", "III", line)
-                    line = re.sub(r"\bIv\b", "IV", line)
-                    line = re.sub(r"\bSglt2\b", "SGLT2", line)
+                    if exception == False:
+                        # Convert remainder of text to title case
+                        line = line.title()
 
-                    output.append(line)
-                    number_last = False
+                    ptcList.append(line)
+                    numPrev = False
 
-            # Appends None to output for a total of 8 items
-            end = 8 - len(output)
-
-            for _ in range(end):
-                output.append(None)
-
-            return output
+            return PTC(ptcList)
     
+        ptcString = html.find_all('tr', class_="idblTable")[0].td.div.p.get_text().strip()
+
+        return parse_ptc(ptcString)
+
     def extract_brand_strength_route_form(html):
         """Extracts the brand name, strenght, route, and dosage form"""
         
