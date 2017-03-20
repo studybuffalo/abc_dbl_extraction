@@ -116,7 +116,9 @@ can_crawl = get_permission()
 if can_crawl:
     from url_scrape import scrape_urls
     from data_extraction import collect_content
-    
+    from data_upload import upload_data
+    from update_website import update_details
+
     log.info("Permissing granted to crawl site")
     log.info("Starting URL extraction")
 
@@ -125,17 +127,17 @@ if can_crawl:
         urlData = scrape_url(i, session, crawlDelay, log)
 
         if urlData.status == "active":
-            content = collect_content(pubCon, urlData.url, Ssession, today, crawlDelay)
+            content = collect_content(urlData.url, session, crawlDelay)
 
-        # UPLOAD INFORMATION TO DATABASE
         if content:
-            from data_upload import upload_data
+            # UPLOAD INFORMATION TO DATABASE
             upload_data(content, priCon)
 
-
             # UPDATE WEBSITE DETAILS
-            from update_website import update_details
-            #update_details(priCon, today)
+            update_details(priCon, today)
+
+            # SAVE BACKUP COPY OF DATA TO SERVER
+            save_data(content)
 
         # TO ADD
         # Record the url data to a document

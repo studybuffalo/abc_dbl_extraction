@@ -1,6 +1,30 @@
 class PageContent(object):
-    def __init__(self, din):
+    def __init__(self, url, html, din, ptc, brandName, strength, route, 
+                 dosageForm, genericName, dateListed, dateDiscontinued, 
+                 unitPrice, lca, unitIssue, interchangeable, manufacturer, 
+                 atc, schedule, coverage, clients, coverageCriteria, 
+                 specialAuth):
+        self.url = url
+        self.html = html
         self.din = din
+        self.ptc = ptc
+        self.brandName = brandName
+        self.strength = strength
+        self.route = route
+        self.dosageForm = dosageForm
+        self.genericName = genericName
+        self.dateListed = dateListed
+        self.dateDiscontinued = dateDiscontinued
+        self.dateDiscontinued = unitPrice
+        self.lca = lca
+        self.unitIssue = unitIssue
+        self.interchangeable = interchangeable
+        self.manufacturer = manufacturer
+        self.atc = atc
+        self.schedule = schedule
+        self.coverage = coverage
+        self.clients = coverageCriteria
+        self.specialAuth = specialAuth
         
 class PTC(object):
     def __init__(self, ptcList):
@@ -33,10 +57,6 @@ def download_page(session, url):
         return response.text()
     else:
         raise IOError("%s returned status code %d" % (url, status))
-
-def save_page_content(page):
-    """Saves the html page for back-ups and auditing"""
-
 
 def extract_page_content(page):
     def truncate_content(page):
@@ -2073,17 +2093,20 @@ def extract_page_content(page):
     specialAuth = extract_special_auth(html)
 
     # Generate the final object
-    pageContent = PageContent()
+    pageContent = PageContent(
+        url, page, din, ptc, brandName, strength, route, dosageForm, 
+        genericName, dateListed, dateDiscontinued, unitPrice, lca, 
+        unitIssue, interchangeable, manufacturer, atc, schedule, coverage, 
+        clients, coverageCriteria, specialAuth)
 
     return pageContent
 
-def collect_content(config, session, urlList, today, crawlDelay):
+def collect_content(url, session, crawlDelay):
     """Takes a list of URLs and extracts drug pricing information
         args:
-            config:     config object holding extraction details
-            urlList:    a list of valid URL strings
-            today:      todays date as a string (yyyy-mm-dd)
-            crawlDelay: time to pause between each request
+            url:        url to extract data from
+            session:    requests session object connected to the site
+            delay:      time to pause between each request
 
         returns:
             content:    a lost of object containing the pricing data
@@ -2096,53 +2119,24 @@ def collect_content(config, session, urlList, today, crawlDelay):
     from datetime import datetime
     import time
     import re
-
-    # List to hold all the extracted content
-    content = []
-
-    # Gets folder path to save files to
-    dataLocation = config.get("misc", "data_location")
-
-    # Opens text files to save extracted data
-    pricePath = dataLocation.child("%s_price.csv" % today).absolute()
-    coveragePath = dataLocation.child("%s_coverage.csv" % today).absolute()
-    specialPath = dataLocation.child("%s_special.csv" % today).absolute()
-    ptcPath = dataLocation.child("%s_ptc.csv" % today).absolute()
-    atcPath = dataLocation.child("%s_atc.csv" % today).absolute()
-    extraPath = dataLocation.child("%s_extra.csv" % today).absolute()
-    errorPath = dataLocation.child("%s_price.txt" % today).absolute()
     
-    with open(pricePath, "w") as priceCSV,\
-         open(coveragePath, "w") as coverageCSV,\
-         open(specialPath, "w") as specialCSV,\
-         open(ptcPath, "w") as ptcCSV,\
-         open(atcPath, "w") as atcCSV,\
-         open(extraPath, "w") as extraCSV,\
-         open(errorPath, "w") as errorText:
+    # Apply delay before starting
+    time.sleep(delay)
 
-        for url in urlList:
-            try:
-                page = download_page(session, url)
-            except Exception as e:
-                log.warn("Unable to download page content: %e"
-                         % (url, e))
-                page = None
+    try:
+        page = download_page(session, url)
+    except Exception as e:
+        log.warn("Unable to download page content: %e"
+                    % (url, e))
+        page = None
+        pageContent = None
 
-            if page:
-                try:
-                    save_page_conent(page)
-                    pageContent = extract_page_content(page)
-                except Exception as e:
-                    log.warn("Unable to extract %s page content: %s" 
-                             % (url, e))
-                    pageContent = None
+    if page:
+        try:
+            pageContent = extract_page_content(url, page)
+        except Exception as e:
+            log.warn("Unable to extract %s page content: %s" 
+                        % (url, e))
+            pageContent = None
 
-            if pageContent:
-                content.append(pageContent)
-                
-                # Write content to file
-                write_price(pageContent, priceCSV)
-
-            time.sleep(0.25)
-
-    return content
+    return pageContent
