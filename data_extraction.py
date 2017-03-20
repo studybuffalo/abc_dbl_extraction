@@ -34,6 +34,10 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
+def save_page_content(page):
+    """Saves the html page for back-ups and auditing"""
+
+
 def extract_page_content(page):
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object
@@ -2126,6 +2130,7 @@ def collect_content(config, session, urlList, today, crawlDelay):
 
             if page:
                 try:
+                    save_page_conent(page)
                     pageContent = extract_page_content(page)
                 except Exception as e:
                     log.warn("Unable to extract %s page content: %s" 

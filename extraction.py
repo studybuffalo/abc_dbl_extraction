@@ -112,25 +112,26 @@ log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 # Checking the robots.txt file for permission to crawl
 can_crawl = get_permission()
 
-# If crawling is permitted, run url scraper
+# If crawling is permitted, run the program
 if can_crawl:
     from url_scrape import scrape_urls
-    urlList = scrape_urls(pubCon, session, today, crawlDelay, log)
-   
-     
-# SCRAPES DATA FROM ACTIVE URLS
-if len(urlList):
     from data_extraction import collect_content
-    #content = collect_content(pubCon, session, urlList, today, crawlDelay)
-    content = None
+    
+    for i in range (start, end + 1):
+        urlData = scrape_urls(pubCon, session, today, crawlDelay, log)
+        continueScrape = urlData.continueScrape
+
+        if urlData.valid:
+            #content = collect_content(pubCon, session, urlList, today, crawlDelay)
+            content = None
 
 
-# UPLOAD INFORMATION TO DATABASE
-if content:
-    from data_upload import upload_data
-    upload_data(content, priCon)
+        # UPLOAD INFORMATION TO DATABASE
+        if content:
+            from data_upload import upload_data
+            upload_data(content, priCon)
 
 
-# UPDATE WEBSITE DETAILS
-from update_website import update_details
-#update_details(priCon, today)
+            # UPDATE WEBSITE DETAILS
+            from update_website import update_details
+            #update_details(priCon, today)
