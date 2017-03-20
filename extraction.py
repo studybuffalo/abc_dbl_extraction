@@ -117,14 +117,15 @@ if can_crawl:
     from url_scrape import scrape_urls
     from data_extraction import collect_content
     
+    log.info("Permissing granted to crawl site")
+    log.info("Starting URL extraction")
+
     for i in range (start, end + 1):
-        urlData = scrape_urls(pubCon, session, today, crawlDelay, log)
-        continueScrape = urlData.continueScrape
+        # Get the URL data
+        urlData = scrape_url(i, session, crawlDelay, log)
 
-        if urlData.valid:
-            #content = collect_content(pubCon, session, urlList, today, crawlDelay)
-            content = None
-
+        if urlData.status == "active":
+            content = collect_content(pubCon, urlData.url, Ssession, today, crawlDelay)
 
         # UPLOAD INFORMATION TO DATABASE
         if content:
@@ -135,3 +136,8 @@ if can_crawl:
             # UPDATE WEBSITE DETAILS
             from update_website import update_details
             #update_details(priCon, today)
+
+        # TO ADD
+        # Record the url data to a document
+        # Save the HTML pages
+        # Save the formatted CSV data

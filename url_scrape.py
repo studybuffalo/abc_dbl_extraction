@@ -1,4 +1,9 @@
-def check_url(session, url, active, error, log):
+class URLData(object):
+    def __init__(self, url, status):
+        self.url = url
+        self.status = status
+
+def check_url(url, session, log):
     """Checks the provided URL for an active status code"""
     # Request the header for the provided url
     try:
@@ -8,23 +13,25 @@ def check_url(session, url, active, error, log):
         log.warn("Unable to retriever header for %s: %s" % (url, e))
         code = 0
     
+    # Check status and create the URL Status object
     if code == 200:
         log.debug("%s active" % url)
-        active.write(url + "\n")
-        return url
+        status = URLData(url, "active")
+
     elif code == 302:
         log.debug("%s inactive" % url)
+        status = URLData(url, "inactive")
+
     else:
         log.warn("Unexpected %d error with %s" % (code, url))
-        error.write(url + "\n")
-        return None
+        status = URLData(url, "error")
 
-def scrape_urls(config, session, today, delay, log):
-    """Cycles through product IDs to find active URLs
+    return status
+
+def scrape_url(id, session, delay, log):
+    """Takes the provided ID # and checks if it returns active URL
         args:
-            config:     config object holding extraction details
             session:    a requests session to request headers
-            today:      the date to add to the text files
             delay:      the seconds delay between header requests
             log:        a logging object to send logs to
 
@@ -38,38 +45,17 @@ def scrape_urls(config, session, today, delay, log):
     from unipath import Path
     import time
 
-    log.info("Permissing granted to crawl site")
-    log.info("Starting URL extraction")
+    # Apply delay before starting
+    time.sleep(delay)
 
-	# Variables to generate urls
+	# Base URL to construct final URL from
     base = ("https://idbl.ab.bluecross.ca/idbl/"
             "lookupDinPinDetail.do?productID=")
-    start = config.getint("url_extraction", "url_start")
-    end = config.getint("url_extraction", "url_end")
-    
-    # Set where to save the extracted url data
-    urlLoc = Path(config.get("url_extraction", "url_location"))
 
-    activeList = urlLoc.child("%s_active.txt" % today).absolute()
-    errorList = urlLoc.child("%s_error.txt" % today).absolute()
-    
-	# Goes through each URL; saves active ones to text file and list
-    urlList = []
-
-    with open(activeList, 'w') as active, open(errorList, 'w') as error: 
-        for i in range (start, end + 1):
-            # Assembles the url form the base + 10 digit productID
-            url = "%s%010d" % (base, i)
+    # Assembles the url form the base + 10 digit productID
+    url = "%s%010d" % (base, id)
             
-            tempUrl = check_url(session, url, active, error, log)
+    data = check_url(url, session, log)
             
-            # Record any valid URLs
-            if tempUrl:
-                urlList.append(tempUrl)
-            
-            # Wait for delay to reduce load on server
-            time.sleep(delay)
-    
-    log.info("URL extraction complete")
-    
-    return urlList
+    # Return the URL
+    return data
