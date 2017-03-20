@@ -3,19 +3,15 @@ class PageContent(object):
         self.din = din
         
 class PTC(object):
-    def __init__(self, list):
-        # Pad list to 8 items
-        while i < 8 - len(list):
-            list.append(None)
-
-        self.num1 = list[0]
-        self.text1 = list[1]
-        self.num2 = list[2]
-        self.text2 = list[3]
-        self.num3 = list[4]
-        self.text3 = list[5]
-        self.num4 = list[6]
-        self.text4 = list[7]
+    def __init__(self, ptcList):
+        self.num1 = ptcList[0]
+        self.text1 = ptcList[1]
+        self.num2 = ptcList[2]
+        self.text2 = ptcList[3]
+        self.num3 = ptcList[4]
+        self.text3 = ptcList[5]
+        self.num4 = ptcList[6]
+        self.text4 = ptcList[7]
 
 class BSRF(object):
     def __init__(self, brand, strength, route, form):
@@ -23,6 +19,11 @@ class BSRF(object):
         self.strength = strength
         self.route = route
         self.form = form
+
+class LCA(object):
+    def __init__(self, value, text):
+        self.value = value
+        self.text = text
 
 def download_page(session, url):
     response = session.get(url)
@@ -49,13 +50,32 @@ def extract_page_content(page):
         html = BeautifulSoup(page, 'html.parser')
 
         return html
-        
+    
+    def convert_date(dateString):
+        # If date is present, will be in form of dd-mmm-yyyy
+        try:
+            # Convert to date object
+            date = datetime.strptime(dateString, "%d-%b-%Y")
+
+            # Format for MySQL (yyyy-mm-dd)
+            date = date.strftime("%y-%m-%d")
+        except ValueError:
+            # Expected behaviour for most situations without a date
+            date = None
+        except:
+            log.warn("Error trying to parse date for %s" % url)
+            date = None
+
+        return date
+    
     def extract_din(html):
         """Extracts the DIN"""
         # Get the main HTML element
         din = html.p.string
 
-        # Remove exccess content
+        # Extract the DIN
+        # TO CONFIRM: is the DIN/PIN always 8 digits?
+        # If so, would it be better to regex extract?
         din = din.replace("DIN/PIN Detail - ", "")
 
         return din
@@ -63,7 +83,15 @@ def extract_page_content(page):
     def extract_ptc():
         """Extracts the PTC numbers and descriptions"""
         def parse_ptc(ptcString):
-            """Separates out each number and formats descriptions"""
+            """Separates out each number and formats descriptions
+            
+                String is formatted with each number and description 
+                on a single line. Sometimes a number will not have a
+                description. The raw string is formatted into a list
+                where each number is followed by the description, or 
+                None in cases where there is no description. The list 
+                is then padded to 8 entries (the maximum amount).
+            """
 
             # Removes blank list entries
             rawList = []
@@ -89,8 +117,7 @@ def extract_page_content(page):
                     # Check if the previous line was a number
                     if numPrev:
                         # Previous entry was number, therefore it did 
-                        # not have a text description and needs to be 
-                        # flagged as None before adding this number
+                        # not have a text description
                         ptcList.append(None)
                         ptcList.append(line)
                     else:
@@ -115,6 +142,10 @@ def extract_page_content(page):
 
                     ptcList.append(line)
                     numPrev = False
+
+            # Pad list to 8 items
+            while i < 8 - len(ptcList):
+                ptcList.append(None)
 
             return PTC(ptcList)
     
@@ -439,19 +470,10 @@ def extract_page_content(page):
         return split_brand_strength_route_form(bsrf)
 
     def extract_generic_name():
-        """"""
-        generic_name = html.find_all('tr', class_="idblTable")[2].td.div.string.strip()
-
+        """Extracts the generic name"""
         def parse_generic(text):
-            '''Manually corrects errors that are not fixed by .lower()'''
-
-            text = text[1:len(text) - 1]
-            text = text.lower()
-
-            # Removes extra space characters
-            text = re.sub(r"\s{2,}", " ", text)
-            text = re.sub(r"/\s", "/", text)
-
+            """Correct formatting of generic name to be lowercase"""
+            """ CONVERT TO A STRAIGHT REPLACEMENT 
             # Regex Replacements			text = re.sub(r"", "", text)
             # 0
 
@@ -494,84 +516,100 @@ def extract_page_content(page):
 
             # V
             text = re.sub(r"\bvol\b", "volumes", text)
+            """
+            # NEED TO ACTUALLY CODE THIS
+            exceptionList = []
+                    
+            for item in exceptionList:
+                if item.original == text:
+                    generic = item.correction
+                    exception = True
+                    break
 
-            return text
+            if exception == False:
+                # Remove parenthesis on each side of text
+                generic = text[1:len(text) - 1]
 
-    def convert_date(date):
-        search = re.search(r"\d{2}-\w{3}-\d{4}", text)
-        
-        if search != None:
-            text = text.split("-")
+                # Convert to lower case
+                generic = generic.lower()
+
+                # Removes extra space characters
+                generic = re.sub(r"\s{2,}", " ", generic)
+
+                # Remove spaces around slashes
+                generic = re.sub(r"/\s", "/", generic)
+
+            return generic
             
-            # Convert months to numerical value
-            text[1] = text[1].replace("JAN", "01")
-            text[1] = text[1].replace("FEB", "02")
-            text[1] = text[1].replace("MAR", "03")
-            text[1] = text[1].replace("APR", "04")
-            text[1] = text[1].replace("MAY", "05")
-            text[1] = text[1].replace("JUN", "06")
-            text[1] = text[1].replace("JUL", "07")
-            text[1] = text[1].replace("AUG", "08")
-            text[1] = text[1].replace("SEP", "09")
-            text[1] = text[1].replace("OCT", "10")
-            text[1] = text[1].replace("NOV", "11")
-            text[1] = text[1].replace("DEC", "12")
-            
-            date = "%s-%s-%s" % (text[2], text[1], text[0])
-        else:
-            date = None
-        return date
+        generic = html.find_all('tr', class_="idblTable")[2].td.div.string.strip()
+
+        return parse_generic(generic)
 
     def extract_date_listed():
         """"""
-        date_listed = html.find_all('tr', class_="idblTable")[3].find_all('td')[1].string.strip()
+        dateText = html.find_all('tr', class_="idblTable")[3].find_all('td')[1].string.strip()
+        
+        dateListed = convert_date(dateText)
+
+        return dateListed
 
     def extract_date_discontinued():
         """"""
-        date_discontinued = html.find_all('tr', class_="idblTable")[4].find_all('td')[1].string.strip()
+        dateText  = html.find_all('tr', class_="idblTable")[4].find_all('td')[1].string.strip()
+        
+        dateDiscontinued = convert_date(dateText)
+        
+        return dateDiscontinued
 
     def extract_unit_price():
-        """"""
-        unit_price = html.find_all('tr', class_="idblTable")[5].find_all('td')[1].string.strip()
+        """Extracts the unit price"""
+        priceText = html.find_all('tr', class_="idblTable")[5].find_all('td')[1].string.strip()
 
-        def parse_unit_price(text):
-            '''Replaces N/A with None'''
+        if priceText == "N/A":
+            unitPrice = None
+        else:
+            unitPrice = priceText
 
-            if "N/A" in text:
-                text = None
-
-            return text
+        return priceText
 
     def extract_lca():
-        """"""
-        lca = html.find_all('tr', class_="idblTable")[6].find_all('td')[1].div.get_text().strip()
+        """Extract LCA price and any accompanying text"""
+        lcaString = html.find_all('tr', class_="idblTable")[6].find_all('td')[1].div.get_text().strip()
 
-        def parse_lca(text):
-            '''Splits LCA into a number and text, as required.'''
-            index = text.find(" ")
-            if index == -1:
-                if "N/A" in text:
-                    output = [None, None]
-                else:
-                    output = [text, None]
+        # If the string has a space, it will have LCA text
+        if " " in lcaString:
+            if "N/A" in lcaString:
+                # Note there is a weird case in the old code where
+                # a line with a space and N/A, but I could not find
+                # such an example; this is for theory only
+                lca = None
+                lcaText = lcaString[4:]
             else:
-                if "N/A" in text:
-                    output = [None, text[index + 1:-1].strip()]
-                else:
-                    output = [text[0:index].strip(), text[index + 1:-1].strip()]
+                # LCA with text - split at first space to extract
+                index = lcaString.find(" ")
 
-            return output
+                lca = lcaString[0:index]
+                lcaText = lcaString[index + 1:]
+        # No LCA text present
+        else:
+            lcaText = None
 
-        lca_temp = parse_lca(lca_temp)
-        lca = lca_temp[0]
-        lca_text = lca_temp[1]
+            # Check if there is any price data
+            if "N/A" in lcaString:
+                lca = None
+            else:
+                lca = lcaString
+
+        return LCA(lca, lcaText)
 
     def extract_unit_issue():
-        """"""
-        unit_issue =  html.find_all('tr', class_="idblTable")[7].find_all('td')[1].string.strip()
+        """Extracts the unit of issue"""
+        unitText =  html.find_all('tr', class_="idblTable")[7].find_all('td')[1].string.strip()
 
         # Unit of Issue
-        unit_issue = unit_issue.lower()
+        unitIssue = unit_issue.lower()
+
+        return unitIssue
 
     def extract_interchangeable():
         """"""
@@ -2051,6 +2089,7 @@ def collect_content(config, session, urlList, today, crawlDelay):
     """
     
     from bs4 import BeautifulSoup
+    from datetime import datetime
     import time
     import re
 
