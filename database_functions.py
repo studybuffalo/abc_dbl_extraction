@@ -98,7 +98,10 @@ def upload_data(content, cursor):
     s = ("INSERT INTO abc_atc (url, atc_1, atc_1_text, atc_2, atc_2_text, "
          "atc_3, atc_3_text, atc_4, atc_4_text, atc_5, atc_5_text) "
          "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    atc = ()
+    atc = (content.atc.code1, content.atc.text1, content.atc.code2, 
+           content.atc.text2, content.atc.code3, content.atc.text3, 
+           content.atc.code4, content.atc.text4, content.atc.code5, 
+           content.atc.text5)
     cursor.execute(s, atc)
 
     # Construct and execute abc_extra_information query
