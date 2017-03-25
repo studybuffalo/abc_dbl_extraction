@@ -58,7 +58,7 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
-def extract_page_content(page):
+def extract_page_content(page, cursor, log):
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
@@ -2096,13 +2096,14 @@ def extract_page_content(page):
 
     return pageContent
 
-def collect_content(url, session, crawlDelay, cursor):
+def collect_content(url, session, crawlDelay, cursor, log):
     """Takes a list of URLs and extracts drug pricing information
         args:
             url:        url to extract data from
             session:    requests session object connected to the site
             delay:      time to pause between each request
             cursor:     PyMySQL cursor to query database
+            log:        a logging object to send logs to
 
         returns:
             content:    the PageContent object with all extracted data
@@ -2119,6 +2120,7 @@ def collect_content(url, session, crawlDelay, cursor):
     # Apply delay before starting
     time.sleep(delay)
 
+    # Download the page content
     try:
         page = download_page(session, url)
     except Exception as e:
@@ -2127,9 +2129,10 @@ def collect_content(url, session, crawlDelay, cursor):
         page = None
         pageContent = None
 
+    # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(url, page)
+            pageContent = extract_page_content(url, page, cursor, log)
         except Exception as e:
             log.warn("Unable to extract %s page content: %s" 
                         % (url, e))
