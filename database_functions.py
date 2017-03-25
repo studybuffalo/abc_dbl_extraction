@@ -59,7 +59,7 @@ def upload_data(content, cursor):
          "unit_issue) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     price = (content.url, content.din, content.brandName, content.strength,
              content.route, content.dosageForm, content.genericName, content.unitPrice,
-             content.lca, content.lcaText, content.unitIssue)
+             content.lca.value, content.lca.text, content.unitIssue)
 
     cursor.excecute(s, price)
 

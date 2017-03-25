@@ -15,8 +15,7 @@ class PageContent(object):
         self.dateListed = dateListed
         self.dateDiscontinued = dateDiscontinued
         self.unitPrice = unitPrice
-        self.lca = lca.value
-        self.lcaText = lca.text
+        self.lca = lca
         self.unitIssue = unitIssue
         self.interchangeable = interchangeable
         self.manufacturer = manufacturer
