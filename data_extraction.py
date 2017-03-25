@@ -60,20 +60,12 @@ def download_page(session, url):
 
 def extract_page_content(page):
     def truncate_content(page):
-        """Extracts relevant HTML and returns a BeautifulSoup object
+        """Extracts relevant HTML and returns a BeautifulSoup object"""
 
-            This was determined with trial and error; the start and 
-            end parts appear to be unique strings that reasonably
-            extract the relevant HTML sections from the page.
-        """
-        start = page.find("columnLeftFull")
-        end = page.find("A drug classification system")
+        html = BeautifulSoup(page, "html.parser")
+        trunc = html.findAll("div", {"class": "columnLeftFull"})
 
-        page = html[start:end]
-
-        html = BeautifulSoup(page, 'html.parser')
-
-        return html
+        return trunc
     
     def convert_date(dateString):
         # If date is present, will be in form of dd-mmm-yyyy
@@ -2063,6 +2055,9 @@ def extract_page_content(page):
         
 
         html = truncate_content(page)
+
+    # Truncate extra content to improve extraction
+    html = truncate_content(page)
 
     # Extract the DIN
     din = extract_din(html)

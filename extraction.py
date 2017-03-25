@@ -48,6 +48,18 @@ import pymysql
 
 from ftplib import FTP
 
+class FileNames(object):
+    def __init__(self, url, html, price, coverage, 
+                 specialAuth, ptc, atc, extra):
+        self.url = url
+        self.html = html
+        self.price = price
+        self.coverage = coverage
+        self.specialAuth = specialAuth
+        self.ptc = ptc
+        self.atc = atc
+        self.extra = extra
+
 
 def setup_config():
 	config = configparser.ConfigParser()
@@ -79,6 +91,82 @@ def get_permission():
 
     return can_crawl
 
+
+def collect_file_paths(con):
+    """Collects extraction file paths and creates needed directories"""
+    # Get Current today
+    today = get_today()
+
+    # Assemble URL filepath
+    url = Path(con.get("locations", "url")).child(today, "url.txt")
+    url.parent.mkdir(parents=True, exist_ok=True)
+
+    # Assemble HTML file path
+    html = Path(con.get("locations", "html").child(today, "html"))
+    html.mkdir(parents=True, exist_ok=True)
+
+    # Assemble price file path
+    price = Path(con.get("locations", "price").child(today, "price.csv"))
+    price.parent.mkdir(parents=True, exist_ok=True)
+
+    # Assemble coverage file path
+    cov = Path(con.get("locations", "coverage").child(today, "coverage.csv"))
+    cov.parent.mkdir(parents=True, exist_ok=True)
+
+    # Assemble special authorization file path
+    special = Path(con.get("locations", "special").child(today, "special.csv"))
+    special.parent.mkdir(parents=True, exist_ok=True)
+
+    # Assemble PTC file path
+    ptc = Path(con.get("locations", "ptc").child(today, "ptc.csv"))
+    ptc.parent.mkdir(parents=True, exist_ok=True)
+
+    # Assemble ATC file path
+    atc = Path(con.get("locations", "atc").child(today, "atc.csv"))
+    atc.parent.mkdir(parents=True, exist_ok=True)
+
+    # Assemble extra information file path
+    extra = Path(con.get("locations", "extra").child(today, "extra.csv"))
+    extra.parent.mkdir(parents=True, exist_ok=True)
+
+    return FileNames(url, html, price, cov, special, ptc, atc, extra)
+
+
+def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC, 
+              cExtra, pHTML):
+    """Saves the information in content to respective files"""
+    # Save URL data
+    fURL.write("%s\n" % content.url)
+
+    # Save the price data
+    price = []
+    cPrice.writerow(price)
+
+    # Save the coverage data
+    coverage = []
+    cCoverage.writerow(coverage)
+
+    # Save the special authorization data
+    special = []
+    cSpecial.writerow(special)
+
+    # Save the PTC data
+    ptc = []
+    cPTC.writerow(ptc)
+
+    # Save the ATC data
+    atc = []
+    cATC.writerow(atc)
+
+    # Save the extra information data
+    extra = []
+    cExtra.writerow(extra)
+
+    # Save a copy of the HTML page
+    with open(pHTML.child("%s.html" % content.url).absolute(), "w") as fHTML:
+        fHTML.write(content.html)
+
+
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
 root = Path(sys.argv[1])
@@ -93,9 +181,6 @@ priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
 
 # Set up logging
 log = python_logging.start(priCon)
-
-# Get Current Date
-today = get_today()
 
 # Get robot details
 userAgent = pubCon.get("robot", "user_agent", raw=True)
@@ -122,24 +207,42 @@ if can_crawl:
     log.info("Permissing granted to crawl site")
     log.info("Starting URL extraction")
 
-    for i in range (start, end + 1):
-        # Get the URL data
-        urlData = scrape_url(i, session, crawlDelay, log)
+    files = collect_file_paths(pubCon)
 
-        if urlData.status == "active":
-            content = collect_content(urlData.url, session, crawlDelay)
+    # Open required files for data extraction logging
+    with open(files.url.absolute(), "w") as fURL, \
+            open(files.price.absolute(), "w") as fPrice, \
+            open(files.coverage.absolute(), "w") as fCoverage, \
+            open(files.specialAuth.absolute(), "w") as fSpecial, \
+            open(files.ptc.absolute(), "w") as fPTC, \
+            open(files.atc.absolute(), "w") as fATC, \
+            open(files.extra.absolute(), "w") as fExtra:
 
-        if content:
-            # UPLOAD INFORMATION TO DATABASE
-            upload_data(content, priCon)
+        # Create appropriate CSV writers
+        cPrice = csv.writer(fPrice, quoting=csv.QUOTE_NONNUMERIC)
+        cCoverage = csv.writer(fCoverage, quoting=csv.QUOTE_NONNUMERIC)
+        cSpecial = csv.writer(fSpecial, quoting=csv.QUOTE_NONNUMERIC)
+        cPTC = csv.writer(fPTC, quoting=csv.QUOTE_NONNUMERIC)
+        cATC = csv.writer(fATC, quoting=csv.QUOTE_NONNUMERIC)
+        cExtra = csv.writer(fExtra, quoting=csv.QUOTE_NONNUMERIC)
 
-            # UPDATE WEBSITE DETAILS
-            update_details(priCon, today)
+        # Get filepath for HTML files
+        pHTML = files.html
 
-            # SAVE BACKUP COPY OF DATA TO SERVER
-            save_data(content)
+        for i in range (start, end + 1):
+            # Get the URL data
+            urlData = scrape_url(i, session, crawlDelay, log)
 
-        # TO ADD
-        # Record the url data to a document
-        # Save the HTML pages
-        # Save the formatted CSV data
+            if urlData.status == "active":
+                content = collect_content(urlData.url, session, crawlDelay)
+
+            if content:
+                # UPLOAD INFORMATION TO DATABASE
+                upload_data(content, priCon)
+
+                # UPDATE WEBSITE DETAILS
+                update_details(priCon, today)
+
+                # SAVE BACKUP COPY OF DATA TO SERVER
+                save_data(content, fURL, cPrice, cCoverage, cSpecial, 
+                          cPTC, cATC, cExtra, pHTML)
