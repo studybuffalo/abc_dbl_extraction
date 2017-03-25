@@ -219,12 +219,14 @@ if can_crawl:
             open(files.extra.absolute(), "w") as fExtra:
 
         # Create appropriate CSV writers
-        cPrice = csv.writer(fPrice, quoting=csv.QUOTE_NONNUMERIC)
-        cCoverage = csv.writer(fCoverage, quoting=csv.QUOTE_NONNUMERIC)
-        cSpecial = csv.writer(fSpecial, quoting=csv.QUOTE_NONNUMERIC)
-        cPTC = csv.writer(fPTC, quoting=csv.QUOTE_NONNUMERIC)
-        cATC = csv.writer(fATC, quoting=csv.QUOTE_NONNUMERIC)
-        cExtra = csv.writer(fExtra, quoting=csv.QUOTE_NONNUMERIC)
+        quoteStyle = csv.QUOTE_NONNUMERIC
+
+        cPrice = csv.writer(fPrice, quoting=quoteStyle)
+        cCoverage = csv.writer(fCoverage, quoting=quoteStyle)
+        cSpecial = csv.writer(fSpecial, quoting=quoteStyle)
+        cPTC = csv.writer(fPTC, quoting=quoteStyle)
+        cATC = csv.writer(fATC, quoting=quoteStyle)
+        cExtra = csv.writer(fExtra, quoting=quoteStyle)
 
         # Get filepath for HTML files
         pHTML = files.html
