@@ -196,7 +196,8 @@ def extract_page_content(page, parseData, log):
 
             return PTC(ptcList)
     
-        ptcString = html.find_all('tr', class_="idblTable")[0].td.div.p.get_text().strip()
+        ptcString = html.find_all('tr', class_="idblTable")[0]\
+                        .td.div.p.get_text().strip()
 
         return parse_ptc(ptcString)
 
@@ -516,7 +517,7 @@ def extract_page_content(page, parseData, log):
         
         return split_brand_strength_route_form(bsrf)
 
-    def extract_generic_name():
+    def extract_generic_name(html):
         """Extracts the generic name"""
         def parse_generic(text):
             """Correct formatting of generic name to be lowercase"""
@@ -588,29 +589,33 @@ def extract_page_content(page, parseData, log):
 
             return generic
             
-        generic = html.find_all('tr', class_="idblTable")[2].td.div.string.strip()
+        generic = html.find_all('tr', class_="idblTable")[2]\
+                      .td.div.string.strip()
 
         return parse_generic(generic)
 
-    def extract_date_listed():
+    def extract_date_listed(html):
         """"""
-        dateText = html.find_all('tr', class_="idblTable")[3].find_all('td')[1].string.strip()
+        dateText = html.find_all('tr', class_="idblTable")[3]\
+                       .find_all('td')[1].string.strip()
         
         dateListed = convert_date(dateText)
 
         return dateListed
 
-    def extract_date_discontinued():
+    def extract_date_discontinued(html):
         """"""
-        dateText  = html.find_all('tr', class_="idblTable")[4].find_all('td')[1].string.strip()
+        dateText  = html.find_all('tr', class_="idblTable")[4]\
+                        .find_all('td')[1].string.strip()
         
         dateDiscontinued = convert_date(dateText)
         
         return dateDiscontinued
 
-    def extract_unit_price():
+    def extract_unit_price(html):
         """Extracts the unit price"""
-        priceText = html.find_all('tr', class_="idblTable")[5].find_all('td')[1].string.strip()
+        priceText = html.find_all('tr', class_="idblTable")[5]\
+                        .find_all('td')[1].string.strip()
 
         if priceText == "N/A":
             unitPrice = None
@@ -619,9 +624,10 @@ def extract_page_content(page, parseData, log):
 
         return priceText
 
-    def extract_lca():
+    def extract_lca(html):
         """Extract LCA price and any accompanying text"""
-        lcaString = html.find_all('tr', class_="idblTable")[6].find_all('td')[1].div.get_text().strip()
+        lcaString = html.find_all('tr', class_="idblTable")[6]\
+                        .find_all('td')[1].div.get_text().strip()
 
         # If the string has a space, it will have LCA text
         if " " in lcaString:
@@ -649,27 +655,30 @@ def extract_page_content(page, parseData, log):
 
         return LCA(lca, lcaText)
 
-    def extract_unit_issue():
+    def extract_unit_issue(html):
         """Extracts the unit of issue"""
-        unitText =  html.find_all('tr', class_="idblTable")[7].find_all('td')[1].string.strip()
+        unitText =  html.find_all('tr', class_="idblTable")[7]\
+                        .find_all('td')[1].string.strip()
 
         # Unit of Issue
         unitIssue = unit_issue.lower()
 
         return unitIssue
 
-    def extract_interchangeable():
+    def extract_interchangeable(html):
         """"""
-        interchangeable = html.find_all('tr', class_="idblTable")[8].find_all('td')[1].get_text()
+        interchangeable = html.find_all('tr', class_="idblTable")[8]\
+                              .find_all('td')[1].get_text()
           
         if "YES" in interchangeable:
             interchangeable = 1
         else:
             interchangeable = 0
 
-    def extract_manufacturer():
+    def extract_manufacturer(html):
         """"""
-        manufacturer = html.find_all('tr', class_="idblTable")[9].find_all('td')[1].a.string.strip()
+        manufacturer = html.find_all('tr', class_="idblTable")[9]\
+                           .find_all('td')[1].a.string.strip()
 
         def parse_manufactuer(text):
             '''Manually corrects errors that are not fixed by .title()'''
@@ -731,10 +740,10 @@ def extract_page_content(page, parseData, log):
 
             return text
 
-    def extract_atc(html, log):
+    def extract_atc(html, descriptions, log):
         """Extracts the ATC codes"""
         
-        def match_atc(code):
+        def match_atc(code, descriptions):
             """Matches an ATC code to the description"""
 
             match = False
@@ -2016,14 +2025,14 @@ def extract_page_content(page, parseData, log):
 
         atcList = parse_atc(atc)
 
-    def extract_schedule():
+    def extract_schedule(html):
         """Extracts the provincial drug schedule"""
         schedule = html.find_all('tr', class_="idblTable")[11]\
                        .find_all('td')[1].string.strip()
 
         return schedule
 
-    def extract_coverage():
+    def extract_coverage(html):
         """Extract the coverage status"""
         coverage = html.find_all('tr', class_="idblTable")[12]\
                        .find_all('td')[1].string.strip()
