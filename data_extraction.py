@@ -2096,15 +2096,16 @@ def extract_page_content(page):
 
     return pageContent
 
-def collect_content(url, session, crawlDelay):
+def collect_content(url, session, crawlDelay, cursor):
     """Takes a list of URLs and extracts drug pricing information
         args:
             url:        url to extract data from
             session:    requests session object connected to the site
             delay:      time to pause between each request
+            cursor:     PyMySQL cursor to query database
 
         returns:
-            content:    a lost of object containing the pricing data
+            content:    the PageContent object with all extracted data
 
         raises:
             none.

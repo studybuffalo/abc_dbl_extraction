@@ -195,15 +195,19 @@ can_crawl = get_permission()
 if can_crawl:
     from url_scrape import scrape_urls
     from data_extraction import collect_content
-    from data_upload import upload_data
+    import data_upload
     from update_website import update_details
 
     log.info("Permissing granted to crawl site")
     log.info("Starting URL extraction")
 
-    files = collect_file_paths(pubCon)
+    # Create a database cursor and connection cursor to run queries
+    dbConn = data_upload.return_connection(priCon)
+    dbCursor = data_upload.return_cursor(dbConn)
 
     # Open required files for data extraction logging
+    files = collect_file_paths(pubCon)
+
     with open(files.url.absolute(), "w") as fURL, \
             open(files.price.absolute(), "w") as fPrice, \
             open(files.coverage.absolute(), "w") as fCoverage, \
@@ -224,17 +228,22 @@ if can_crawl:
 
         # Get filepath for HTML files
         pHTML = files.html
-
+        
         for i in range (start, end + 1):
+            # Remove old entry from the database
+            remove_data(cursor, url)
+
             # Get the URL data
             urlData = scrape_url(i, session, crawlDelay, log)
 
+            # Collect the content for active URLs
             if urlData.status == "active":
-                content = collect_content(urlData.url, session, crawlDelay)
+                content = collect_content(urlData.url, session, crawlDelay, 
+                                          dbCursor, log)
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
-                upload_data(content, priCon)
+                data_upload.upload_data(content, dbCursor)
 
                 # UPDATE WEBSITE DETAILS
                 update_details(priCon, today)
@@ -242,3 +251,9 @@ if can_crawl:
                 # SAVE BACKUP COPY OF DATA TO SERVER
                 save_data(content, fURL, cPrice, cCoverage, cSpecial, 
                           cPTC, cATC, cExtra, pHTML)
+
+            # Commit the database queries
+            dbConn.commit()
+
+    # Close Database Connection
+    dbConn.close()
