@@ -91,17 +91,21 @@ def upload_data(content, cursor):
     s = ("INSERT INTO abc_ptc (url, ptc_1, ptc_1_text, ptc_2, ptc_2_text, "
          "ptc_3, ptc_3_text, ptc_4, ptc_4_text) "
          "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    ptc = ()
+    ptc = (content.url, content.ptc.code1, content.ptc.text1, 
+           content.ptc.code2, content.ptc.text2, 
+           content.ptc.code3, content.ptc.text3, 
+           content.ptc.code4, content.ptc.text4)
     cursor.execute(s, special)
 
     # Construct and execute abc_atc query
     s = ("INSERT INTO abc_atc (url, atc_1, atc_1_text, atc_2, atc_2_text, "
          "atc_3, atc_3_text, atc_4, atc_4_text, atc_5, atc_5_text) "
          "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    atc = (content.atc.code1, content.atc.text1, content.atc.code2, 
-           content.atc.text2, content.atc.code3, content.atc.text3, 
-           content.atc.code4, content.atc.text4, content.atc.code5, 
-           content.atc.text5)
+    atc = (content.url, content.atc.code1, content.atc.text1, 
+           content.atc.code2, content.atc.text2, 
+           content.atc.code3, content.atc.text3, 
+           content.atc.code4, content.atc.text4, 
+           content.atc.code5, content.atc.text5)
     cursor.execute(s, atc)
 
     # Construct and execute abc_extra_information query
