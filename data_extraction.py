@@ -2005,16 +2005,19 @@ def extract_page_content(page, cursor, log):
         schedule = html.find_all('tr', class_="idblTable")[11].find_all('td')[1].string.strip()
 
     def extract_coverage():
-        """"""
-        coverage = html.find_all('tr', class_="idblTable")[12].find_all('td')[1].string.strip()
+        """Extract the coverage status"""
+        coverage = html.find_all('tr', class_="idblTable")[12]\
+                       .find_all('td')[1].string.strip()
 
         coverage = coverage.title()
+
+        return coverage
 
     def extract_clients(html):
         """Extracts clients and converts to 1/0 representation"""
 
         clients = html.find_all('tr', class_="idblTable")[13]\
-                  .find_all('td')[1].get_text().strip()
+                      .find_all('td')[1].get_text().strip()
 
         # List of strings to match against
         stringList = ["(Group 1)", "(Group 66)", "(Group 66A", 
@@ -2048,8 +2051,8 @@ def extract_page_content(page, cursor, log):
 
             # Extracts the link element
             criteriaSA = html.find_all('tr', class_="idblTable")[14]\
-                                .find_all('td')[1].p\
-                                .find_all('a')[0]['onclick']
+                             .find_all('td')[1].p\
+                             .find_all('a')[0]['onclick']
 
             # Extracts just the URL for the special auth criteria
             criteriaSA = ("https://idbl.ab.bluecross.ca/idbl/%s" %
@@ -2069,7 +2072,7 @@ def extract_page_content(page, cursor, log):
         """Extract any special authorization links"""
 
         specialElem = html.find_all('tr', class_="idblTable")[15]\
-                      .find_all('td')[1]
+                          .find_all('td')[1]
         
         specialAuth = []
       
