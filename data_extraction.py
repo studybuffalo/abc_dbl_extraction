@@ -68,6 +68,11 @@ class CoverageCriteria(object):
         self.special = criteriaSA
         self.palliative = criteriaP
 
+class SpecialAuthorization(object):
+    def __init__(self, text, link):
+        self.text = text
+        self.link = link
+
 def download_page(session, url):
     response = session.get(url)
     status = response.status_code
@@ -2061,31 +2066,27 @@ def extract_page_content(page, cursor, log):
         return CoverageCriteria(criteria, criteriaSA, criteriaP)
 
     def extract_special_auth():
-        """"""
-        special_auth_temp = html.find_all('tr', class_="idblTable")[15].find_all('td')[1]
+        """Extract any special authorization links"""
+
+        specialElem = html.find_all('tr', class_="idblTable")[15]\
+                      .find_all('td')[1]
         
-        special_auth = []
-        special_auth_link = []
+        specialAuth = []
       
-        if "N/A" in special_auth_temp.get_text():
-            special_auth = ["N/A"]
-            special_auth_link = ["N/A"]
-        else:
+        if "N/A" not in specialElem.get_text():
             for a in special_auth_temp.find_all('a'):
-                special_auth.append(a.string.strip())
-                special_auth_link.append(a['onclick'])
+                # Grab the text for the special auth link
+                text = a.string.strip()
 
-        # Special Authorization & Links
-        if "N/A" not in special_auth[0]:
-            for i in range(0, len(special_auth)):
-                special_auth[i] = special_auth[i]
-                special_auth_link[i] = "https://idbl.ab.bluecross.ca" + re.search(r"\('(.+\.pdf)','", special_auth_link[i]).group(1)
-                temp_list.append([url, special_auth[i], special_auth_link[i]])
-        else:
-            temp_list.append([url, None, None])
+                # Grab and format the pdf link
+                link = a['onclick']
+                link = ("https://idbl.ab.bluecross.ca%s" 
+                        % re.search(r"\('(.+\.pdf)','", link).group(1))
+
+                specialAuth.append(SpecialAuthorization(text, link))
+
+        return specialAuth
         
-
-        html = truncate_content(page)
 
     # Truncate extra content to improve extraction
     html = truncate_content(page)

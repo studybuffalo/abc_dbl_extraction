@@ -78,11 +78,14 @@ def upload_data(content, cursor):
                 content.clients.g23609)
     cursor.execute(s, coverage)
 
-    # Construct and execute abc_special_authorization query
+    # Construct and execute abc_special_authorization query 
+    # (if there are values)
     s = ("INSERT INTO abc_special_authorization (url, title, link) "
-         "VALUES (%s, %s, %s)")
-    special = ()
-    cursor.execute(s, special)
+            "VALUES (%s, %s, %s)")
+        
+    for spec in content.SpecialAuth:
+        special = (spec.text, spec.link)
+        cursor.execute(s, special)
 
     # Construct and execute abc_ptc query
     s = ("INSERT INTO abc_ptc (url, ptc_1, ptc_1_text, ptc_2, ptc_2_text, "
