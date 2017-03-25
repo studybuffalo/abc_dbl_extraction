@@ -1,10 +1,10 @@
-def update_details(con, today):
+def update_details(conf, today):
     from ftplib import FTP
 
     # Connect to server
-    ftp_address = con.get('ftp_sb', 'address')
-    ftp_user = con.get('ftp_sb', 'user')
-    ftp_password = con.get('ftp_sb', 'password')
+    ftp_address = conf.get('ftp_sb', 'address')
+    ftp_user = conf.get('ftp_sb', 'user')
+    ftp_password = conf.get('ftp_sb', 'password')
 
     print("Connecting to Study Buffalo server")
     ftp = FTP(ftp_address, ftp_user, ftp_password)

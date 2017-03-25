@@ -195,15 +195,16 @@ can_crawl = get_permission()
 if can_crawl:
     from url_scrape import scrape_urls
     from data_extraction import collect_content
-    import data_upload
+    from database_functions import return_connection, return_cursor, \
+                                   remove_data, upload_data
     from update_website import update_details
 
     log.info("Permissing granted to crawl site")
     log.info("Starting URL extraction")
 
     # Create a database cursor and connection cursor to run queries
-    dbConn = data_upload.return_connection(priCon)
-    dbCursor = data_upload.return_cursor(dbConn)
+    dbConn = return_connection(priCon)
+    dbCursor = return_cursor(dbConn)
 
     # Open required files for data extraction logging
     files = collect_file_paths(pubCon)
@@ -243,7 +244,7 @@ if can_crawl:
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
-                data_upload.upload_data(content, dbCursor)
+                upload_data(content, dbCursor)
 
                 # UPDATE WEBSITE DETAILS
                 update_details(priCon, today)
