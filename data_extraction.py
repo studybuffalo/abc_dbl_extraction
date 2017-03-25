@@ -1,22 +1,22 @@
 class PageContent(object):
-    def __init__(self, url, html, din, ptc, brandName, strength, route, 
-                 dosageForm, genericName, dateListed, dateDiscontinued, 
-                 unitPrice, lca, unitIssue, interchangeable, manufacturer, 
-                 atc, schedule, coverage, clients, coverageCriteria, 
-                 specialAuth):
+    def __init__(self, url, html, din, ptc, bsrf, genericName, dateListed, 
+                 dateDiscontinued, unitPrice, lca, unitIssue, 
+                 interchangeable, manufacturer, atc, schedule, coverage, 
+                 clients, coverageCriteria, specialAuth):
         self.url = url
         self.html = html
         self.din = din
         self.ptc = ptc
-        self.brandName = brandName
-        self.strength = strength
-        self.route = route
-        self.dosageForm = dosageForm
+        self.brandName = bsrf.brand
+        self.strength = bsrf.strength
+        self.route = bsrf.route
+        self.dosageForm = bsrf.dosageForm
         self.genericName = genericName
         self.dateListed = dateListed
         self.dateDiscontinued = dateDiscontinued
-        self.dateDiscontinued = unitPrice
-        self.lca = lca
+        self.unitPrice = unitPrice
+        self.lca = lca.value
+        self.lcaText = lca.text
         self.unitIssue = unitIssue
         self.interchangeable = interchangeable
         self.manufacturer = manufacturer
@@ -2059,19 +2059,9 @@ def extract_page_content(page, cursor, log):
     # Truncate extra content to improve extraction
     html = truncate_content(page)
 
-    # Extract the DIN
     din = extract_din(html)
-
-    # Extract the PTC
     ptc = extract_ptc(html)
-
-    # Extract the brand name, strength, route, and dosage form
     bsrf = extract_brand_strength_route_form(html)
-    brandName = bsrf.brand
-    strength = bsrf.strength
-    route = bsrf.route
-    dosageForm = bsrf.form
-
     genericName = extract_generic_name(html)
     dateListed = extract_date_listed(html)
     dateDiscontinued = extract_date_discontinued(html)

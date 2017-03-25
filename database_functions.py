@@ -55,9 +55,12 @@ def upload_data(content, cursor):
     """Uploads the content to the respective database tables"""
     # Construct and execute abc_price query
     s = ("INSERT INTO abc_price (url, din, brand_name, strength, "
-         "route,dosage_form, generic_name, unit_price, lca, lca_text, "
+         "route, dosage_form, generic_name, unit_price, lca, lca_text, "
          "unit_issue) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    price = ()
+    price = (content.url, content.din, content.brandName, content.strength,
+             content.route, content.dosageForm, content.genericName, content.unitPrice,
+             content.lca, content.lcaText, content.unitIssue)
+
     cursor.excecute(s, price)
 
     # Construct and execute abc_coverage query
