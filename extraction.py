@@ -194,7 +194,7 @@ can_crawl = get_permission()
 # If crawling is permitted, run the program
 if can_crawl:
     from url_scrape import scrape_urls
-    from data_extraction import collect_content
+    from data_extraction import collect_content, collect_parse_data
     from database_functions import return_connection, return_cursor, \
                                    remove_data, upload_data
     from update_website import update_details
@@ -205,6 +205,9 @@ if can_crawl:
     # Create a database cursor and connection cursor to run queries
     dbConn = return_connection(priCon)
     dbCursor = return_cursor(dbConn)
+
+    # Collects relevant data from database to enable data parsing
+    parseData = collect_parse_data(dbCursor)
 
     # Open required files for data extraction logging
     files = collect_file_paths(pubCon)
@@ -240,7 +243,7 @@ if can_crawl:
             # Collect the content for active URLs
             if urlData.status == "active":
                 content = collect_content(urlData.url, session, crawlDelay, 
-                                          dbCursor, log)
+                                          parseData, log)
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE

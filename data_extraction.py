@@ -73,6 +73,13 @@ class SpecialAuthorization(object):
         self.text = text
         self.link = link
 
+def collect_parse_data(cursor):
+    # Collect BSRF exceptions
+    # Collect PTC exceptions
+    # Collect ATC descriptions
+
+    return parseData
+
 def download_page(session, url):
     response = session.get(url)
     status = response.status_code
@@ -82,7 +89,7 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
-def extract_page_content(page, cursor, log):
+def extract_page_content(page, parseData, log):
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
@@ -120,7 +127,7 @@ def extract_page_content(page, cursor, log):
 
         return din
 
-    def extract_ptc():
+    def extract_ptc(html):
         """Extracts the PTC numbers and descriptions"""
         def parse_ptc(ptcString):
             """Separates out each number and formats descriptions
@@ -724,44 +731,12 @@ def extract_page_content(page, cursor, log):
 
             return text
 
-    def extract_atc():
-        """"""
-        atc = html.find_all('tr', class_="idblTable")[10].find_all('td')[1].string.strip()
-
-        def parse_atc(text):
-            '''Splits text into a list containing ATC codes and titles.'''
-            output = []
-            searchList = [
-                # Level 1: Anatomical Main Group
-                "([a-zA-Z]).*$",
-		
-                # Level 2: Therapeutic Subgroup
-                "([a-zA-Z]\d\d).*$",
-
-                # Level 3: Pharmacological Subgroup
-                "([a-zA-Z]\d\d[a-zA-Z]).*$",
-
-                # Level 4: Chemical Subgroup
-                "([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]).*$",
-
-                # Level 5: Chemical Substance
-                "([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]\d\d)*$"
-            ]
-
-            for search in searchList:
-                try:
-                    code = re.match(search, text).group(1)
-                    title = match_atc(code)
-                except:
-                    code = None
-                    title = None
-                
-                output.append(code)
-                output.append(title)
-
-            return output
-
+    def extract_atc(html, log):
+        """Extracts the ATC codes"""
+        
         def match_atc(code):
+            """Matches an ATC code to the description"""
+
             match = False
     
             # List of all ATC codes and titles
@@ -2000,9 +1975,53 @@ def extract_page_content(page, cursor, log):
 
             return output
 
+        def parse_atc(text):
+            '''Splits text into a list containing ATC codes and titles.'''
+            output = []
+
+            # The regex matches to extract specific content
+            searchList = [
+                # Level 1: Anatomical Main Group
+                "([a-zA-Z]).*$",
+		
+                # Level 2: Therapeutic Subgroup
+                "([a-zA-Z]\d\d).*$",
+
+                # Level 3: Pharmacological Subgroup
+                "([a-zA-Z]\d\d[a-zA-Z]).*$",
+
+                # Level 4: Chemical Subgroup
+                "([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]).*$",
+
+                # Level 5: Chemical Substance
+                "([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]\d\d)*$"
+            ]
+
+            for search in searchList:
+                try:
+                    code = re.match(search, text).group(1)
+                    title = match_atc(code)
+                except:
+                    code = None
+                    title = None
+                
+                output.append(code)
+                output.append(title)
+
+            return output
+
+        atc = html.find_all('tr', class_="idblTable")[10]\
+                  .find_all('td')[1].string.strip()
+
+
+        atcList = parse_atc(atc)
+
     def extract_schedule():
-        """"""
-        schedule = html.find_all('tr', class_="idblTable")[11].find_all('td')[1].string.strip()
+        """Extracts the provincial drug schedule"""
+        schedule = html.find_all('tr', class_="idblTable")[11]\
+                       .find_all('td')[1].string.strip()
+
+        return schedule
 
     def extract_coverage():
         """Extract the coverage status"""
@@ -2121,7 +2140,7 @@ def extract_page_content(page, cursor, log):
 
     return pageContent
 
-def collect_content(url, session, crawlDelay, cursor, log):
+def collect_content(url, session, crawlDelay, parseData, log):
     """Takes a list of URLs and extracts drug pricing information
         args:
             url:        url to extract data from
@@ -2157,7 +2176,7 @@ def collect_content(url, session, crawlDelay, cursor, log):
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(url, page, cursor, log)
+            pageContent = extract_page_content(url, page, parseData, log)
         except Exception as e:
             log.warn("Unable to extract %s page content: %s" 
                         % (url, e))
