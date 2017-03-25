@@ -22,7 +22,8 @@ class PageContent(object):
         self.atc = atc
         self.schedule = schedule
         self.coverage = coverage
-        self.clients = coverageCriteria
+        self.clients = clients
+        self.criteria = coverageCriteria
         self.specialAuth = specialAuth
         
 class PTC(object):
@@ -47,6 +48,25 @@ class LCA(object):
     def __init__(self, value, text):
         self.value = value
         self.text = text
+
+class Clients(object):
+    def __init__(self, list):
+        self.g1 = list[0]
+        self.g66 = list[1]
+        self.g66a = list[2]
+        self.g19823 = list[3]
+        self.g19824 = list[4]
+        self.g20400 = list[5]
+        self.g20403 = list[6]
+        self.g20514 = list[7]
+        self.g22128 = list[8]
+        self.g23609 = list[9]
+
+class CoverageCriteria(object):
+    def __init__(self, criteria, criteriaSA, criteriaP):
+        self.criteria = criteria
+        self.special = criteriaSA
+        self.palliative = criteriaP
 
 def download_page(session, url):
     response = session.get(url)
@@ -1985,48 +2005,60 @@ def extract_page_content(page, cursor, log):
 
         coverage = coverage.title()
 
-    def extract_clients():
-        """"""
-        clients = html.find_all('tr', class_="idblTable")[13].find_all('td')[1].get_text().strip()
+    def extract_clients(html):
+        """Extracts clients and converts to 1/0 representation"""
 
-        # Clients
-        client_list = ["(Group 1)", "(Group 66)", "(Group 66A", 
-                       "Income Support", "(AISH)", "(Group 19824", 
-                       "(Group 20400", "(Group 20403", "(Group 20514", 
-                       "(Group 22128", "(Group 23609"]
-        clients = []
+        clients = html.find_all('tr', class_="idblTable")[13]\
+                  .find_all('td')[1].get_text().strip()
 
-        for name in client_list:
-            if name in clients_temp:
-                clients.append(1)
-            else:
-                clients.append(0)
-
-    def extract_coverage_criteria():
-        """"""
-        coverage_criteria = html.find_all('tr', class_="idblTable")[14].find_all('td')[1].get_text()
+        # List of strings to match against
+        stringList = ["(Group 1)", "(Group 66)", "(Group 66A", 
+                      "Income Support", "(AISH)", "(Group 19824", 
+                      "(Group 20400", "(Group 20403", "(Group 20514", 
+                      "(Group 22128", "(Group 23609"]
         
-        if "Click" in coverage_criteria:
-            if "coverage" in coverage_criteria and "program" in coverage_criteria:
-                coverage_criteria_sa = html.find_all('tr', class_="idblTable")[14].find_all('td')[1].p.find_all('a')[0]['onclick']
-                coverage_criteria_p = "http://www.health.alberta.ca/services/drugs-palliative-care.html"
-            elif "coverage" in coverage_criteria:
-                coverage_criteria_sa = html.find_all('tr', class_="idblTable")[14].find_all('td')[1].p.find_all('a')[0]['onclick']
-                coverage_criteria_p = None
-            elif "program" in coverage_criteria:
-                coverage_criteria_sa = None
-                coverage_criteria_p = "http://www.health.alberta.ca/services/drugs-palliative-care.html"
-            
-            coverage_criteria = 1
-        else:
-            coverage_criteria = 0
-            coverage_criteria_sa = None
-            coverage_criteria_p = None
+        # If string is found in clients text, return 1, otherwise 0
+        clientList = []
 
-        # Coverage Criteria, SA, P
-        if coverage_criteria == 1:
-            if coverage_criteria_sa != None:
-                coverage_criteria_sa = "https://idbl.ab.bluecross.ca/idbl/" + re.search(r"\('(.+\d)','", coverage_criteria_sa).group(1)
+        for name in stringList:
+            if name in clients:
+                clientList.append(1)
+            else:
+                clientList.append(0)
+
+        return Clients(clientList)
+
+    def extract_coverage_criteria(html):
+        """Extracts any coverage criteria data"""
+        criteriaText = html.find_all('tr', class_="idblTable")[14]\
+                           .find_all('td')[1].get_text()
+        
+        # Default values incase desired info is not found
+        criteria = 0
+        criteriaSA = None
+        criteriaP = None
+
+        if "coverage" in criteriaText:
+            criteria = 1
+
+            # Extracts the link element
+            criteriaSA = html.find_all('tr', class_="idblTable")[14]\
+                                .find_all('td')[1].p\
+                                .find_all('a')[0]['onclick']
+
+            # Extracts just the URL for the special auth criteria
+            criteriaSA = ("https://idbl.ab.bluecross.ca/idbl/%s" %
+                          re.search(r"\('(.+\d)','", criteriaSA).group(1))
+            
+
+        if "program" in criteriaText:
+            criteria = 1
+
+            # Palliative care link is always the same
+            criteriaP = ("http://www.health.alberta.ca/services/"
+                            "drugs-palliative-care.html")
+
+        return CoverageCriteria(criteria, criteriaSA, criteriaP)
 
     def extract_special_auth():
         """"""

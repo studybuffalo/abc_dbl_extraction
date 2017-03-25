@@ -69,7 +69,13 @@ def upload_data(content, cursor):
          "group_19823a, group_19824, group_20400, group_20403, group_20514, "
          "group_22128, group_23609) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, "
          "%s, %s, %s, %s, %s, %s, %s, %s)")
-    coverage = ()
+    coverage = (content.url, content.coverage, content.criteria.criteria, 
+                content.criteria.special, content.criteria.palliative,
+                content.clients.g1, content.clients.g66, content.clients.g66a,
+                content.clients.g19823, content.clients.g19824, 
+                content.clients.g20400, content.clients.g20403,
+                content.clients.g20514, content.clients.g22128,
+                content.clients.g23609)
     cursor.execute(s, coverage)
 
     # Construct and execute abc_special_authorization query
