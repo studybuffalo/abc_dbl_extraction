@@ -39,14 +39,8 @@ import python_logging
 import datetime
 from urllib import robotparser
 import requests
-
 import csv
-import codecs
-import math
-import pymysql
 
-
-from ftplib import FTP
 
 class FileNames(object):
     def __init__(self, url, html, price, coverage, 
