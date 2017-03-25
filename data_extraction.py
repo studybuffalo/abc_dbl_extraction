@@ -28,13 +28,13 @@ class PageContent(object):
         
 class PTC(object):
     def __init__(self, ptcList):
-        self.num1 = ptcList[0]
+        self.code1 = ptcList[0]
         self.text1 = ptcList[1]
-        self.num2 = ptcList[2]
+        self.code2 = ptcList[2]
         self.text2 = ptcList[3]
-        self.num3 = ptcList[4]
+        self.code3 = ptcList[4]
         self.text3 = ptcList[5]
-        self.num4 = ptcList[6]
+        self.code4 = ptcList[6]
         self.text4 = ptcList[7]
 
 class BSRF(object):
@@ -211,7 +211,9 @@ def extract_page_content(page, parseData, log):
         ptcString = html.find_all('tr', class_="idblTable")[0]\
                         .td.div.p.get_text().strip()
 
-        return parse_ptc(ptcString)
+        ptcList = parse_ptc(ptcString)
+
+        return PTC(ptcList)
 
     def extract_brand_strength_route_form(html):
         """Extracts the brand name, strenght, route, and dosage form"""
