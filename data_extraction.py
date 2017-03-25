@@ -140,7 +140,7 @@ def extract_page_content(page, parseData, log):
 
         return din
 
-    def extract_ptc(html):
+    def extract_ptc(html, exceptions, log):
         """Extracts the PTC numbers and descriptions"""
         def parse_ptc(ptcString):
             """Separates out each number and formats descriptions
@@ -187,16 +187,15 @@ def extract_page_content(page, parseData, log):
                 
                 # Entry is text        
                 else:
-                    # NEED TO ACTUALLY CODE THIS
-                    exceptionList = []
-                    
-                    for item in exceptionList:
-                        if item.original == line:
-                            line = item.correction
-                            exception = True
+                    exceptionFound = False
+
+                    for exception in exceptions:
+                        if exception.original == line:
+                            line = exception.correction
+                            exceptionFound = True
                             break
 
-                    if exception == False:
+                    if exceptionFound == False:
                         # Convert remainder of text to title case
                         line = line.title()
 
@@ -909,7 +908,7 @@ def extract_page_content(page, parseData, log):
     html = truncate_content(page)
 
     din = extract_din(html)
-    ptc = extract_ptc(html)
+    ptc = extract_ptc(html, parseData.ptc, log)
     bsrf = extract_brand_strength_route_form(html)
     genericName = extract_generic_name(html)
     dateListed = extract_date_listed(html)
