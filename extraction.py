@@ -273,17 +273,20 @@ if can_crawl:
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
-                upload_data(content, dbCursor)
+                upload_data(content, dbCursor, log)
 
                 # UPDATE WEBSITE DETAILS
-                update_details(priCon, today)
+                update_details(priCon, today, log)
 
                 # SAVE BACKUP COPY OF DATA TO SERVER
                 save_data(content, fURL, cPrice, cCoverage, cSpecial, 
                           cPTC, cATC, cExtra, pHTML)
 
             # Commit the database queries
-            dbConn.commit()
+            try:
+                dbConn.commit()
+            except:
+                log.exception("Unable to update database for %s" % i)
 
     # Close Database Connection
     dbConn.close()
