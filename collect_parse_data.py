@@ -20,8 +20,14 @@ class ATCDescription(object):
 
 
 class ParseData(object):
-    def __init__(self):
+    def __init__(self, ptc, bsrf, brand, units, generic, manufacturer, atc):
         self.ptc = ptc
+        self.bsrf = bsrf
+        self.brand = brand
+        self.units = units
+        self.generic = generic
+        self.manufacturer = manufacturer
+        self.atc = atc
 
 
 def collect_parse_data(cursor):
@@ -91,4 +97,3 @@ def collect_parse_data(cursor):
         atc.append(ATCDescription(row["code"], row["description"]))
 
     return ParseData(ptc, bsrf, brand, units, generic, manufacturer, atc)
-
