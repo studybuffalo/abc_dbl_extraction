@@ -743,7 +743,7 @@ def extract_page_content(url, page, parseData, log):
         specialAuth = []
       
         if "N/A" not in specialElem.get_text():
-            for a in special_auth_temp.find_all('a'):
+            for a in specialElem.find_all('a'):
                 # Grab the text for the special auth link
                 text = a.string.strip()
 
@@ -819,14 +819,15 @@ def collect_content(urlData, session, parseData, log):
             pageContent = extract_page_content(urlData.id, page, parseData, 
                                                log)
         except:
-            log.exception("Unable to extract %s page content" % url)
+            log.exception("Unable to extract %s page content" % urlData.id)
             pageContent = None
 
     return pageContent
 
+
 def debug_data(urlData, htmlLoc, parseData, log):
     """Collects HTML data from provided location instead of website"""
-    htmlFile = htmlLoc.child("%.html" % url).absolute()
+    htmlFile = htmlLoc.child("%.html" % urlData.id).absolute()
 
     with open(htmlFile, "w") as html:
         page = html.read()
@@ -835,7 +836,7 @@ def debug_data(urlData, htmlLoc, parseData, log):
             pageContent = extract_page_content(urlData.id, page, parseData)
         except Exception as e:
             log.warn("Unable to extract %s page content: %s" 
-                        % (url, e))
+                        % (urlData.id, e))
             pageContent = None
     
     return pageContent

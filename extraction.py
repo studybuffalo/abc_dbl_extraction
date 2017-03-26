@@ -161,7 +161,7 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
     special = []
     
     for item in content.specialAuth:
-        special.append([item.text, item.link])
+        special.append([content.url, item.text, item.link])
 
     try:
         cSpecial.writerows(special)
