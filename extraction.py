@@ -165,6 +165,7 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
 # Set up root path to generate absolute paths to files
 root = Path(sys.argv[1])
 
+
 # Get the public config file
 pubCon = configparser.ConfigParser()
 pubCon.read(root.child("abc_config.cfg").absolute())
@@ -173,13 +174,17 @@ pubCon.read(root.child("abc_config.cfg").absolute())
 priCon = configparser.ConfigParser()
 priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
 
+
 # Set up logging
 log = python_logging.start(priCon)
+
 
 # Check debug status
 scrapeUrl = pubCon.getboolean("debug", "scrape_urls")
 scrapeData = pubCon.getboolean("debug", "scrape_data")
 uploadData = pubCon.getboolean("debug", "upload_data")
+updateWebsite = pubCon.getboolean("debug", "update_website")
+
 
 # Get robot details
 userAgent = pubCon.get("robot", "user_agent", raw=True)
@@ -190,6 +195,7 @@ crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
+
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
 # SCRAPE ACTIVE URLS FROM WEBSITE
@@ -199,6 +205,7 @@ if scrapeUrl:
 else:
     # Debug set to False; set can_crawl to true to continue program
     can_crawl = True
+
 
 # If crawling is permitted, run the program
 if can_crawl:
@@ -283,10 +290,13 @@ if can_crawl:
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
-                upload_data(content, dbCursor, log)
+                if uploadData:
+                    upload_data(content, dbCursor, log)
 
                 # UPDATE WEBSITE DETAILS
-                update_details(priCon, today, log)
+                if updateWebsite:
+                    update_details(priCon, today, log)
+
 
                 # SAVE BACKUP COPY OF DATA TO SERVER
                 save_data(content, fURL, cPrice, cCoverage, cSpecial, 
