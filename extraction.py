@@ -55,32 +55,6 @@ class FileNames(object):
         self.extra = extra
 
 
-class Sub(object):
-    def __init__(self, original, correction):
-        self.original = original
-        self.correction = correction
-
-
-class BSRFSub(object):
-    def __init__(self, bsrf, brandName, strength, route, dosageForm):
-        self.bsrf = bsrf
-        self.brandName = brandName
-        self.strength = strength
-        self.route = route
-        self.dosageForm = dosageForm
-
-
-class ATCDescription(object):
-    def __init__(self, code, description):
-        self.code = code
-        self.description = description
-
-
-class ParseData(object):
-    def __init__(self):
-        self.ptc = ptc
-
-
 def setup_config():
 	config = configparser.ConfigParser()
 	config.read(root.parent.child("config", "python_config.cfg").absolute())
@@ -97,75 +71,6 @@ def get_today():
     today = "%s-%s-%s" % (year, month, day)
     
     return today
-
-
-def collect_parse_data(cursor):
-    # Get the PTC subs
-    s = "SELECT original, correction FROM abc_subs_ptc"
-    results = cursor.execute(s)
-
-    ptc = []
-
-    for row in cursor:
-        ptc.append(Sub(row["original"], row["correction"]))
-
-    # Get the BSRF subs
-    s = ("SELECT bsrf, brand_name, strength, route, dosage_form "
-         "FROM abc_sub_bsrf")
-    results = cursor.execute(s)
-
-    brand = []
-
-    for row in cursor:
-        brand.append(BSRFSub(row["bsrf"], row["brand_name"], row["strength"], 
-                             row["route"], row["dosage_form"]))
-
-    # Get the Brand Name subs
-    s = "SELECT original, correction FROM abc_subs_brand"
-    results = cursor.execute(s)
-
-    brand = []
-
-    for row in cursor:
-        brand.append(Sub(row["original"], row["correction"]))
-
-    # Get the Units Subs
-    s = "SELECT original, correction FROM abc_subs_unit"
-    results = cursor.execute(s)
-
-    units = []
-
-    for row in cursor:
-        units.append(Sub(row["original"], row["correction"]))
-
-    # Get the Generic Name subs
-    s = "SELECT original, correction FROM abc_subs_generic"
-    results = cursor.execute(s)
-
-    generic = []
-
-    for row in cursor:
-        generic.append(Sub(row["original"], row["correction"]))
-
-    # Get the Manufacturer subs
-    s = "SELECT original, correction FROM abc_subs_manufacturer"
-    results = cursor.execute(s)
-
-    manufacturer = []
-
-    for row in cursor:
-        manufacturer.append(Sub(row["original"], row["correction"]))
-
-    # Get the ATC subs
-    s = "SELECT code, description FROM abc_subs_atc"
-    results = cursor.execute(s)
-
-    atc = []
-
-    for row in cursor:
-        atc.append(ATCDescription(row["code"], row["description"]))
-
-    return ParseData(ptc, bsrf, brand, units, generic, manufacturer, atc)
 
 
 def get_permission():
@@ -288,6 +193,7 @@ can_crawl = get_permission()
 
 # If crawling is permitted, run the program
 if can_crawl:
+    from collect_parse_data import collect_parse_data
     from url_scrape import scrape_urls
     from data_extraction import collect_content, collect_parse_data
     from database_functions import return_connection, return_cursor, \
