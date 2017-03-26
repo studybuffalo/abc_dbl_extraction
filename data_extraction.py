@@ -121,15 +121,16 @@ def binary_search(term, lists):
         raises:
             none.
     """
+    from bisect import bisect_left
 
-    searchList = lists.searchList
-    returnList = lists.objectList
+    searchList = lists.original
+    returnList = lists.correction
 
     # Look for match
     i = bisect_left(searchList, term)
 
     # If match found, return the corresponding object
-    if i != len(list) and searchList[i] == term:
+    if i != len(searchList) and searchList[i] == term:
         return returnList[i]
     else:
         return None
@@ -153,7 +154,6 @@ def extract_page_content(url, page, parseData, log):
     """
     from bs4 import BeautifulSoup
     import re
-    from bisect import bisect_left
 
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
@@ -199,12 +199,11 @@ def extract_page_content(url, page, parseData, log):
         # If so, would it be better to regex extract?
         din = din.replace("DIN/PIN Detail - ", "")
         
-        log.debug("%s DIN = %s" % (url, din))
-
         return din
 
     def extract_ptc(html, subs):
         """Extracts the PTC numbers and descriptions"""
+
         def parse_ptc(ptcString):
             """Separates out each number and formats descriptions
             
@@ -251,9 +250,9 @@ def extract_page_content(url, page, parseData, log):
                 # Entry is text        
                 else:
                     exceptionFound = False
-
+                    
                     # Look to see if this text has a sub
-                    sub = binary_search(subs, line)
+                    sub = binary_search(line, subs)
 
                     # If there is a sub, apply it
                     if sub:
@@ -267,7 +266,7 @@ def extract_page_content(url, page, parseData, log):
                     numPrev = False
 
             # Pad list to 8 items
-            while i < 8 - len(ptcList):
+            for i in range(0, 8 - len(newList)):
                 newList.append(None)
 
             ptcList = PTC(newList)

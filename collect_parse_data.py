@@ -11,6 +11,13 @@ class Units(object):
         self.original = original
         self.correction = correction
 
+
+class SearchList(object):
+    def __init__(self, originalList, corrList):
+        self.original = originalList
+        self.correction = corrList
+
+
 class ParseData(object):
     def __init__(self, ptc, bsrf, brand, units, generic, manufacturer, atc):
         self.ptc = ptc
@@ -20,11 +27,6 @@ class ParseData(object):
         self.generic = generic
         self.manufacturer = manufacturer
         self.atc = atc
-
-class SearchList(object):
-    def __init__(self, originalList, corrList):
-        self.original = originalList
-        self.correction = corrList
 
 
 def collect_parse_data(cursor):
