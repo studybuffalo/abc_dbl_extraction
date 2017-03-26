@@ -3,6 +3,18 @@ class URLData(object):
         self.url = url
         self.status = status
 
+def debug_url(fileLoc):
+    """Returns data from text file instead of website"""
+    with open(fileLoc.absolute(), "r") as file:
+        urls = file.split("\n")
+
+    urlList = []
+
+    for url in urls:
+        urlList.append(url, "active")
+
+    return urlList
+
 def check_url(url, session, log):
     """Checks the provided URL for an active status code"""
     # Request the header for the provided url

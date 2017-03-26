@@ -176,6 +176,11 @@ priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
 # Set up logging
 log = python_logging.start(priCon)
 
+# Check debug status
+scrapeUrl = pubCon.getboolean("debug", "scrape_urls")
+scrapeData = pubCon.getboolean("debug", "scrape_data")
+uploadData = pubCon.getboolean("debug", "upload_data")
+
 # Get robot details
 userAgent = pubCon.get("robot", "user_agent", raw=True)
 userFrom = pubCon.get("robot", "from", raw=True)
@@ -189,12 +194,16 @@ log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
 # SCRAPE ACTIVE URLS FROM WEBSITE
 # Checking the robots.txt file for permission to crawl
-can_crawl = get_permission()
+if scrapeUrl:
+    can_crawl = get_permission()
+else:
+    # Debug set to False; set can_crawl to true to continue program
+    can_crawl = True
 
 # If crawling is permitted, run the program
 if can_crawl:
     from collect_parse_data import collect_parse_data
-    from url_scrape import scrape_urls
+    from url_scrape import scrape_urls, debug_url
     from data_extraction import collect_content, collect_parse_data
     from database_functions import return_connection, return_cursor, \
                                    remove_data, upload_data
@@ -233,16 +242,32 @@ if can_crawl:
 
         # Get filepath for HTML files
         pHTML = files.html
+
+        # Set the start and end for loop
+        if scrapeUrl:
+            start = pubCon.get("url_extraction", "url_start")
+            end = pubCon.get("url_extraction", "url_end")
+        else:
+            # Grabbing data from text file if set to debug
+            urlList = debug_url(Path(pubCon.get("debug", "url_loc")))
+            start = 0
+            end = len(urlList) - 1
         
         for i in range (start, end + 1):
             # Remove old entry from the database
-            remove_data(cursor, i)
-
-            # Apply delay before crawling URL
-            time.sleep(crawlDelay)
+            if uploadData:
+                remove_data(cursor, i)
+            
             
             # Get the URL data
-            urlData = scrape_url(i, session, log)
+            if scrapeUrl:
+                # Apply delay before crawling URL
+                time.sleep(crawlDelay)
+            
+                urlData = scrape_url(i, session, log)
+            else:
+                urlData = urlList[i]
+
 
             # Collect the content for active URLs
             if urlData.status == "active":
@@ -260,7 +285,7 @@ if can_crawl:
 
                 # SAVE BACKUP COPY OF DATA TO SERVER
                 save_data(content, fURL, cPrice, cCoverage, cSpecial, 
-                          cPTC, cATC, cExtra, pHTML)
+                            cPTC, cATC, cExtra, pHTML)
 
             # Commit the database queries
             try:
