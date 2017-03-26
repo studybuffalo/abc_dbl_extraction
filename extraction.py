@@ -308,8 +308,8 @@ if can_crawl:
 
         # Set the start and end for loop
         if scrapeUrl:
-            start = pubCon.getint("url_extraction", "url_start")
-            end = pubCon.getint("url_extraction", "url_end")
+            start = int(sys.argv[2])
+            end = int(sys.argv[3])
         else:
             # Grabbing data from text file if set to debug
             urlList = debug_url(Path(pubCon.get("debug", "url_loc")))
