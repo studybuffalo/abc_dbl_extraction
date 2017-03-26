@@ -83,7 +83,7 @@ def upload_data(content, cursor):
             "VALUES (%s, %s, %s)")
         
     for spec in content.SpecialAuth:
-        special = (spec.text, spec.link)
+        special = (content.url, spec.text, spec.link)
         cursor.execute(s, special)
 
     # Construct and execute abc_ptc query
