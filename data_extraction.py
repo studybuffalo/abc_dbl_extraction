@@ -108,9 +108,9 @@ def binary_search(term, lists):
         args:
             term:   the term to be found in the provided list
             lists:  an object containg a search list (a list of search 
-                    terms to match against) and an object list (a 
+                    terms to match against) and an return list (a 
                     matching list to the search list that contains 
-                    the desired object to return
+                    the desired content to return
         
         returns:
             on match:   the corresponding object to the match
@@ -121,14 +121,14 @@ def binary_search(term, lists):
     """
 
     searchList = lists.searchList
-    objectList = lists.objectList
+    returnList = lists.objectList
 
     # Look for match
     i = bisect_left(searchList, term)
 
     # If match found, return the corresponding object
     if i != len(list) and searchList[i] == term:
-        return objectList[i]
+        return returnList[i]
     else:
         return None
 
@@ -243,7 +243,7 @@ def extract_page_content(url, page, parseData):
                     exceptionFound = False
 
                     # Look to see if this text has a sub
-                    sub = binary_search(sub, line)
+                    sub = binary_search(subs, line)
 
                     # If there is a sub, apply it
                     if sub:
@@ -277,25 +277,28 @@ def extract_page_content(url, page, parseData):
         
         def parse_brand_name(text):
             '''Properly formats the brand name'''
+            sub = binary_search(text, brandSubs)
 
-            # TO DO: MOVE ALL THIS INTO FULL BRAND NAMES AND INTO MYSQL
-            #        WILL SWITCH TO MATCHING ENTIRE STRINGS AND LOADING
-            #        IT ALL INTO A SET. WILL NEED TO SPEED TEST THIS
+            # Checks if this text has a substitution
+            if sub:
+                text = sub
 
-            # Convert to title text
-            text = text.title()
+            # Otherwise apply regular processing
+            else:
+                # Convert to title text
+                text = text.title()
 
-            # Removes extra space characters
-            text = re.sub(r"\s{2,}", " ", text)
+                # Removes extra space characters
+                text = re.sub(r"\s{2,}", " ", text)
 
-            # Correct errors with apostrophes and "s"
-            text = re.sub(r"'S\b", "'s", text)
+                # Correct errors with apostrophes and "s"
+                text = re.sub(r"'S\b", "'s", text)
 
             return text
 
         def parse_strength(text):
             '''Manually corrects errors not fixed by .lower().'''
-            
+
             # Converts the strength to lower case
             text = text.lower()
 
@@ -306,9 +309,11 @@ def extract_page_content(url, page, parseData):
             text = re.sub(r"\s/\s", "/", text)
 
             # Remove any spaces between numbers and %
-            text = re.sub(r"\s%", "%", text)
+            text = re.sub(r"\s%\b", "%", text)
 
-            # APPLY UNIT SUBS HERE
+            # Applies any remaining corrections
+            for sub in unitSubs:
+                text = re.sub(r"\b%s\b" % sub.original, sub.correction, text)
 
             return text
         
@@ -331,28 +336,19 @@ def extract_page_content(url, page, parseData):
         def split_brand_strength_route_form(text):
             """Extracts brand name, strength, route, dosage form"""
             
-            # Checks if the text is an exception case
-            exceptMatch = False
+            # Checks if the text has a substitution
+            sub = binary_search(text, bsrfSubs)
 
-            for sub in bsrfSubs:
-                if text == exception.bsrf:
-                    brandName = sub.brandName
-                    strength = sub.strength
-                    route = sub.route
-                    dosageForm = sub.dosageForm
+            if sub:
+                brandName = sub.brandName
+                strength = sub.strength
+                route = sub.route
+                dosageForm = sub.dosageForm
 
-                    exceptMatch = True
-
-                    break
-
-            if exceptMatch == False:
-                # ECL-METFORMIN 500 MG    ORAL   TABLET
-                    
+            # If no substitution, apply regular processing
+            else:
                 # Splits text multiple strings depending on the format used
-
                 # Formats vary with number of white space between sections
-                # TO DO: Check if this search can be sped up with 
-                #        different regex patterns
                 match3 = r"\b\s{3}\b"
                 match4 = r"\b\s{4}\b"
 
@@ -440,26 +436,27 @@ def extract_page_content(url, page, parseData):
         except:
             log.exception("Unable to extract BSRF string for %s" % url)
         
-        return split_brand_strength_route_form(bsrf)
+        bsrf = split_brand_strength_route_form(bsrf)
+
+        return bsrf
 
     def extract_generic_name(html, subs):
         """Extracts the generic name"""
         def parse_generic(text):
             """Correct formatting of generic name to be lowercase"""
 
-            # NEED TO ACTUALLY CODE THIS
-            exceptionList = []
-                    
-            for item in exceptionList:
-                if item.original == text:
-                    generic = item.correction
-                    exception = True
-                    break
+            # Remove parenthesis
+            generic = text[1:len(text) - 1]
 
-            if exception == False:
-                # Remove parenthesis on each side of text
-                generic = text[1:len(text) - 1]
+            # Check if this text has a substitution
+            sub = binary_search(subs, generic)
 
+            # If there is a sub, apply it
+            if sub:
+                generic = sub
+            
+            # Otherwise apply regular processing
+            else:
                 # Convert to lower case
                 generic = generic.lower()
 
@@ -471,10 +468,12 @@ def extract_page_content(url, page, parseData):
 
             return generic
             
-        generic = html.find_all('tr', class_="idblTable")[2]\
-                      .td.div.string.strip()
+        genericText = html.find_all('tr', class_="idblTable")[2]\
+                          .td.div.string.strip()
+        
+        generic = parse_generic(genericText)
 
-        return parse_generic(generic)
+        return generic
 
     def extract_date_listed(html):
         """Extracts the listing date and returns MySQL date"""
@@ -551,7 +550,12 @@ def extract_page_content(url, page, parseData):
         # Unit of Issue
         unitIssue = unit_issue.lower()
 
-        # APPLY UNIT SUBSTITUTIONS HERE?
+        # Correct any formatting errors
+        for sub in subs:
+            unitIssue = re.sub(r"\b%s\b" % sub.original, 
+                               sub.correction, 
+                               unitIssue)
+
         return unitIssue
 
     def extract_interchangeable(html):
@@ -569,14 +573,21 @@ def extract_page_content(url, page, parseData):
         def parse_manufactuer(text):
             '''Manually corrects errors that are not fixed by .title()'''
             
-            # APPLY SUBSTITUTIONS HERE
+            # Check if this text has a substitution
+            sub = binary_search(subs, text)
 
-            text = text.title()
+            # If there is a sub, apply it
+            if sub:
+                manufacturer = sub
             
-            # Removes extra space characters
-            text = re.sub(r"\s{2,}", " ", text)
+            # Otherwise apply regular processing
+            else:
+                manufacturer = text.title()
             
-            return text
+                # Removes extra space characters
+                manufacturer = re.sub(r"\s{2,}", " ", manufacturer)
+            
+            return manufacturer
 
         manufacturer = html.find_all('tr', class_="idblTable")[9]\
                            .find_all('td')[1].a.string.strip()
@@ -588,17 +599,6 @@ def extract_page_content(url, page, parseData):
     def extract_atc(html, descriptions):
         """Extracts the ATC codes and assigns description"""
         
-        def match_atc(code, descriptions):
-            """Matches an ATC code to the description"""
-            description = None
-
-            for entry in descriptions:
-                if entry.code == code:
-                    description = entry.description
-                    break
-
-            return description
-
         def parse_atc(text):
             '''Splits text into a list containing ATC codes and titles.'''
             atcList  = []
@@ -626,7 +626,7 @@ def extract_page_content(url, page, parseData):
                 
                 if match:
                     code = match.group(1)
-                    description = match_atc(code)
+                    description = binary_search(descriptions, code)
                 else:
                     code = None
                     description = None

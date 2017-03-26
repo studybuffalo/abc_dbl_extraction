@@ -6,6 +6,11 @@ class BSRFSub(object):
         self.dosageForm = dosageForm
 
 
+class Units(object):
+    def __init__(self, original, correction):
+        self.original = original
+        self.correction = correctioon
+
 class ParseData(object):
     def __init__(self, ptc, bsrf, brand, units, generic, manufacturer, atc):
         self.ptc = ptc
@@ -85,14 +90,10 @@ def collect_parse_data(cursor):
     s = "SELECT original, correction FROM abc_subs_unit ORDER BY original"
     results = cursor.execute(s)
 
-    unitsO = []
-    unitsC = []
+    units = []
 
     for row in cursor:
-        unitsO.append(row["orignal"])
-        unitsC.append(row["correction"])
-
-    units = SearchList(unitsO, unitsC)
+        units.append(Units(row["original"], row["correction"]))
 
 
     # Get the Generic Name subs
