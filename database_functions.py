@@ -110,7 +110,8 @@ def upload_data(content, cursor):
 
     # Construct and execute abc_extra_information query
     s = ("INSERT INTO abc_extra_information (url, date_listed, "
-         "date_discontinued, manufacturer,schedule, interchangeable) "
+         "date_discontinued, manufacturer, schedule, interchangeable) "
          "VALUES (%s, %s, %s, %s, %s, %s)")
-    extra = ()
+    extra = (content.url, content.dateListed, content.dateDiscontinued, 
+             content.manufacturer, content.schedule, content.interchangeable)
     cursor.execute(s, extra)

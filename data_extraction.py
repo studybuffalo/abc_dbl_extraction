@@ -102,16 +102,21 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
-def extract_page_content(page, parseData, log):
+def extract_page_content(url, page, parseData, log):
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
-        html = BeautifulSoup(page, "html.parser")
-        trunc = html.findAll("div", {"class": "columnLeftFull"})
+        try:
+            html = BeautifulSoup(page, "html.parser")
+            trunc = html.findAll("div", {"class": "columnLeftFull"})
+        except:
+            log.exception("Unable to create Soup for %s" % url)
 
         return trunc
     
     def convert_date(dateString):
+        """Converts the ABC date to a MySQL date format"""
+
         # If date is present, will be in form of dd-mmm-yyyy
         try:
             # Convert to date object
@@ -130,8 +135,10 @@ def extract_page_content(page, parseData, log):
     
     def extract_din(html):
         """Extracts the DIN"""
-        # Get the main HTML element
-        din = html.p.string
+        try:
+            din = html.p.string
+        except:
+            log.exception("Unable to extract DIN for %s" % url)
 
         # Extract the DIN
         # TO CONFIRM: is the DIN/PIN always 8 digits?
@@ -140,9 +147,9 @@ def extract_page_content(page, parseData, log):
 
         return din
 
-    def extract_ptc(html, exceptions, log):
+    def extract_ptc(html, bsrfExceptions, unitSubs):
         """Extracts the PTC numbers and descriptions"""
-        def parse_ptc(ptcString):
+        def parse_ptc(ptcString, exceptions):
             """Separates out each number and formats descriptions
             
                 String is formatted with each number and description 
@@ -207,15 +214,18 @@ def extract_page_content(page, parseData, log):
                 ptcList.append(None)
 
             return PTC(ptcList)
-    
-        ptcString = html.find_all('tr', class_="idblTable")[0]\
-                        .td.div.p.get_text().strip()
+        
+        try:
+            ptcString = html.find_all('tr', class_="idblTable")[0]\
+                            .td.div.p.get_text().strip()
+        except:
+            log.exception("Unable to extract PTC string for %s" % url)
 
-        ptcList = parse_ptc(ptcString)
+        ptcList = parse_ptc(ptcString, exceptions)
 
-        return PTC(ptcList)
+        return ptcList
 
-    def extract_brand_strength_route_form(html):
+    def extract_brand_strength_route_form(html, exceptions):
         """Extracts the brand name, strenght, route, and dosage form"""
         
         def parse_brand_name(text):
@@ -231,165 +241,8 @@ def extract_page_content(page, parseData, log):
             # Removes extra space characters
             text = re.sub(r"\s{2,}", " ", text)
 
-            # Targetted replacements			
-            # 0
+            # Correct errors with apostrophes and "s"
             text = re.sub(r"'S\b", "'s", text)
-
-            # A
-            text = re.sub(r"\bAc\b", "AC", text)
-            text = re.sub(r"\bAdv\b", "ADV", text)
-            text = re.sub(r"\bAerochamber\b", "AeroChamber", text)
-            text = re.sub(r"\bAf\b", "AF", text)
-            text = re.sub(r"\bAsa\b", "ASA", text)
-
-            # B
-            text = re.sub(r"\bBenzaclin\b", "BenzaClin", text)
-            text = re.sub(r"\bBid\b", "BID", text)
-            text = re.sub(r"\bBp\b", "BP", text)
-
-            # C
-            text = re.sub(r"\bCd\b", "CD", text)
-            text = re.sub(r"\bChildrens\b", "Children's", text)
-            text = re.sub(r"\bCfc\b", "CFC", text)
-            text = re.sub(r"\bCr\b", "CR", text)
-            text = re.sub(r"\bCtp\b", "CTP", text)
-
-            # D
-            text = re.sub(r"\bDdavp\b", "DDAVP", text)
-            text = re.sub(r"\bDexiron\b", "DexIron", text)
-            text = re.sub(r"\bDf\b", "DF", text)
-            text = re.sub(r"\bDhe\b", "DHE", text)
-            text = re.sub(r"\bDr\b", "DR", text)
-            text = re.sub(r"\bDs\b", "DS", text)
-            text = re.sub(r"\bDuotrav\b", "DuoTrav", text)
-
-            # E
-            text = re.sub(r"\bEc\b", "EC", text)
-            text = re.sub(r"\bEcs\b", "ECS", text)
-            text = re.sub(r"\bEnfacare\b", "EnfaCare", text)
-            text = re.sub(r"\bEpipen\b", "EpiPen", text)
-            text = re.sub(r"\bEr\b", "ER", text)
-            text = re.sub(r"\bEs\b", "ES", text)
-            text = re.sub(r"\bEz\b", "EZ", text)
-
-            # F
-            text = re.sub(r"\bFastab\b", "FasTab", text)
-            text = re.sub(r"\bFc\b", "FC", text)
-            text = re.sub(r"\bFct\b", "FCT", text)
-            text = re.sub(r"\bFemhrt\b", "FemHRT", text)
-            text = re.sub(r"\bFlextouch\b", "FlexTouch", text)
-
-            # G
-            text = re.sub(r"\bGe\b", "GE", text)
-            text = re.sub(r"\bGlucagen\b", "GlucaGen", text)
-            text = re.sub(r"\bGluconorm\b", "GlucoNorm", text)
-            text = re.sub(r"\bGoquick\b", "GoQuick", text)
-
-            # H
-            text = re.sub(r"\bHbv\b", "HBV", text)
-            text = re.sub(r"\bHc\b", "HC", text)
-            text = re.sub(r"\bHcl\b", "HCl", text)
-            text = re.sub(r"\bHct\b", "HCT", text)
-            text = re.sub(r"\bHctz\b", "HCTZ", text)
-            text = re.sub(r"\bHfa\b", "HFA", text)
-            text = re.sub(r"\bHn\b", "HN", text)
-            text = re.sub(r"\bHp\b", "HP", text)
-            text = re.sub(r"\bHumapen\b", "HumaPen", text)
-            text = re.sub(r"\bHypokit\b", "HypoKit", text)
-
-            # I
-            text = re.sub(r"\bIbd\b", "IBD", text)
-            text = re.sub(r"\bIi\b", "II", text)
-            text = re.sub(r"\bIr\b", "IR", text)
-            text = re.sub(r"\bIv\b", "IV", text)
-
-            # J
-
-            # K
-            text = re.sub(r"\bKwikpen\b", "KwikPen", text)
-
-            # L
-            text = re.sub(r"\bLa\b", "LA", text)
-
-            # M
-            text = re.sub(r"\bMct\b", "MCT", text)
-            text = re.sub(r"\bMetoprol\b", "Metoprolol", text)
-            text = re.sub(r"\bMetrocream\b", "MetroCream", text)
-            text = re.sub(r"\bMetrogel\b", "MetroGel", text)
-            text = re.sub(r"\bMetrolotion\b", "MetroLotion", text)
-            text = re.sub(r"\bMinestrin\b", "MinEstrin", text)
-            text = re.sub(r"\bMiniquick\b", "MiniQuick", text)
-            text = re.sub(r"\bMr\b", "MR", text)
-            text = re.sub(r"\bMs\b", "MS", text)
-            text = re.sub(r"\bMt\b", "MT", text)
-            text = re.sub(r"\bMs4\b", "MS4", text)
-            text = re.sub(r"\bMt12\b", "MT12", text)
-            text = re.sub(r"\bMt20\b", "MT20", text)
-            text = re.sub(r"\bMtx\b", "MTX", text)
-
-            # N
-            text = re.sub(r"\bNeosure\b", "NeoSure", text)
-            text = re.sub(r"\bNorlevo\b", "NorLevo", text)
-            text = re.sub(r"\bNovasource\b", "NovaSource", text)
-            text = re.sub(r"\bNovorapid\b", "NovoRapid", text)
-            text = re.sub(r"\bNph\b", "NPH", text)
-            text = re.sub(r"\bNs\b", "NS", text)
-            text = re.sub(r"\bNutrihep\b", "NutriHep", text)
-
-            # O
-            text = re.sub(r"\bOdt\b", "ODT", text)
-            text = re.sub(r"\bOptichamber\b", "OptiChamber", text)
-            text = re.sub(r"\bOxyneo\b", "OxyNeo", text)
-
-            # P
-            text = re.sub(r"\bPediasure\b", "PediaSure", text)
-            text = re.sub(r"\bPq\b", "PQ", text)
-
-            # Q
-
-            # R
-            text = re.sub(r"\bRbv\b", "RBV", text)
-            text = re.sub(r"\bRc\b", "RC", text)
-            text = re.sub(r"\bRdt\b", "RDT", text)
-            text = re.sub(r"\bRpd\b", "RPD", text)
-
-            # S
-            text = re.sub(r"\bScandishake\b", "ScandiShake", text)
-            text = re.sub(r"\bSdz\b", "SDZ", text)
-            text = re.sub(r"\bSod Succin\.", "Sodium Succinate", text)
-            text = re.sub(r"\bSolostar\b", "SoloSTAR", text)
-            text = re.sub(r"\bSr\b", "SR", text)
-
-            # T
-            text = re.sub(r"\bThickenup\b", "ThickenUp", text)
-            text = re.sub(r"\bTobradex\b", "TobraDex", text)
-            text = re.sub(r"\bTs\b", "TS", text)
-
-            # U
-            text = re.sub(r"\bUdv\b", "UDV", text)
-            text = re.sub(r"\bUsp\b", "USP", text)
-
-            # V
-            text = re.sub(r"\bVhn\b", "VHN", text)
-            text = re.sub(r"\bVhp\b", "VHP", text)
-            text = re.sub(r"\bVk\b", "VK", text)
-            text = re.sub(r"\bVr\b", "VR", text)
-
-            # W
-
-            # X
-            text = re.sub(r"\bXc\b", "XC", text)
-            text = re.sub(r"\bXl\b", "XL", text)
-            text = re.sub(r"\bXr\b", "XR", text)
-            text = re.sub(r"\bXrt\b", "XRT", text)
-
-            # Y
-
-            # Z
-
-            #String Replacements	text = text.replace("", "")
-            # THIS NEEDS TO BE MOVED INTO AN EXCEPTION INSTEAD OF HERE
-            text = text.replace("Sod.(Unpreserved)", "Sodium (Unpreserved)")
 
             return text
 
@@ -408,13 +261,7 @@ def extract_page_content(page, parseData, log):
             # Remove any spaces between numbers and %
             text = re.sub(r"\s%", "%", text)
 
-            # Targetted corrections
-            text = re.sub(r"\benm\b", "enema", text)
-            text = re.sub(r"\biu\b", "IU", text)
-            text = re.sub(r"\bmeq\b", "mEq", text)
-            text = re.sub(r"\bml\b", "mL", text)
-            text = re.sub(r"\bpth\b", "patch", text)
-            text = re.sub(r"\bsyr\b", "syringe", text)
+            # APPLY UNIT SUBS HERE
 
             return text
         
@@ -435,32 +282,23 @@ def extract_page_content(page, parseData, log):
             return text
         
         def split_brand_strength_route_form(text):
-            """Extracts brand name, strength, route, dosage form from string
-	            Args:
-	                text: the extracted text from the html
-		
-	            Returns:
-	                output: a BSRF object
-			
-	            Raises:
-	                None.
-            """
+            """Extracts brand name, strength, route, dosage form"""
             
             # Checks if the text is an exception case
             exceptMatch = False
 
-            for exception in bsrfExceptionList:
-                if text == exception[0]:
-                    brandName = exception[1]
-                    strength = exception[2]
-                    route = exception[3]
-                    dosageForm = exception[4]
+            for exception in exceptions:
+                if text == exception.bsrf:
+                    brandName = exception.brandName
+                    strength = exception.strength
+                    route = exception.route
+                    dosageForm = exception.dosageForm
 
                     exceptMatch = True
 
                     break
 
-            if exceptMatch:
+            if exceptMatch == False:
                 # ECL-METFORMIN 500 MG    ORAL   TABLET
                     
                 # Splits text multiple strings depending on the format used
@@ -473,28 +311,50 @@ def extract_page_content(page, parseData, log):
 
                 # Format: B S   R    F
                 if re.search(match4, text) and re.search(match3, text):
+                    try:
+                        text = text.split("   ")
                 
-                    text = text.split("   ")
-                
-                    brandStrength = text[0].strip()
-                    route = text[1].strip()
-                    dosageForm = text[2].strip()
+                        brandStrength = text[0].strip()
+                        route = text[1].strip()
+                        dosageForm = text[2].strip()
+                    except:
+                        log.exception("Error extracting BSRF for %s" % url)
+
+                        brandStrength = text
+                        route = None
+                        dosageForm = None
 
                 # Format: B S    F
                 elif re.search(match4, text):
-                
-                    text = text.split("    ")
+                    try:
+                        text = text.split("    ")
                     
-                    brandStrength = text[0].strip()
-                    route = None
-                    dosageForm = text[1].strip()
+                        brandStrength = text[0].strip()
+                        route = None
+                        dosageForm = text[1].strip()
+                    except:
+                        log.exception("Error extracting 4 space BSF for %s" 
+                                      % url)
+
+                        brandStrength = text
+                        route = None
+                        dosageForm = None
 
                 # Format: B S   F
                 elif re.search(match3, text):
-                    text = text.split("   ")
-                    brandStrength = text[0].strip()
-                    route = None
-                    dosageForm = text[1].strip()
+                    try:
+                        text = text.split("   ")
+
+                        brandStrength = text[0].strip()
+                        route = None
+                        dosageForm = text[1].strip()
+                    except:
+                        log.exception("Error extracting 3 space BSF for %s" 
+                                      % url)
+                        
+                        brandStrength = text
+                        route = None
+                        dosageForm = None
 
                 # Format: B S
                 else:
@@ -504,8 +364,8 @@ def extract_page_content(page, parseData, log):
                     dosageForm = None
                 
                 # Splits the brandStrength at the first number 
-                # encountered with text behind it (assumed to 
-                # be a unit)
+                # encountered with a non-numeric character behind it 
+                # (assumed to be a unit)
                 search = re.search(r"\b\d.+$", text)
 
                 if search:
@@ -527,7 +387,11 @@ def extract_page_content(page, parseData, log):
 
             return output
 
-        bsrf = html.find_all('tr', class_="idblTable")[1].td.div.string.strip()
+        try:
+            bsrf = html.find_all('tr', class_="idblTable")[1]\
+                       .td.div.string.strip()
+        except:
+            log.exception("Unable to extract BSRF string for %s" % url)
         
         return split_brand_strength_route_form(bsrf)
 
@@ -609,19 +473,25 @@ def extract_page_content(page, parseData, log):
         return parse_generic(generic)
 
     def extract_date_listed(html):
-        """"""
-        dateText = html.find_all('tr', class_="idblTable")[3]\
-                       .find_all('td')[1].string.strip()
-        
+        """Extracts the listing date and returns MySQL date"""
+        try:
+            dateText = html.find_all('tr', class_="idblTable")[3]\
+                           .find_all('td')[1].string.strip()
+        except:
+            log.exception("Unable to extract date listed for %s" % url)
+
         dateListed = convert_date(dateText)
 
         return dateListed
 
     def extract_date_discontinued(html):
-        """"""
-        dateText  = html.find_all('tr', class_="idblTable")[4]\
-                        .find_all('td')[1].string.strip()
-        
+        """Extracts the discontinued date and returns MySQL date"""
+        try:
+            dateText  = html.find_all('tr', class_="idblTable")[4]\
+                            .find_all('td')[1].string.strip()
+        except:
+            log.exception("Unable to extract discontinued date for %s" % url)
+
         dateDiscontinued = convert_date(dateText)
         
         return dateDiscontinued
@@ -754,7 +624,7 @@ def extract_page_content(page, parseData, log):
 
             return text
 
-    def extract_atc(html, descriptions, log):
+    def extract_atc(html, descriptions):
         """Extracts the ATC codes and assigns description"""
         
         def match_atc(code, descriptions):
