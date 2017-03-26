@@ -31,6 +31,17 @@ class ParseData(object):
 
 
 def collect_parse_data(cursor):
+    """Retrieves all the required parsing data from the database
+        args:
+            cursor: a PyMySQL cursor connected to the proper database
+
+        returns:
+            ParseData:  an object containing all the parse data
+
+        raises:
+            none.
+    """
+
     # Get the PTC subs
     s = "SELECT original, correction FROM abc_subs_ptc"
     results = cursor.execute(s)
