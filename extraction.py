@@ -204,7 +204,7 @@ else:
 if can_crawl:
     from collect_parse_data import collect_parse_data
     from url_scrape import scrape_urls, debug_url
-    from data_extraction import collect_content, collect_parse_data
+    from data_extraction import collect_content, collect_parse_data, debug_data
     from database_functions import return_connection, return_cursor, \
                                    remove_data, upload_data
     from update_website import update_details
@@ -271,10 +271,15 @@ if can_crawl:
 
             # Collect the content for active URLs
             if urlData.status == "active":
-                # Apply delay before accessing page
-                time.sleep(crawlDelay)
+                if scrapeData:
+                    # Apply delay before accessing page
+                    time.sleep(crawlDelay)
 
-                content = collect_content(i, session, parseData, log)
+                    content = collect_content(i, session, parseData, log)
+                else:
+                    url = urlData.url
+                    htmlLoc = Path(pubCon.get("debug", "data_loc"))
+                    content = debug_data(url, htmlLoc, parseData, log)
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE

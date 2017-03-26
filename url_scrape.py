@@ -15,7 +15,7 @@ def debug_url(fileLoc):
 
     return urlList
 
-def check_url(url, session, log):
+def check_url(id, url, session, log):
     """Checks the provided URL for an active status code"""
     # Request the header for the provided url
     try:
@@ -28,15 +28,15 @@ def check_url(url, session, log):
     # Check status and create the URL Status object
     if code == 200:
         log.debug("%s active" % url)
-        status = URLData(url, "active")
+        status = URLData(id, "active")
 
     elif code == 302:
         log.debug("%s inactive" % url)
-        status = URLData(url, "inactive")
+        status = URLData(id, "inactive")
 
     else:
         log.warn("Unexpected %d error with %s" % (code, url))
-        status = URLData(url, "error")
+        status = URLData(id, "error")
 
     return status
 
@@ -63,7 +63,7 @@ def scrape_url(id, session, delay, log):
     # Assembles the url form the base + 10 digit productID
     url = "%s%010d" % (base, id)
             
-    data = check_url(url, session, log)
+    data = check_url(id, url, session, log)
             
     # Return the URL
     return data

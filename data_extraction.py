@@ -785,7 +785,6 @@ def collect_content(url, session, parseData, log):
     """
     
     from bs4 import BeautifulSoup
-    from datetime import datetime
     import re
     from bisect import bisect_left
     
@@ -801,10 +800,26 @@ def collect_content(url, session, parseData, log):
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(url, page, parseData, log)
+            pageContent = extract_page_content(url, page, parseData)
         except Exception as e:
             log.warn("Unable to extract %s page content: %s" 
                         % (url, e))
             pageContent = None
 
+    return pageContent
+
+def debug_data(url, htmlLoc, parseData, log):
+    """Collects HTML data from provided location instead of website"""
+    htmlFile = htmlLoc.child("%.html" % url).absolute()
+
+    with open(htmlFile, "w") as html:
+        page = html.read()
+
+        try:
+            pageContent = extract_page_content(url, page, parseData)
+        except Exception as e:
+            log.warn("Unable to extract %s page content: %s" 
+                        % (url, e))
+            pageContent = None
+    
     return pageContent
