@@ -1,22 +1,9 @@
-class Sub(object):
-    def __init__(self, original, correction):
-        self.original = original
-        self.correction = correction
-
-
 class BSRFSub(object):
-    def __init__(self, bsrf, brandName, strength, route, dosageForm):
-        self.bsrf = bsrf
+    def __init__(self, brandName, strength, route, dosageForm):
         self.brandName = brandName
         self.strength = strength
         self.route = route
         self.dosageForm = dosageForm
-
-
-class ATCDescription(object):
-    def __init__(self, code, description):
-        self.code = code
-        self.description = description
 
 
 class ParseData(object):
@@ -30,9 +17,10 @@ class ParseData(object):
         self.atc = atc
 
 class SearchList(object):
-    def __init__(self, searchList, objectList):
-        self.searchList = searchList
-        self.objectList = objectList
+    def __init__(self, originalList, corrList):
+        self.original = originalList
+        self.correction = corrList
+
 
 def collect_parse_data(cursor):
     """Retrieves all the required parsing data from the database
@@ -53,15 +41,14 @@ def collect_parse_data(cursor):
     s = "SELECT original, correction FROM abc_subs_ptc ORDER BY original"
     results = cursor.execute(s)
 
-    ptcS = []
     ptcO = []
+    ptcC = []
 
     for row in cursor:
-        ptcS.append(row["original"])
-        ptcO.append(Sub(row["original"], row["correction"]))
+        ptcO.append(row["original"])
+        ptcC.append(row["correction"])
 
-    
-    ptc = SearchList(ptcS, ptcO)
+    ptc = SearchList(ptcO, ptcC)
 
 
     # Get the BSRF subs
@@ -69,57 +56,57 @@ def collect_parse_data(cursor):
          "FROM abc_sub_bsrf ORDER BY bsrf")
     results = cursor.execute(s)
 
-    bsrfS = []
     bsrfO = []
+    bsrfC = []
 
     for row in cursor:
-        bsrfS.append(row["bsrf"])
-        bsrfO.append(BSRFSub(row["bsrf"], row["brand_name"], row["strength"], 
+        bsrfO.append(row["bsrf"])
+        bsrfC.append(BSRFSub(row["brand_name"], row["strength"], 
                              row["route"], row["dosage_form"]))
     
-    bsrf = SearchList(bsrfS, bsrfO)
+    bsrf = SearchList(bsrfO, bsrfC)
 
 
     # Get the Brand Name subs
     s = "SELECT original, correction FROM abc_subs_brand ORDER BY original"
     results = cursor.execute(s)
 
-    brandS = []
     brandO = []
+    brandC = []
 
     for row in cursor:
-        brandS.append(row["original"])
-        brandO.append(Sub(row["original"], row["correction"]))
+        brandO.append(row["original"])
+        brandC.append( row["correction"])
 
-    brand = SearchList(brandS, brandO)
+    brand = SearchList(brandO, brandC)
 
 
     # Get the Units Subs
     s = "SELECT original, correction FROM abc_subs_unit ORDER BY original"
     results = cursor.execute(s)
 
-    unitsS = []
     unitsO = []
+    unitsC = []
 
     for row in cursor:
-        unitsS.append(row["orignal"])
-        unitsO.append(Sub(row["original"], row["correction"]))
+        unitsO.append(row["orignal"])
+        unitsC.append(row["correction"])
 
-    units = SearchList(unitsS, unitsO)
+    units = SearchList(unitsO, unitsC)
 
 
     # Get the Generic Name subs
     s = "SELECT original, correction FROM abc_subs_generic ORDER BY original"
     results = cursor.execute(s)
 
-    genericS = []
     genericO = []
+    genericC = []
 
     for row in cursor:
-        genericS.append(row["original"])
-        genericO.append(Sub(row["original"], row["correction"]))
+        genericO.append(row["original"])
+        genericC.append(row["correction"])
 
-    generic = SearchList(genericS, genericO)
+    generic = SearchList(genericO, genericC)
 
 
     # Get the Manufacturer subs
@@ -127,28 +114,28 @@ def collect_parse_data(cursor):
          "ORDER BY original")
     results = cursor.execute(s)
 
-    manufS = []
     manufO = []
+    manufC = []
 
     for row in cursor:
-        manufS.append(row["original"])
-        manufO.append(Sub(row["original"], row["correction"]))
+        manufO.append(row["original"])
+        manufC.append(row["correction"])
 
-    manufacturer = SearchList(manufS, manufO)
+    manufacturer = SearchList(manufO, manufC)
 
 
     # Get the ATC subs
     s = "SELECT code, description FROM abc_subs_atc ORDER BY code"
     results = cursor.execute(s)
 
-    atcS = []
-    atcO = []
+    atcC = []
+    atcD = []
 
     for row in cursor:
-        atcS.append(row["code"])
-        atcO.append(ATCDescription(row["code"], row["description"]))
+        atcC.append(row["code"])
+        atcD.append(row["description"])
 
-    atc = SearchList(atcS, atcO)
+    atc = SearchList(atcC, atcD)
 
 
     return ParseData(ptc, bsrf, brand, units, generic, manufacturer, atc)

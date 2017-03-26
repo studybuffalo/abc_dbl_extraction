@@ -103,13 +103,14 @@ def download_page(session, url):
         raise IOError("%s returned status code %d" % (url, status))
 
 
-def binary_search(term, searchList, objectList):
+def binary_search(term, lists):
     """Searches for term in provided list
         args:
-            term:       the term to be found in the provided list
-            searchList: a list of search terms to match against
-            objectList: a matching list to the search list that 
-                        contains the desired object to return
+            term:   the term to be found in the provided list
+            lists:  an object containg a search list (a list of search 
+                    terms to match against) and an object list (a 
+                    matching list to the search list that contains 
+                    the desired object to return
         
         returns:
             on match:   the corresponding object to the match
@@ -119,6 +120,9 @@ def binary_search(term, searchList, objectList):
             none.
     """
 
+    searchList = lists.searchList
+    objectList = lists.objectList
+
     # Look for match
     i = bisect_left(searchList, term)
 
@@ -127,6 +131,7 @@ def binary_search(term, searchList, objectList):
         return objectList[i]
     else:
         return None
+
 
 def extract_page_content(url, page, parseData):
     """Takes the provided HTML page and extracts all relevant content
@@ -237,14 +242,15 @@ def extract_page_content(url, page, parseData):
                 else:
                     exceptionFound = False
 
-                    for sub in subs:
-                        if sub.original == line:
-                            line = sub.correction
-                            exceptionFound = True
-                            break
+                    # Look to see if this text has a sub
+                    sub = binary_search(sub, line)
 
-                    if exceptionFound == False:
-                        # Convert remainder of text to title case
+                    # If there is a sub, apply it
+                    if sub:
+                        line = sub
+
+                    # Otherwise, apply Title Case
+                    else:
                         line = line.title()
 
                     ptcList.append(line)
