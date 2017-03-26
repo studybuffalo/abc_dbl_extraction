@@ -133,6 +133,7 @@ def create_csv_writer(path):
 
     return writer
 
+
 def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC, 
               cExtra, pHTML):
     """Saves the information in content to respective files"""
@@ -214,6 +215,7 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
             fHTML.write(content.html)
     except:
         log.exception("Unable to save HTML for %s" % content.url)
+
 
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
