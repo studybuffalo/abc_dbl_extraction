@@ -50,7 +50,7 @@ def collect_parse_data(cursor):
     """
 
     # Get the PTC subs
-    s = "SELECT original, correction FROM abc_subs_ptc"
+    s = "SELECT original, correction FROM abc_subs_ptc ORDER BY original"
     results = cursor.execute(s)
 
     ptcS = []
@@ -66,7 +66,7 @@ def collect_parse_data(cursor):
 
     # Get the BSRF subs
     s = ("SELECT bsrf, brand_name, strength, route, dosage_form "
-         "FROM abc_sub_bsrf")
+         "FROM abc_sub_bsrf ORDER BY bsrf")
     results = cursor.execute(s)
 
     bsrfS = []
@@ -81,7 +81,7 @@ def collect_parse_data(cursor):
 
 
     # Get the Brand Name subs
-    s = "SELECT original, correction FROM abc_subs_brand"
+    s = "SELECT original, correction FROM abc_subs_brand ORDER BY original"
     results = cursor.execute(s)
 
     brandS = []
@@ -95,7 +95,7 @@ def collect_parse_data(cursor):
 
 
     # Get the Units Subs
-    s = "SELECT original, correction FROM abc_subs_unit"
+    s = "SELECT original, correction FROM abc_subs_unit ORDER BY original"
     results = cursor.execute(s)
 
     unitsS = []
@@ -109,7 +109,7 @@ def collect_parse_data(cursor):
 
 
     # Get the Generic Name subs
-    s = "SELECT original, correction FROM abc_subs_generic"
+    s = "SELECT original, correction FROM abc_subs_generic ORDER BY original"
     results = cursor.execute(s)
 
     genericS = []
@@ -123,7 +123,8 @@ def collect_parse_data(cursor):
 
 
     # Get the Manufacturer subs
-    s = "SELECT original, correction FROM abc_subs_manufacturer"
+    s = ("SELECT original, correction FROM abc_subs_manufacturer "
+         "ORDER BY original")
     results = cursor.execute(s)
 
     manufS = []
@@ -137,7 +138,7 @@ def collect_parse_data(cursor):
 
 
     # Get the ATC subs
-    s = "SELECT code, description FROM abc_subs_atc"
+    s = "SELECT code, description FROM abc_subs_atc ORDER BY code"
     results = cursor.execute(s)
 
     atcS = []
