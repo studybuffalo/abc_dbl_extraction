@@ -126,6 +126,13 @@ def collect_file_paths(con):
     return FileNames(url, html, price, cov, special, ptc, atc, extra)
 
 
+def create_csv_writer(path):
+    writer = csv.writer(path, 
+                        quoting=csv.QUOTE_NONNUMERIC, 
+                        lineterminator="\n")
+
+    return writer
+
 def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC, 
               cExtra, pHTML):
     """Saves the information in content to respective files"""
@@ -287,21 +294,12 @@ if can_crawl:
             open(files.extra.absolute(), "w") as fExtra:
 
         # Create appropriate CSV writers
-        quoteStyle = csv.QUOTE_NONNUMERIC
-
-        cPrice = csv.writer(fPrice, quoting=quoteStyle, lineterminator="\n")
-
-        cCoverage = csv.writer(fCoverage, quoting=quoteStyle, 
-                               lineterminator="\n")
-
-        cSpecial = csv.writer(fSpecial, quoting=quoteStyle, 
-                              lineterminator="\n")
-
-        cPTC = csv.writer(fPTC, quoting=quoteStyle, lineterminator="\n")
-
-        cATC = csv.writer(fATC, quoting=quoteStyle, lineterminator="\n")
-
-        cExtra = csv.writer(fExtra, quoting=quoteStyle, lineterminator="\n")
+        cPrice = create_csv_writer(fPrice)
+        cCoverage = create_csv_writer(fCoverage)
+        cSpecial = create_csv_writer(fSpecial)
+        cPTC = create_csv_writer(fPTC)
+        cATC = create_csv_writer(fATC)
+        cExtra = create_csv_writer(fExtra)
 
         # Get filepath for HTML files
         pHTML = files.html
