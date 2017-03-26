@@ -1,19 +1,9 @@
 class URLData(object):
-    def __init__(self, url, status):
+    def __init__(self, id, url, status):
+        self.id = id
         self.url = url
         self.status = status
 
-def debug_url(fileLoc):
-    """Returns data from text file instead of website"""
-    with open(fileLoc.absolute(), "r") as file:
-        urls = file.split("\n")
-
-    urlList = []
-
-    for url in urls:
-        urlList.append(url, "active")
-
-    return urlList
 
 def check_url(id, url, session, log):
     """Checks the provided URL for an active status code"""
@@ -27,20 +17,21 @@ def check_url(id, url, session, log):
     
     # Check status and create the URL Status object
     if code == 200:
-        log.debug("%s active" % url)
-        status = URLData(id, "active")
+        log.debug("ACTIVE   - %s" % url)
+        status = URLData(id, url, "active")
 
     elif code == 302:
-        log.debug("%s inactive" % url)
-        status = URLData(id, "inactive")
+        log.debug("INACTIVE - %s" % url)
+        status = URLData(id, url, "inactive")
 
     else:
         log.warn("Unexpected %d error with %s" % (code, url))
-        status = URLData(id, "error")
+        status = URLData(id, url, "error")
 
     return status
 
-def scrape_url(id, session, delay, log):
+
+def scrape_url(id, session, log):
     """Takes the provided ID # and checks if it returns active URL
         args:
             session:    a requests session to request headers
@@ -54,8 +45,6 @@ def scrape_url(id, session, delay, log):
             none.
     """
 
-    from unipath import Path
-
 	# Base URL to construct final URL from
     base = ("https://idbl.ab.bluecross.ca/idbl/"
             "lookupDinPinDetail.do?productID=")
@@ -67,3 +56,16 @@ def scrape_url(id, session, delay, log):
             
     # Return the URL
     return data
+
+
+def debug_url(fileLoc):
+    """Returns data from text file instead of website"""
+    with open(fileLoc.absolute(), "r") as file:
+        urls = file.split("\n")
+
+    urlList = []
+
+    for url in urls:
+        urlList.append(url, "active")
+
+    return urlList

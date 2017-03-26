@@ -98,9 +98,9 @@ def download_page(session, url):
     """Downloads the webpage at the provided URL"""
     response = session.get(url)
     status = response.status_code
-
+    
     if status == 200:
-        return response.text()
+        return response.text
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
@@ -135,7 +135,7 @@ def binary_search(term, lists):
         return None
 
 
-def extract_page_content(url, page, parseData):
+def extract_page_content(url, page, parseData, log):
     """Takes the provided HTML page and extracts all relevant content
         args:
             url:        url to extract data from
@@ -143,6 +143,7 @@ def extract_page_content(url, page, parseData):
                         to extract
             parseData:  an object containing relevant data to parse 
                         extracted content
+            log:        a logging object to send logs to
 
         returns:
             pageContent:    object with all the extracted data
@@ -150,13 +151,16 @@ def extract_page_content(url, page, parseData):
         raises:
             none.
     """
+    from bs4 import BeautifulSoup
+    import re
+    from bisect import bisect_left
 
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
         try:
             html = BeautifulSoup(page, "html.parser")
-            trunc = html.findAll("div", {"class": "columnLeftFull"})
+            trunc = html.findAll("div", {"class": "columnLeftFull"})[0]
         except:
             log.exception("Unable to create Soup for %s" % url)
 
@@ -183,15 +187,19 @@ def extract_page_content(url, page, parseData):
     
     def extract_din(html):
         """Extracts the DIN"""
+
         try:
             din = html.p.string
         except:
             log.exception("Unable to extract DIN for %s" % url)
+            din = ""
 
         # Extract the DIN
         # TO CONFIRM: is the DIN/PIN always 8 digits?
         # If so, would it be better to regex extract?
         din = din.replace("DIN/PIN Detail - ", "")
+        
+        log.debug("%s DIN = %s" % (url, din))
 
         return din
 
@@ -233,11 +241,11 @@ def extract_page_content(url, page, parseData):
                     if numPrev:
                         # Previous entry was number, therefore it did 
                         # not have a text description
-                        ptcList.append(None)
-                        ptcList.append(line)
+                        newList.append(None)
+                        newList.append(line)
                     else:
                         # Previous line was text, can just add number
-                        ptcList.append(line)
+                        newList.append(line)
                         numPrev = True
                 
                 # Entry is text        
@@ -255,14 +263,16 @@ def extract_page_content(url, page, parseData):
                     else:
                         line = line.title()
 
-                    ptcList.append(line)
+                    newList.append(line)
                     numPrev = False
 
             # Pad list to 8 items
             while i < 8 - len(ptcList):
-                ptcList.append(None)
+                newList.append(None)
 
-            return PTC(ptcList)
+            ptcList = PTC(newList)
+
+            return ptcList
         
         try:
             ptcString = html.find_all('tr', class_="idblTable")[0]\
@@ -786,15 +796,11 @@ def collect_content(url, session, parseData, log):
             none.
     """
     
-    from bs4 import BeautifulSoup
-    import re
-    from bisect import bisect_left
-    
     # Download the page content
     try:
         page = download_page(session, url)
     except Exception as e:
-        log.warn("Unable to download page content: %e"
+        log.warn("Unable to download %s content: %s"
                     % (url, e))
         page = None
         pageContent = None
@@ -802,10 +808,9 @@ def collect_content(url, session, parseData, log):
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(url, page, parseData)
-        except Exception as e:
-            log.warn("Unable to extract %s page content: %s" 
-                        % (url, e))
+            pageContent = extract_page_content(url, page, parseData, log)
+        except:
+            log.exception("Unable to extract %s page content" % url)
             pageContent = None
 
     return pageContent

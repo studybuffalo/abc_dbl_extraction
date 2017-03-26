@@ -96,31 +96,31 @@ def collect_file_paths(con):
     url.parent.mkdir(parents=True)
 
     # Assemble HTML file path
-    html = Path(con.get("locations", "html").child(today, "html"))
+    html = Path(con.get("locations", "html")).child(today, "html")
     html.mkdir(parents=True)
 
     # Assemble price file path
-    price = Path(con.get("locations", "price").child(today, "price.csv"))
+    price = Path(con.get("locations", "price")).child(today, "price.csv")
     price.parent.mkdir(parents=True)
 
     # Assemble coverage file path
-    cov = Path(con.get("locations", "coverage").child(today, "coverage.csv"))
+    cov = Path(con.get("locations", "coverage")).child(today, "coverage.csv")
     cov.parent.mkdir(parents=True)
 
     # Assemble special authorization file path
-    special = Path(con.get("locations", "special").child(today, "special.csv"))
+    special = Path(con.get("locations", "special")).child(today, "special.csv")
     special.parent.mkdir(parents=True)
 
     # Assemble PTC file path
-    ptc = Path(con.get("locations", "ptc").child(today, "ptc.csv"))
+    ptc = Path(con.get("locations", "ptc")).child(today, "ptc.csv")
     ptc.parent.mkdir(parents=True)
 
     # Assemble ATC file path
-    atc = Path(con.get("locations", "atc").child(today, "atc.csv"))
+    atc = Path(con.get("locations", "atc")).child(today, "atc.csv")
     atc.parent.mkdir(parents=True)
 
     # Assemble extra information file path
-    extra = Path(con.get("locations", "extra").child(today, "extra.csv"))
+    extra = Path(con.get("locations", "extra")).child(today, "extra.csv")
     extra.parent.mkdir(parents=True)
 
     return FileNames(url, html, price, cov, special, ptc, atc, extra)
@@ -254,15 +254,15 @@ if can_crawl:
 
         # Set the start and end for loop
         if scrapeUrl:
-            start = pubCon.get("url_extraction", "url_start")
-            end = pubCon.get("url_extraction", "url_end")
+            start = pubCon.getint("url_extraction", "url_start")
+            end = pubCon.getint("url_extraction", "url_end")
         else:
             # Grabbing data from text file if set to debug
             urlList = debug_url(Path(pubCon.get("debug", "url_loc")))
             start = 0
             end = len(urlList) - 1
         
-        for i in range (start, end + 1):
+        for i in range(start, end + 1):
             # Remove old entry from the database
             if uploadData:
                 remove_data(cursor, i)
@@ -284,11 +284,13 @@ if can_crawl:
                     # Apply delay before accessing page
                     time.sleep(crawlDelay)
 
-                    content = collect_content(i, session, parseData, log)
+                    content = collect_content(urlData.url, session, 
+                                              parseData, log)
                 else:
-                    url = urlData.url
                     htmlLoc = Path(pubCon.get("debug", "data_loc"))
-                    content = debug_data(url, htmlLoc, parseData, log)
+                    content = debug_data(urlData.url, htmlLoc, parseData, log)
+            else:
+                content = None
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
