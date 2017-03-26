@@ -1,4 +1,4 @@
-def return_connection(conf):
+def return_connection(conf, log):
     """Connects to a MySQL DB with the provided details"""
     import pymysql.cursors
 
@@ -12,7 +12,7 @@ def return_connection(conf):
                                      user=user, 
                                      password=pw, 
                                      db=db, 
-                                     charsest="utf8",
+                                     charset="utf8",
                                      cursorclass=pymysql.cursors.DictCursor)
     except:
         log.exception("Unable to connect to database")
@@ -20,7 +20,7 @@ def return_connection(conf):
 
     return connection
 
-def return_cursor(conn):
+def return_cursor(conn, log):
     """Creates a cursor for the DB connection"""
     try:
         cursor = conn.cursor()

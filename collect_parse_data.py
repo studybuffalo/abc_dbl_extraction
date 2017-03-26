@@ -9,7 +9,7 @@ class BSRFSub(object):
 class Units(object):
     def __init__(self, original, correction):
         self.original = original
-        self.correction = correctioon
+        self.correction = correction
 
 class ParseData(object):
     def __init__(self, ptc, bsrf, brand, units, generic, manufacturer, atc):
@@ -58,7 +58,7 @@ def collect_parse_data(cursor):
 
     # Get the BSRF subs
     s = ("SELECT bsrf, brand_name, strength, route, dosage_form "
-         "FROM abc_sub_bsrf ORDER BY bsrf")
+         "FROM abc_subs_bsrf ORDER BY bsrf")
     results = cursor.execute(s)
 
     bsrfO = []
@@ -126,7 +126,7 @@ def collect_parse_data(cursor):
 
 
     # Get the ATC subs
-    s = "SELECT code, description FROM abc_subs_atc ORDER BY code"
+    s = "SELECT code, description FROM abc_atc_descriptions ORDER BY code"
     results = cursor.execute(s)
 
     atcC = []

@@ -26,6 +26,7 @@ class PageContent(object):
         self.criteria = coverageCriteria
         self.specialAuth = specialAuth
         
+
 class PTC(object):
     def __init__(self, ptcList):
         self.code1 = ptcList[0]
@@ -36,6 +37,7 @@ class PTC(object):
         self.text3 = ptcList[5]
         self.code4 = ptcList[6]
         self.text4 = ptcList[7]
+
 
 class BSRF(object):
     def __init__(self, brand, strength, route, form):

@@ -93,35 +93,35 @@ def collect_file_paths(con):
 
     # Assemble URL filepath
     url = Path(con.get("locations", "url")).child(today, "url.txt")
-    url.parent.mkdir(parents=True, exist_ok=True)
+    url.parent.mkdir(parents=True)
 
     # Assemble HTML file path
     html = Path(con.get("locations", "html").child(today, "html"))
-    html.mkdir(parents=True, exist_ok=True)
+    html.mkdir(parents=True)
 
     # Assemble price file path
     price = Path(con.get("locations", "price").child(today, "price.csv"))
-    price.parent.mkdir(parents=True, exist_ok=True)
+    price.parent.mkdir(parents=True)
 
     # Assemble coverage file path
     cov = Path(con.get("locations", "coverage").child(today, "coverage.csv"))
-    cov.parent.mkdir(parents=True, exist_ok=True)
+    cov.parent.mkdir(parents=True)
 
     # Assemble special authorization file path
     special = Path(con.get("locations", "special").child(today, "special.csv"))
-    special.parent.mkdir(parents=True, exist_ok=True)
+    special.parent.mkdir(parents=True)
 
     # Assemble PTC file path
     ptc = Path(con.get("locations", "ptc").child(today, "ptc.csv"))
-    ptc.parent.mkdir(parents=True, exist_ok=True)
+    ptc.parent.mkdir(parents=True)
 
     # Assemble ATC file path
     atc = Path(con.get("locations", "atc").child(today, "atc.csv"))
-    atc.parent.mkdir(parents=True, exist_ok=True)
+    atc.parent.mkdir(parents=True)
 
     # Assemble extra information file path
     extra = Path(con.get("locations", "extra").child(today, "extra.csv"))
-    extra.parent.mkdir(parents=True, exist_ok=True)
+    extra.parent.mkdir(parents=True)
 
     return FileNames(url, html, price, cov, special, ptc, atc, extra)
 
@@ -201,17 +201,19 @@ log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 # SCRAPE ACTIVE URLS FROM WEBSITE
 # Checking the robots.txt file for permission to crawl
 if scrapeUrl:
+    log.debug("URL SCRAPING ENABLED")
     can_crawl = get_permission()
 else:
     # Debug set to False; set can_crawl to true to continue program
+    log.debug("URL DEBUG ENABLED - SKIPPING URL EXTRACTION")
     can_crawl = True
 
 
 # If crawling is permitted, run the program
 if can_crawl:
     from collect_parse_data import collect_parse_data
-    from url_scrape import scrape_urls, debug_url
-    from data_extraction import collect_content, collect_parse_data, debug_data
+    from url_scrape import scrape_url, debug_url
+    from data_extraction import collect_content, debug_data
     from database_functions import return_connection, return_cursor, \
                                    remove_data, upload_data
     from update_website import update_details
@@ -220,8 +222,8 @@ if can_crawl:
     log.info("Starting URL extraction")
 
     # Create a database cursor and connection cursor to run queries
-    dbConn = return_connection(priCon)
-    dbCursor = return_cursor(dbConn)
+    dbConn = return_connection(priCon, log)
+    dbCursor = return_cursor(dbConn, log)
 
     # Collects relevant data from database to enable data parsing
     parseData = collect_parse_data(dbCursor)
