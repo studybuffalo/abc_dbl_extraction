@@ -43,10 +43,6 @@ def scrape_url(id, session, delay, log):
     """
 
     from unipath import Path
-    import time
-
-    # Apply delay before starting
-    time.sleep(delay)
 
 	# Base URL to construct final URL from
     base = ("https://idbl.ab.bluecross.ca/idbl/"

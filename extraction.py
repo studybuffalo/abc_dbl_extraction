@@ -40,7 +40,7 @@ import datetime
 from urllib import robotparser
 import requests
 import csv
-
+import time
 
 class FileNames(object):
     def __init__(self, url, html, price, coverage, 
@@ -54,6 +54,10 @@ class FileNames(object):
         self.atc = atc
         self.extra = extra
 
+
+class ParseData(object):
+    def __init__(self):
+        self.ptc = ptc
 
 def setup_config():
 	config = configparser.ConfigParser()
@@ -72,6 +76,23 @@ def get_today():
     
     return today
 
+
+def collect_parse_data(cursor):
+    # Get the PTC subs
+
+    # Get the BSRF subs
+
+    # Get the Brand Name subs
+
+    # Get the Units Subs
+
+    # Get the Generic Name subs
+
+    # Get the Manufacturer subs
+
+    # Get the ATC subs
+
+    return ParseData(ptc, bsrf, brand, units, generic, manufacturer, atc)
 
 def get_permission():
     textURL = "https://www.ab.bluecross.ca/robots.txt"
@@ -235,15 +256,20 @@ if can_crawl:
         
         for i in range (start, end + 1):
             # Remove old entry from the database
-            remove_data(cursor, url)
+            remove_data(cursor, i)
 
+            # Apply delay before crawling URL
+            time.sleep(crawlDelay)
+            
             # Get the URL data
-            urlData = scrape_url(i, session, crawlDelay, log)
+            urlData = scrape_url(i, session, log)
 
             # Collect the content for active URLs
             if urlData.status == "active":
-                content = collect_content(urlData.url, session, crawlDelay, 
-                                          parseData, log)
+                # Apply delay before accessing page
+                time.sleep(crawlDelay)
+
+                content = collect_content(i, session, parseData, log)
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE

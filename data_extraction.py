@@ -147,9 +147,9 @@ def extract_page_content(url, page, parseData, log):
 
         return din
 
-    def extract_ptc(html, bsrfExceptions, unitSubs):
+    def extract_ptc(html, subs):
         """Extracts the PTC numbers and descriptions"""
-        def parse_ptc(ptcString, exceptions):
+        def parse_ptc(ptcString):
             """Separates out each number and formats descriptions
             
                 String is formatted with each number and description 
@@ -196,9 +196,9 @@ def extract_page_content(url, page, parseData, log):
                 else:
                     exceptionFound = False
 
-                    for exception in exceptions:
-                        if exception.original == line:
-                            line = exception.correction
+                    for sub in subs:
+                        if sub.original == line:
+                            line = sub.correction
                             exceptionFound = True
                             break
 
@@ -221,11 +221,11 @@ def extract_page_content(url, page, parseData, log):
         except:
             log.exception("Unable to extract PTC string for %s" % url)
 
-        ptcList = parse_ptc(ptcString, exceptions)
+        ptcList = parse_ptc(ptcString)
 
         return ptcList
 
-    def extract_brand_strength_route_form(html, exceptions):
+    def extract_brand_strength_route_form(html, bsrfSubs, brandSubs, unitSubs):
         """Extracts the brand name, strenght, route, and dosage form"""
         
         def parse_brand_name(text):
@@ -287,12 +287,12 @@ def extract_page_content(url, page, parseData, log):
             # Checks if the text is an exception case
             exceptMatch = False
 
-            for exception in exceptions:
+            for sub in bsrfSubs:
                 if text == exception.bsrf:
-                    brandName = exception.brandName
-                    strength = exception.strength
-                    route = exception.route
-                    dosageForm = exception.dosageForm
+                    brandName = sub.brandName
+                    strength = sub.strength
+                    route = sub.route
+                    dosageForm = sub.dosageForm
 
                     exceptMatch = True
 
@@ -395,54 +395,11 @@ def extract_page_content(url, page, parseData, log):
         
         return split_brand_strength_route_form(bsrf)
 
-    def extract_generic_name(html):
+    def extract_generic_name(html, subs):
         """Extracts the generic name"""
         def parse_generic(text):
             """Correct formatting of generic name to be lowercase"""
-            """ CONVERT TO A STRAIGHT REPLACEMENT 
-            # Regex Replacements			text = re.sub(r"", "", text)
-            # 0
 
-            # A
-            text = re.sub(r"\ba\b", "A", text)
-            text = re.sub(r"\basa\b", "ASA", text)
-
-            # B
-            text = re.sub(r"\bb\b", "B", text)
-            text = re.sub(r"\bb2\b", "B2", text)
-            text = re.sub(r"\bbotulinumtoxina\b", "botulinumtoxinA", text)
-
-            # C
-            text = re.sub(r"\bc\b", "C", text)
-            text = re.sub(r"\bcitrate,acid\b", "citrate, acid", text)
-            text = re.sub(r"\bcl\b", "Cl", text)
-
-            # D
-            text = re.sub(r"\bd\b", "D", text)
-            text = re.sub(r"\bd3\b", "D3", text)
-            text = re.sub(r"\bdessicated\b", "desiccated", text)
-
-            # E
-            text = re.sub(r"\be\b", "E", text)
-
-            # H
-            text = re.sub(r"\bhbr\b", "HBr", text)
-            text = re.sub(r"\bhcl\b", "HCl", text)
-
-            # K
-            text = re.sub(r"\bk\b", "K", text)
-            text = re.sub(r"\bkd\b", "kD", text)
-
-            # O
-            text = re.sub(r"\bonabotulinumtoxina\b", "onabotulinumtoxinA", text)
-
-            # R
-            text = re.sub(r"\brdna\b", "RDNA", text)
-            text = re.sub(r"\br-dna\b", "RDNA", text)
-
-            # V
-            text = re.sub(r"\bvol\b", "volumes", text)
-            """
             # NEED TO ACTUALLY CODE THIS
             exceptionList = []
                     
@@ -539,7 +496,7 @@ def extract_page_content(url, page, parseData, log):
 
         return LCA(lca, lcaText)
 
-    def extract_unit_issue(html):
+    def extract_unit_issue(html, subs):
         """Extracts the unit of issue"""
         unitText =  html.find_all('tr', class_="idblTable")[7]\
                         .find_all('td')[1].string.strip()
@@ -547,6 +504,7 @@ def extract_page_content(url, page, parseData, log):
         # Unit of Issue
         unitIssue = unit_issue.lower()
 
+        # APPLY UNIT SUBSTITUTIONS HERE?
         return unitIssue
 
     def extract_interchangeable(html):
@@ -559,70 +517,26 @@ def extract_page_content(url, page, parseData, log):
         else:
             interchangeable = 0
 
-    def extract_manufacturer(html):
-        """"""
+    def extract_manufacturer(html, subs):
+        """Extracts and parses the manufacturer"""
+        def parse_manufactuer(text):
+            '''Manually corrects errors that are not fixed by .title()'''
+            
+            # APPLY SUBSTITUTIONS HERE
+
+            text = text.title()
+            
+            # Removes extra space characters
+            text = re.sub(r"\s{2,}", " ", text)
+            
+            return text
+
         manufacturer = html.find_all('tr', class_="idblTable")[9]\
                            .find_all('td')[1].a.string.strip()
 
-        def parse_manufactuer(text):
-            '''Manually corrects errors that are not fixed by .title()'''
-            text = text.title()
+        manufacturer = parse_manufactuer(manufacturer)
 
-            # Removes extra space characters
-            text = re.sub(r"\s{2,}", " ", text)
-
-            # Regex Replacements			text = re.sub(r"", "", text)
-            # 0
-
-            # A
-            text = re.sub(r"\bAa\b", "AA", text)
-            text = re.sub(r"\bAb\b", "AB", text)
-            text = re.sub(r"\bAbbvieb\b", "AbbVie", text)
-            text = re.sub(r"\bAstrazeneca\b", "AstraZeneca", text)
-
-            # B
-            text = re.sub(r"\bBgp\b", "BGP", text)
-            text = re.sub(r"\bBiomarin\b", "BioMarin", text)
-
-            # E
-            text = re.sub(r"\bErfa\b", "ERFA", text)
-            text = re.sub(r"\bEmd\b", "EMD", text)
-
-            # F
-            text = re.sub(r"\bFze\b", "FZE", text)
-
-            # G
-            text = re.sub(r"\bGenmed\b", "GenMed", text)
-            text = re.sub(r"\bGlaxosmithkline\b", "GlaxoSmithKline", text)
-            text = re.sub(r"\bGmbh\b", "GmbH", text)
-
-            # I
-            text = re.sub(r"\bInc(\.|\b)", "Inc.", text)
-            text = re.sub(r"\bIncorporated\b", "Inc.", text)
-
-            # L
-            text = re.sub(r"\bLeo\b", "LEO", text)
-            text = re.sub(r"\bLtd(\.|\b)", "Ltd.", text)
-            text = re.sub(r"\bLimited\b", "Ltd.", text)
-
-            # M
-            text = re.sub(r"\bMcneil\b", "McNeil", text)
-
-            # N
-            text = re.sub(r"\bNj\b", "NJ", text)
-
-            # S
-            text = re.sub(r"\bSterimax\b", "SteriMax", text)
-
-            # T
-            text = re.sub(r"\bTaropharma\b", "TaroPharma", text)
-
-            # U
-            text = re.sub(r"\bUcb\b", "UCB", text)
-            text = re.sub(r"\bUk\b", "UK", text)
-            text = re.sub(r"\bUlc\b", "ULC", text)
-
-            return text
+        return manufacturer
 
     def extract_atc(html, descriptions):
         """Extracts the ATC codes and assigns description"""
@@ -780,17 +694,18 @@ def extract_page_content(url, page, parseData, log):
     html = truncate_content(page)
 
     din = extract_din(html)
-    ptc = extract_ptc(html, parseData.ptc, log)
-    bsrf = extract_brand_strength_route_form(html)
-    genericName = extract_generic_name(html)
+    ptc = extract_ptc(html, parseData.ptc)
+    bsrf = extract_brand_strength_route_form(html, parseData.bsrf, 
+                                             parseData.brand, parseData.units)
+    genericName = extract_generic_name(html, parseData.generic)
     dateListed = extract_date_listed(html)
     dateDiscontinued = extract_date_discontinued(html)
     unitPrice = extract_unit_price(html)
     lca = extract_lca(html)
-    unitIssue = extract_unit_issue(html)
+    unitIssue = extract_unit_issue(html, parseData.units)
     interchangeable = extract_interchangeable(html)
-    manufacturer = extract_manufacturer(html)
-    atc = extract_atc(html, parseData.atc, log)
+    manufacturer = extract_manufacturer(html, parseData.manufacturer)
+    atc = extract_atc(html, parseData.atc)
     schedule = extract_schedule(html)
     coverage = extract_coverage(html)
     clients = extract_clients(html)
@@ -824,12 +739,8 @@ def collect_content(url, session, crawlDelay, parseData, log):
     
     from bs4 import BeautifulSoup
     from datetime import datetime
-    import time
     import re
     
-    # Apply delay before starting
-    time.sleep(delay)
-
     # Download the page content
     try:
         page = download_page(session, url)
