@@ -103,6 +103,31 @@ def download_page(session, url):
         raise IOError("%s returned status code %d" % (url, status))
 
 
+def binary_search(term, searchList, objectList):
+    """Searches for term in provided list
+        args:
+            term:       the term to be found in the provided list
+            searchList: a list of search terms to match against
+            objectList: a matching list to the search list that 
+                        contains the desired object to return
+        
+        returns:
+            on match:   the corresponding object to the match
+            no match:   None
+
+        raises:
+            none.
+    """
+
+    # Look for match
+    i = bisect_left(searchList, term)
+
+    # If match found, return the corresponding object
+    if i != len(list) and searchList[i] == term:
+        return objectList[i]
+    else:
+        return None
+
 def extract_page_content(url, page, parseData):
     """Takes the provided HTML page and extracts all relevant content
         args:
@@ -118,6 +143,7 @@ def extract_page_content(url, page, parseData):
         raises:
             none.
     """
+
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
@@ -755,6 +781,7 @@ def collect_content(url, session, parseData, log):
     from bs4 import BeautifulSoup
     from datetime import datetime
     import re
+    from bisect import bisect_left
     
     # Download the page content
     try:
