@@ -44,10 +44,12 @@ class BSRF(object):
         self.route = route
         self.form = form
 
+
 class LCA(object):
     def __init__(self, value, text):
         self.value = value
         self.text = text
+
 
 class ATC(object):
     def __init__(self, atcList):
@@ -62,6 +64,7 @@ class ATC(object):
         self.code5 = atcList[8]
         self.text5 = atcList[9]
 
+
 class Clients(object):
     def __init__(self, list):
         self.g1 = list[0]
@@ -75,25 +78,22 @@ class Clients(object):
         self.g22128 = list[8]
         self.g23609 = list[9]
 
+
 class CoverageCriteria(object):
     def __init__(self, criteria, criteriaSA, criteriaP):
         self.criteria = criteria
         self.special = criteriaSA
         self.palliative = criteriaP
 
+
 class SpecialAuthorization(object):
     def __init__(self, text, link):
         self.text = text
         self.link = link
 
-def collect_parse_data(cursor):
-    # Collect BSRF exceptions
-    # Collect PTC exceptions
-    # Collect ATC descriptions
-
-    return parseData
 
 def download_page(session, url):
+    """Downloads the webpage at the provided URL"""
     response = session.get(url)
     status = response.status_code
 
@@ -102,7 +102,22 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
-def extract_page_content(url, page, parseData, log):
+
+def extract_page_content(url, page, parseData):
+    """Takes the provided HTML page and extracts all relevant content
+        args:
+            url:        url to extract data from
+            page:       A BeautifulSoup object with the content 
+                        to extract
+            parseData:  an object containing relevant data to parse 
+                        extracted content
+
+        returns:
+            pageContent:    object with all the extracted data
+
+        raises:
+            none.
+    """
     def truncate_content(page):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
@@ -721,12 +736,12 @@ def extract_page_content(url, page, parseData, log):
 
     return pageContent
 
-def collect_content(url, session, crawlDelay, parseData, log):
+
+def collect_content(url, session, parseData, log):
     """Takes a list of URLs and extracts drug pricing information
         args:
             url:        url to extract data from
             session:    requests session object connected to the site
-            delay:      time to pause between each request
             cursor:     PyMySQL cursor to query database
             log:        a logging object to send logs to
 
