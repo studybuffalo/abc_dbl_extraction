@@ -284,11 +284,11 @@ if can_crawl:
                     # Apply delay before accessing page
                     time.sleep(crawlDelay)
 
-                    content = collect_content(urlData.url, session, 
+                    content = collect_content(urlData, session, 
                                               parseData, log)
                 else:
                     htmlLoc = Path(pubCon.get("debug", "data_loc"))
-                    content = debug_data(urlData.url, htmlLoc, parseData, log)
+                    content = debug_data(urlData, htmlLoc, parseData, log)
             else:
                 content = None
 
@@ -304,7 +304,7 @@ if can_crawl:
 
                 # SAVE BACKUP COPY OF DATA TO SERVER
                 save_data(content, fURL, cPrice, cCoverage, cSpecial, 
-                            cPTC, cATC, cExtra, pHTML)
+                          cPTC, cATC, cExtra, pHTML)
 
             # Commit the database queries
             try:

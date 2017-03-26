@@ -10,7 +10,7 @@ class PageContent(object):
         self.brandName = bsrf.brand
         self.strength = bsrf.strength
         self.route = bsrf.route
-        self.dosageForm = bsrf.dosageForm
+        self.dosageForm = bsrf.form
         self.genericName = genericName
         self.dateListed = dateListed
         self.dateDiscontinued = dateDiscontinued
@@ -25,6 +25,7 @@ class PageContent(object):
         self.clients = clients
         self.criteria = coverageCriteria
         self.specialAuth = specialAuth
+
         
 
 class PTC(object):
@@ -168,6 +169,7 @@ def extract_page_content(url, page, parseData, log):
     
     def convert_date(dateString):
         """Converts the ABC date to a MySQL date format"""
+        from datetime import datetime
 
         # If date is present, will be in form of dd-mmm-yyyy
         try:
@@ -179,8 +181,8 @@ def extract_page_content(url, page, parseData, log):
         except ValueError:
             # Expected behaviour for most situations without a date
             date = None
-        except:
-            log.warn("Error trying to parse date for %s" % url)
+        except Exception as e:
+            log.warn("Error trying to parse date for %s - %s" % (url, e))
             date = None
 
         return date
@@ -420,22 +422,29 @@ def extract_page_content(url, page, parseData, log):
                 # Splits the brandStrength at the first number 
                 # encountered with a non-numeric character behind it 
                 # (assumed to be a unit)
-                search = re.search(r"\b\d.+$", text)
+                search = re.search(r"\b\d.+$", brandStrength)
 
                 if search:
                     split = search.start()
 
-                    brandName = text[:split].strip()
-                    strength = text[split:].strip()
+                    brandName = brandStrength[:split].strip()
+                    strength = brandStrength[split:].strip()
                 else:
                     brandName = text
                     strength = None
 
                 # Apply final corrections to extracted information
-                brandName = parse_brand_name(output[0])
-                strength = parse_strength(output[1])
-                route = parse_route(output[2])
-                dosageForm = parse_dosage_form(output[3])
+                if brandName:
+                    brandName = parse_brand_name(brandName)
+
+                if strength:
+                    strength = parse_strength(strength)
+
+                if route:
+                    route = parse_route(route)
+
+                if dosageForm:
+                    dosageForm = parse_dosage_form(dosageForm)
             
             output = BSRF(brandName, strength, route, dosageForm)
 
@@ -460,7 +469,7 @@ def extract_page_content(url, page, parseData, log):
             generic = text[1:len(text) - 1]
 
             # Check if this text has a substitution
-            sub = binary_search(subs, generic)
+            sub = binary_search(generic, subs)
 
             # If there is a sub, apply it
             if sub:
@@ -559,7 +568,7 @@ def extract_page_content(url, page, parseData, log):
                         .find_all('td')[1].string.strip()
 
         # Unit of Issue
-        unitIssue = unit_issue.lower()
+        unitIssue = unitText.lower()
 
         # Correct any formatting errors
         for sub in subs:
@@ -585,7 +594,7 @@ def extract_page_content(url, page, parseData, log):
             '''Manually corrects errors that are not fixed by .title()'''
             
             # Check if this text has a substitution
-            sub = binary_search(subs, text)
+            sub = binary_search(text, subs)
 
             # If there is a sub, apply it
             if sub:
@@ -637,7 +646,7 @@ def extract_page_content(url, page, parseData, log):
                 
                 if match:
                     code = match.group(1)
-                    description = binary_search(descriptions, code)
+                    description = binary_search(code, descriptions)
                 else:
                     code = None
                     description = None
@@ -725,7 +734,7 @@ def extract_page_content(url, page, parseData, log):
 
         return CoverageCriteria(criteria, criteriaSA, criteriaP)
 
-    def extract_special_auth():
+    def extract_special_auth(html):
         """Extract any special authorization links"""
 
         specialElem = html.find_all('tr', class_="idblTable")[15]\
@@ -772,15 +781,15 @@ def extract_page_content(url, page, parseData, log):
 
     # Generate the final object
     pageContent = PageContent(
-        url, page, din, ptc, brandName, strength, route, dosageForm, 
-        genericName, dateListed, dateDiscontinued, unitPrice, lca, 
-        unitIssue, interchangeable, manufacturer, atc, schedule, coverage, 
-        clients, coverageCriteria, specialAuth)
+        url, page, din, ptc, bsrf, genericName, dateListed, dateDiscontinued, 
+        unitPrice, lca, unitIssue, interchangeable, manufacturer, atc, 
+        schedule, coverage, clients, coverageCriteria, specialAuth
+    )
 
     return pageContent
 
 
-def collect_content(url, session, parseData, log):
+def collect_content(urlData, session, parseData, log):
     """Takes a list of URLs and extracts drug pricing information
         args:
             url:        url to extract data from
@@ -797,24 +806,25 @@ def collect_content(url, session, parseData, log):
     
     # Download the page content
     try:
-        page = download_page(session, url)
+        page = download_page(session, urlData.url)
     except Exception as e:
         log.warn("Unable to download %s content: %s"
-                    % (url, e))
+                    % (urlData.id, e))
         page = None
         pageContent = None
 
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(url, page, parseData, log)
+            pageContent = extract_page_content(urlData.id, page, parseData, 
+                                               log)
         except:
             log.exception("Unable to extract %s page content" % url)
             pageContent = None
 
     return pageContent
 
-def debug_data(url, htmlLoc, parseData, log):
+def debug_data(urlData, htmlLoc, parseData, log):
     """Collects HTML data from provided location instead of website"""
     htmlFile = htmlLoc.child("%.html" % url).absolute()
 
@@ -822,7 +832,7 @@ def debug_data(url, htmlLoc, parseData, log):
         page = html.read()
 
         try:
-            pageContent = extract_page_content(url, page, parseData)
+            pageContent = extract_page_content(urlData.id, page, parseData)
         except Exception as e:
             log.warn("Unable to extract %s page content: %s" 
                         % (url, e))
