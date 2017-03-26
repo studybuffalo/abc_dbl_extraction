@@ -50,7 +50,6 @@ def remove_data(cursor, url):
     s = "DELETE FROM abc_special_authorizaiton WHERE url = %s"
     cursor.execute(s, url)
 
-
 def upload_data(content, cursor):
     """Uploads the content to the respective database tables"""
     # Construct and execute abc_price query

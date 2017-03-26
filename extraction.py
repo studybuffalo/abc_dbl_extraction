@@ -133,33 +133,80 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
     fURL.write("%s\n" % content.url)
 
     # Save the price data
-    price = []
-    cPrice.writerow(price)
+    price = [content.url, content.din, content.brandName, content.strength,
+             content.route, content.dosageForm, content.genericName, 
+             content.unitPrice, content.lca.value, content.lca.text, 
+             content.unitIssue]
+
+    try:
+        cPrice.writerow(price)
+    except:
+        log.exception("Unable to write %s to price.csv" % content.url)
 
     # Save the coverage data
-    coverage = []
-    cCoverage.writerow(coverage)
+    coverage = [content.url, content.coverage, content.criteria.criteria, 
+                content.criteria.special, content.criteria.palliative,
+                content.clients.g1, content.clients.g66, content.clients.g66a,
+                content.clients.g19823, content.clients.g19824, 
+                content.clients.g20400, content.clients.g20403,
+                content.clients.g20514, content.clients.g22128,
+                content.clients.g23609]
+    
+    try:
+        cCoverage.writerow(coverage)
+    except:
+        log.exception("Unable to write %s to coverage.csv" % content.url)
 
     # Save the special authorization data
     special = []
-    cSpecial.writerow(special)
+    
+    for item in content.specialAuth:
+        special.append([item.text, item.link])
+
+    try:
+        cSpecial.writerows(special)
+    except:
+        log.exception("Unable to write %s to special.csv" % content.url)
 
     # Save the PTC data
-    ptc = []
-    cPTC.writerow(ptc)
+    ptc = [content.url, content.ptc.code1, content.ptc.text1, 
+           content.ptc.code2, content.ptc.text2, 
+           content.ptc.code3, content.ptc.text3, 
+           content.ptc.code4, content.ptc.text4]
+
+    try:
+        cPTC.writerow(ptc)
+    except:
+        log.exception("Unable to write %s to ptc.csv" % content.url)
 
     # Save the ATC data
-    atc = []
-    cATC.writerow(atc)
+    atc = [content.url, content.atc.code1, content.atc.text1, 
+           content.atc.code2, content.atc.text2, 
+           content.atc.code3, content.atc.text3, 
+           content.atc.code4, content.atc.text4, 
+           content.atc.code5, content.atc.text5]
+
+    try:
+        cATC.writerow(atc)
+    except:
+        log.exception("Unable to write %s to atc.csv" % content.url)
 
     # Save the extra information data
-    extra = []
-    cExtra.writerow(extra)
+    extra = [content.url, content.dateListed, content.dateDiscontinued, 
+             content.manufacturer, content.schedule, content.interchangeable]
+
+    try:
+        cExtra.writerow(extra)
+    except:
+        log.exception("Unable to write %s to extra.csv" % content.url)
 
     # Save a copy of the HTML page
-    with open(pHTML.child("%s.html" % content.url).absolute(), "w") as fHTML:
-        fHTML.write(content.html)
-
+    htmlPath = pHTML.child("%s.html" % content.url).absolute()
+    try:
+        with open(htmlPath, "w") as fHTML:
+            fHTML.write(content.html)
+    except:
+        log.exception("Unable to save HTML for %s" % content.url)
 
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
@@ -242,12 +289,19 @@ if can_crawl:
         # Create appropriate CSV writers
         quoteStyle = csv.QUOTE_NONNUMERIC
 
-        cPrice = csv.writer(fPrice, quoting=quoteStyle)
-        cCoverage = csv.writer(fCoverage, quoting=quoteStyle)
-        cSpecial = csv.writer(fSpecial, quoting=quoteStyle)
-        cPTC = csv.writer(fPTC, quoting=quoteStyle)
-        cATC = csv.writer(fATC, quoting=quoteStyle)
-        cExtra = csv.writer(fExtra, quoting=quoteStyle)
+        cPrice = csv.writer(fPrice, quoting=quoteStyle, lineterminator="\n")
+
+        cCoverage = csv.writer(fCoverage, quoting=quoteStyle, 
+                               lineterminator="\n")
+
+        cSpecial = csv.writer(fSpecial, quoting=quoteStyle, 
+                              lineterminator="\n")
+
+        cPTC = csv.writer(fPTC, quoting=quoteStyle, lineterminator="\n")
+
+        cATC = csv.writer(fATC, quoting=quoteStyle, lineterminator="\n")
+
+        cExtra = csv.writer(fExtra, quoting=quoteStyle, lineterminator="\n")
 
         # Get filepath for HTML files
         pHTML = files.html
