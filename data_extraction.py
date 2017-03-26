@@ -570,12 +570,6 @@ def extract_page_content(url, page, parseData, log):
         # Unit of Issue
         unitIssue = unitText.lower()
 
-        # Correct any formatting errors
-        for sub in subs:
-            unitIssue = re.sub(r"\b%s\b" % sub.original, 
-                               sub.correction, 
-                               unitIssue)
-
         return unitIssue
 
     def extract_interchangeable(html):
