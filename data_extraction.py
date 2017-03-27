@@ -286,8 +286,7 @@ def extract_page_content(url, page, parseData, log):
         return ptcList
 
     def extract_brand_strength_route_form(html, bsrfSubs, brandSubs, unitSubs):
-        """Extracts the brand name, strenght, route, and dosage form"""
-        # NEED TO FIND DRUGS WITH "SOD"
+        """Extracts the brand name, strength, route, and dosage form"""
 
         def parse_brand_name(text):
             """Properly formats the brand name"""
