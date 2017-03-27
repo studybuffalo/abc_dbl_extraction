@@ -56,9 +56,10 @@ def upload_data(content, cursor):
     s = ("INSERT INTO abc_price (url, din, brand_name, strength, "
          "route, dosage_form, generic_name, unit_price, lca, lca_text, "
          "unit_issue) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    price = (content.url, content.din, content.brandName, content.strength,
-             content.route, content.dosageForm, content.genericName, content.unitPrice,
-             content.lca.value, content.lca.text, content.unitIssue)
+    price = (content.url, content.din, content.bsrf.brand, 
+             content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
+             content.genericName, content.unitPrice,content.lca.value, 
+             content.lca.text, content.unitIssue)
 
     cursor.excecute(s, price)
 
@@ -68,9 +69,10 @@ def upload_data(content, cursor):
          "group_19823a, group_19824, group_20400, group_20403, group_20514, "
          "group_22128, group_23609) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, "
          "%s, %s, %s, %s, %s, %s, %s, %s)")
-    coverage = (content.url, content.coverage, content.criteria.criteria, 
-                content.criteria.special, content.criteria.palliative,
-                content.clients.g1, content.clients.g66, content.clients.g66a,
+    coverage = (content.url, content.coverage.parse, 
+                content.criteria.criteria, content.criteria.special, 
+                content.criteria.palliative, content.clients.g1, 
+                content.clients.g66, content.clients.g66a,
                 content.clients.g19823, content.clients.g19824, 
                 content.clients.g20400, content.clients.g20403,
                 content.clients.g20514, content.clients.g22128,
@@ -111,6 +113,7 @@ def upload_data(content, cursor):
     s = ("INSERT INTO abc_extra_information (url, date_listed, "
          "date_discontinued, manufacturer, schedule, interchangeable) "
          "VALUES (%s, %s, %s, %s, %s, %s)")
-    extra = (content.url, content.dateListed, content.dateDiscontinued, 
-             content.manufacturer, content.schedule, content.interchangeable)
+    extra = (content.url, content.dateListed.parse, 
+             content.dateDiscontinued.parse, content.manufacturer.parse, 
+             content.schedule.parse, content.interchangeable.parse)
     cursor.execute(s, extra)

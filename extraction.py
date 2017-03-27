@@ -141,10 +141,10 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
     fURL.write("%s\n" % content.url)
 
     # Save the price data
-    price = [content.url, content.din, content.brandName, content.strength,
-             content.route, content.dosageForm, content.genericName, 
-             content.unitPrice, content.lca.value, content.lca.text, 
-             content.unitIssue]
+    price = [content.url, content.din.parse, content.bsrf.brand, 
+             content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
+             content.genericName.parse, content.unitPrice.parse, 
+             content.lca.value, content.lca.text, content.unitIssue.parse]
 
     try:
         cPrice.writerow(price)
@@ -152,9 +152,10 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
         log.exception("Unable to write %s to price.csv" % content.url)
 
     # Save the coverage data
-    coverage = [content.url, content.coverage, content.criteria.criteria, 
-                content.criteria.special, content.criteria.palliative,
-                content.clients.g1, content.clients.g66, content.clients.g66a,
+    coverage = [content.url, content.coverage.parse, 
+                content.criteria.criteria, content.criteria.special, 
+                content.criteria.palliative, content.clients.g1, 
+                content.clients.g66, content.clients.g66a,
                 content.clients.g19823, content.clients.g19824, 
                 content.clients.g20400, content.clients.g20403,
                 content.clients.g20514, content.clients.g22128,
@@ -200,8 +201,9 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
         log.exception("Unable to write %s to atc.csv" % content.url)
 
     # Save the extra information data
-    extra = [content.url, content.dateListed, content.dateDiscontinued, 
-             content.manufacturer, content.schedule, content.interchangeable]
+    extra = [content.url, content.dateListed.parse, 
+             content.dateDiscontinued.parse, content.manufacturer.parse, 
+             content.schedule.parse, content.interchangeable.parse]
 
     try:
         cExtra.writerow(extra)
