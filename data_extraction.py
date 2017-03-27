@@ -287,25 +287,18 @@ def extract_page_content(url, page, parseData, log):
 
     def extract_brand_strength_route_form(html, bsrfSubs, brandSubs, unitSubs):
         """Extracts the brand name, strenght, route, and dosage form"""
-        
+        # NEED TO FIND DRUGS WITH "SOD"
+
         def parse_brand_name(text):
-            '''Properly formats the brand name'''
-            sub = binary_search(text, brandSubs)
+            """Properly formats the brand name"""
+            # Convert to title text
+            text = text.title()
 
-            # Checks if this text has a substitution
-            if sub:
-                text = sub
+            # Removes extra space characters
+            text = re.sub(r"\s{2,}", " ", text)
 
-            # Otherwise apply regular processing
-            else:
-                # Convert to title text
-                text = text.title()
-
-                # Removes extra space characters
-                text = re.sub(r"\s{2,}", " ", text)
-
-                # Correct errors with apostrophes and "s"
-                text = re.sub(r"'S\b", "'s", text)
+            # Correct errors with apostrophes and "s"
+            text = re.sub(r"'S\b", "'s", text)
 
             return text
 
