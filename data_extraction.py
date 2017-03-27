@@ -7,10 +7,7 @@ class PageContent(object):
         self.html = html
         self.din = din
         self.ptc = ptc
-        self.brandName = bsrf.brand
-        self.strength = bsrf.strength
-        self.route = bsrf.route
-        self.dosageForm = bsrf.form
+        self.bsrf = bsrf
         self.genericName = genericName
         self.dateListed = dateListed
         self.dateDiscontinued = dateDiscontinued
@@ -26,18 +23,27 @@ class PageContent(object):
         self.criteria = coverageCriteria
         self.specialAuth = specialAuth
 
-        
+class BasicParse(object):
+    def __init__(self, parse, html, matched):
+        self.parse = parse
+        self.html = html
+
 
 class PTC(object):
-    def __init__(self, ptcList):
+    def __init__(self, ptcList, html, matchList):
         self.code1 = ptcList[0]
         self.text1 = ptcList[1]
+        self.matched1 = matchList[0]
         self.code2 = ptcList[2]
         self.text2 = ptcList[3]
+        self.matched2 = matchList[1]
         self.code3 = ptcList[4]
         self.text3 = ptcList[5]
+        self.matched3 = matchList[2]
         self.code4 = ptcList[6]
         self.text4 = ptcList[7]
+        self.matched4 = matchList[3]
+        self.html = html
 
 
 class BSRF(object):
@@ -48,14 +54,29 @@ class BSRF(object):
         self.form = form
 
 
+class Generic(object):
+    def __init__(self, parse, html, matched):
+        self.parse = parse
+        self.html = html
+        self.matched = match
+
+
 class LCA(object):
-    def __init__(self, value, text):
+    def __init__(self, value, text, html):
         self.value = value
         self.text = text
+        self.html = html
+
+
+class Manufacturer(object):
+    def __init__(self, parse, html, matched):
+        self.parse = parse
+        self.html = html
+        self.matched = match
 
 
 class ATC(object):
-    def __init__(self, atcList):
+    def __init__(self, atcList, html):
         self.code1 = atcList[0]
         self.text1 = atcList[1]
         self.code2 = atcList[2]
@@ -66,10 +87,11 @@ class ATC(object):
         self.text4 = atcList[7]
         self.code5 = atcList[8]
         self.text5 = atcList[9]
+        self.html = html
 
 
 class Clients(object):
-    def __init__(self, list):
+    def __init__(self, list, html):
         self.g1 = list[0]
         self.g66 = list[1]
         self.g66a = list[2]
@@ -80,19 +102,22 @@ class Clients(object):
         self.g20514 = list[7]
         self.g22128 = list[8]
         self.g23609 = list[9]
+        self.html = html
 
 
 class CoverageCriteria(object):
-    def __init__(self, criteria, criteriaSA, criteriaP):
+    def __init__(self, criteria, criteriaSA, criteriaP, html):
         self.criteria = criteria
         self.special = criteriaSA
         self.palliative = criteriaP
+        self.html = html
 
 
 class SpecialAuthorization(object):
-    def __init__(self, text, link):
+    def __init__(self, text, link, html):
         self.text = text
         self.link = link
+        self.html = html
 
 
 def download_page(session, url):
@@ -191,7 +216,8 @@ def extract_page_content(url, page, parseData, log):
         """Extracts the DIN"""
 
         try:
-            din = html.p.string
+            dinText = html.p.string
+            din = dinText.replace("DIN/PIN Detail - ", "")
         except:
             log.exception("Unable to extract DIN for %s" % url)
             din = ""
@@ -199,14 +225,37 @@ def extract_page_content(url, page, parseData, log):
         # Extract the DIN
         # TO CONFIRM: is the DIN/PIN always 8 digits?
         # If so, would it be better to regex extract?
-        din = din.replace("DIN/PIN Detail - ", "")
         
-        return din
+        return BasicParse(din, dinText)
 
     def extract_ptc(html, subs):
         """Extracts the PTC numbers and descriptions"""
 
-        def parse_ptc(ptcString):
+        def parse_ptc(ptcList, html):
+            """Corrects formatting of description"""
+            i = 1
+            matchList = []
+
+            while i <= 7:
+                if ptcList[i]:
+                    # Look to see if this text has a sub
+                    sub = binary_search(ptcList[i], subs)
+
+                    # If there is a sub, apply it
+                    if sub:
+                        ptcList[i] = sub
+                        matchList.append(True)
+
+                    # Otherwise, apply Title Case
+                    else:
+                        ptcList[i] = ptcList[i].title()
+                        matchList.append(False)
+
+                i = i + 2
+
+            return PTC(ptcList, html, matchList)
+
+        def collect_ptc_strings(ptcString):
             """Separates out each number and formats descriptions
             
                 String is formatted with each number and description 
@@ -251,19 +300,6 @@ def extract_page_content(url, page, parseData, log):
                 
                 # Entry is text        
                 else:
-                    exceptionFound = False
-                    
-                    # Look to see if this text has a sub
-                    sub = binary_search(line, subs)
-
-                    # If there is a sub, apply it
-                    if sub:
-                        line = sub
-
-                    # Otherwise, apply Title Case
-                    else:
-                        line = line.title()
-
                     newList.append(line)
                     numPrev = False
 
@@ -271,9 +307,7 @@ def extract_page_content(url, page, parseData, log):
             for i in range(0, 8 - len(newList)):
                 newList.append(None)
 
-            ptcList = PTC(newList)
-
-            return ptcList
+            return newList
         
         try:
             ptcString = html.find_all('tr', class_="idblTable")[0]\
@@ -281,7 +315,8 @@ def extract_page_content(url, page, parseData, log):
         except:
             log.exception("Unable to extract PTC string for %s" % url)
 
-        ptcList = parse_ptc(ptcString)
+        ptcStrings = collect_ptc_strings(ptcString)
+        ptcList = parse_ptc(ptcStrings, ptcString)
 
         return ptcList
 
@@ -338,7 +373,7 @@ def extract_page_content(url, page, parseData, log):
 
             return text
         
-        def split_brand_strength_route_form(text):
+        def split_brand_strength_route_form(text, html):
             """Extracts brand name, strength, route, dosage form"""
             
             # Checks if the text has a substitution
@@ -349,6 +384,7 @@ def extract_page_content(url, page, parseData, log):
                 strength = sub.strength
                 route = sub.route
                 dosageForm = sub.dosageForm
+                matched = True
 
             # If no substitution, apply regular processing
             else:
@@ -438,7 +474,12 @@ def extract_page_content(url, page, parseData, log):
                 if dosageForm:
                     dosageForm = parse_dosage_form(dosageForm)
             
-            output = BSRF(brandName, strength, route, dosageForm)
+                # Flags html as not having sub match
+                matched = False
+
+
+            output = BSRF(brandName, strength, route, dosageForm, 
+                          html, matched)
 
             return output
 
@@ -448,13 +489,13 @@ def extract_page_content(url, page, parseData, log):
         except:
             log.exception("Unable to extract BSRF string for %s" % url)
         
-        bsrf = split_brand_strength_route_form(bsrf)
+        bsrf = split_brand_strength_route_form(bsrf, bsrf)
 
         return bsrf
 
     def extract_generic_name(html, subs):
         """Extracts the generic name"""
-        def parse_generic(text):
+        def parse_generic(text, html):
             """Correct formatting of generic name to be lowercase"""
 
             # Remove parenthesis
@@ -466,6 +507,7 @@ def extract_page_content(url, page, parseData, log):
             # If there is a sub, apply it
             if sub:
                 generic = sub
+                matched = True
             
             # Otherwise apply regular processing
             else:
@@ -478,12 +520,14 @@ def extract_page_content(url, page, parseData, log):
                 # Remove spaces around slashes
                 generic = re.sub(r"/\s", "/", generic)
 
-            return generic
+                matched = False
+
+            return Generic(generic, html, matched)
             
         genericText = html.find_all('tr', class_="idblTable")[2]\
                           .td.div.string.strip()
         
-        generic = parse_generic(genericText)
+        generic = parse_generic(genericText, genericText)
 
         return generic
 
@@ -497,7 +541,7 @@ def extract_page_content(url, page, parseData, log):
 
         dateListed = convert_date(dateText)
 
-        return dateListed
+        return BasicParse(dateListed, dateText)
 
     def extract_date_discontinued(html):
         """Extracts the discontinued date and returns MySQL date"""
@@ -509,7 +553,7 @@ def extract_page_content(url, page, parseData, log):
 
         dateDiscontinued = convert_date(dateText)
         
-        return dateDiscontinued
+        return BasicParse(dateDiscontinued, dateText)
 
     def extract_unit_price(html):
         """Extracts the unit price"""
@@ -521,7 +565,7 @@ def extract_page_content(url, page, parseData, log):
         else:
             unitPrice = priceText
 
-        return priceText
+        return BasicParse(unitPrice, priceText)
 
     def extract_lca(html):
         """Extract LCA price and any accompanying text"""
@@ -552,7 +596,7 @@ def extract_page_content(url, page, parseData, log):
             else:
                 lca = lcaString
 
-        return LCA(lca, lcaText)
+        return LCA(lca, lcaText, lcaString)
 
     def extract_unit_issue(html, subs):
         """Extracts the unit of issue"""
@@ -562,17 +606,19 @@ def extract_page_content(url, page, parseData, log):
         # Unit of Issue
         unitIssue = unitText.lower()
 
-        return unitIssue
+        return BasicParse(unitIssue, unitText)
 
     def extract_interchangeable(html):
-        """"""
-        interchangeable = html.find_all('tr', class_="idblTable")[8]\
+        """Extracts if drug is interchangeable or not"""
+        interText = html.find_all('tr', class_="idblTable")[8]\
                               .find_all('td')[1].get_text()
           
-        if "YES" in interchangeable:
+        if "YES" in interText:
             interchangeable = 1
         else:
             interchangeable = 0
+
+        return BasicParse(interchangeable, interText)
 
     def extract_manufacturer(html, subs):
         """Extracts and parses the manufacturer"""
@@ -585,6 +631,7 @@ def extract_page_content(url, page, parseData, log):
             # If there is a sub, apply it
             if sub:
                 manufacturer = sub
+                matched = True
             
             # Otherwise apply regular processing
             else:
@@ -592,8 +639,10 @@ def extract_page_content(url, page, parseData, log):
             
                 # Removes extra space characters
                 manufacturer = re.sub(r"\s{2,}", " ", manufacturer)
+
+                matched = False
             
-            return manufacturer
+            return Manufacturer(manufacturer, text, matched)
 
         manufacturer = html.find_all('tr', class_="idblTable")[9]\
                            .find_all('td')[1].a.string.strip()
@@ -647,23 +696,23 @@ def extract_page_content(url, page, parseData, log):
 
         atcList = parse_atc(atc)
 
-        return ATC(atcList)
+        return ATC(atcList, atc)
 
     def extract_schedule(html):
         """Extracts the provincial drug schedule"""
         schedule = html.find_all('tr', class_="idblTable")[11]\
                        .find_all('td')[1].string.strip()
 
-        return schedule
+        return BasicParse(schedule, schedule)
 
     def extract_coverage(html):
         """Extract the coverage status"""
-        coverage = html.find_all('tr', class_="idblTable")[12]\
-                       .find_all('td')[1].string.strip()
+        coverageText = html.find_all('tr', class_="idblTable")[12]\
+                           .find_all('td')[1].string.strip()
 
-        coverage = coverage.title()
+        coverage = coverageText.title()
 
-        return coverage
+        return BasicParse(coverage, coverageText)
 
     def extract_clients(html):
         """Extracts clients and converts to 1/0 representation"""
@@ -686,7 +735,7 @@ def extract_page_content(url, page, parseData, log):
             else:
                 clientList.append(0)
 
-        return Clients(clientList)
+        return Clients(clientList, clients)
 
     def extract_coverage_criteria(html):
         """Extracts any coverage criteria data"""
@@ -718,7 +767,7 @@ def extract_page_content(url, page, parseData, log):
             criteriaP = ("http://www.health.alberta.ca/services/"
                             "drugs-palliative-care.html")
 
-        return CoverageCriteria(criteria, criteriaSA, criteriaP)
+        return CoverageCriteria(criteria, criteriaSA, criteriaP, criteriaText)
 
     def extract_special_auth(html):
         """Extract any special authorization links"""
@@ -738,7 +787,9 @@ def extract_page_content(url, page, parseData, log):
                 link = ("https://idbl.ab.bluecross.ca%s" 
                         % re.search(r"\('(.+\.pdf)','", link).group(1))
 
-                specialAuth.append(SpecialAuthorization(text, link))
+                specialAuth.append(
+                    SpecialAuthorization(text, link, specialElem)
+                )
 
         return specialAuth
         
@@ -776,9 +827,9 @@ def extract_page_content(url, page, parseData, log):
 
 
 def collect_content(urlData, session, parseData, log):
-    """Takes a list of URLs and extracts drug pricing information
+    """Extracts the page content from the provided url
         args:
-            url:        url to extract data from
+            urlData:    a URL data object with the url to extract
             session:    requests session object connected to the site
             cursor:     PyMySQL cursor to query database
             log:        a logging object to send logs to
