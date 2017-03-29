@@ -19,10 +19,9 @@ class SearchList(object):
 
 
 class ParseData(object):
-    def __init__(self, ptc, bsrf, brand, units, generic, manufacturer, atc):
+    def __init__(self, ptc, bsrf, units, generic, manufacturer, atc):
         self.ptc = ptc
         self.bsrf = bsrf
-        self.brand = brand
         self.units = units
         self.generic = generic
         self.manufacturer = manufacturer
@@ -72,20 +71,6 @@ def collect_parse_data(cursor):
                              row["route"], row["dosage_form"]))
     
     bsrf = SearchList(bsrfO, bsrfC)
-
-
-    # Get the Brand Name subs
-    s = "SELECT original, correction FROM abc_subs_brand ORDER BY original"
-    results = cursor.execute(s)
-
-    brandO = []
-    brandC = []
-
-    for row in cursor:
-        brandO.append(row["original"])
-        brandC.append( row["correction"])
-
-    brand = SearchList(brandO, brandC)
 
 
     # Get the Units Subs
@@ -141,4 +126,4 @@ def collect_parse_data(cursor):
     atc = SearchList(atcC, atcD)
 
 
-    return ParseData(ptc, bsrf, brand, units, generic, manufacturer, atc)
+    return ParseData(ptc, bsrf, units, generic, manufacturer, atc)

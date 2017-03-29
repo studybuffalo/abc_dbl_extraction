@@ -325,7 +325,7 @@ def extract_page_content(url, page, parseData, log):
 
         return ptcList
 
-    def extract_brand_strength_route_form(html, bsrfSubs, brandSubs, unitSubs):
+    def extract_brand_strength_route_form(html, bsrfSubs, unitSubs):
         """Extracts the brand name, strength, route, and dosage form"""
 
         def parse_brand_name(text):
@@ -395,8 +395,10 @@ def extract_page_content(url, page, parseData, log):
 
             # If no substitution, apply regular processing
             else:
-                # Splits text multiple strings depending on the format used
-                # Formats vary with number of white space between sections
+                # Splits text multiple strings depending on the format 
+                # used
+                # Formats vary with number of white space between 
+                # sections
                 match3 = r"\S\s{3}\S"
                 match4 = r"\S\s{4}\S"
 
@@ -432,6 +434,8 @@ def extract_page_content(url, page, parseData, log):
                         dosageForm = None
 
                 # Format: B S   F
+                # Note: There is a B R   F format as well, but cannot 
+                # be separated from this case
                 elif re.search(match3, text):
                     try:
                         text = text.split("   ")
@@ -808,7 +812,7 @@ def extract_page_content(url, page, parseData, log):
     din = extract_din(html)
     ptc = extract_ptc(html, parseData.ptc)
     bsrf = extract_brand_strength_route_form(html, parseData.bsrf, 
-                                             parseData.brand, parseData.units)
+                                             parseData.units)
     genericName = extract_generic_name(html, parseData.generic)
     dateListed = extract_date_listed(html)
     dateDiscontinued = extract_date_discontinued(html)
