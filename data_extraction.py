@@ -466,7 +466,7 @@ def extract_page_content(url, page, parseData, log):
                     brandName = brandStrength[:split].strip()
                     strength = brandStrength[split:].strip()
                 else:
-                    brandName = text
+                    brandName = brandStrength
                     strength = None
 
                 # Apply final corrections to extracted information
