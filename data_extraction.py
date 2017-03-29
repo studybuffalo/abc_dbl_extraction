@@ -23,8 +23,9 @@ class PageContent(object):
         self.criteria = coverageCriteria
         self.specialAuth = specialAuth
 
+
 class BasicParse(object):
-    def __init__(self, parse, html, matched):
+    def __init__(self, parse, html):
         self.parse = parse
         self.html = html
 
@@ -47,18 +48,20 @@ class PTC(object):
 
 
 class BSRF(object):
-    def __init__(self, brand, strength, route, form):
+    def __init__(self, brand, strength, route, form, html, matched):
         self.brand = brand
         self.strength = strength
         self.route = route
         self.form = form
+        self.html = html
+        self.matched = matched
 
 
 class Generic(object):
     def __init__(self, parse, html, matched):
         self.parse = parse
         self.html = html
-        self.matched = match
+        self.matched = matched
 
 
 class LCA(object):
@@ -72,7 +75,7 @@ class Manufacturer(object):
     def __init__(self, parse, html, matched):
         self.parse = parse
         self.html = html
-        self.matched = match
+        self.matched = matched
 
 
 class ATC(object):
@@ -250,6 +253,8 @@ def extract_page_content(url, page, parseData, log):
                     else:
                         ptcList[i] = ptcList[i].title()
                         matchList.append(False)
+                else:
+                    matchList.append(False)
 
                 i = i + 2
 
