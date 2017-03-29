@@ -395,10 +395,10 @@ def extract_page_content(url, page, parseData, log):
             else:
                 # Splits text multiple strings depending on the format used
                 # Formats vary with number of white space between sections
-                match3 = r"\b\s{3}\b"
-                match4 = r"\b\s{4}\b"
+                match3 = r"\S\s{3}\S"
+                match4 = r"\S\s{4}\S"
 
-                # Format: B S   R    F
+                # Format: B S    R   F
                 if re.search(match4, text) and re.search(match3, text):
                     try:
                         text = text.split("   ")
@@ -454,8 +454,9 @@ def extract_page_content(url, page, parseData, log):
                 
                 # Splits the brandStrength at the first number 
                 # encountered with a non-numeric character behind it 
-                # (assumed to be a unit)
-                search = re.search(r"\b\d.+$", brandStrength)
+                # (excluding commas in numbers, as this is assumed
+                # to be a unit)
+                search = re.search(r"\b[0-9,]+\D+", brandStrength)
 
                 if search:
                     split = search.start()
