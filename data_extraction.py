@@ -154,7 +154,7 @@ def binary_search(term, lists):
 
     searchList = lists.original
     returnList = lists.correction
-
+    
     # Look for match
     i = bisect_left(searchList, term)
 
@@ -382,7 +382,9 @@ def extract_page_content(url, page, parseData, log):
             """Extracts brand name, strength, route, dosage form"""
             
             # Checks if the text has a substitution
-            sub = binary_search(text, bsrfSubs)
+            # Remove extra white space from searchText
+            searchText = re.sub("\s{2,}", " ", text)
+            sub = binary_search(searchText, bsrfSubs)
 
             if sub:
                 brandName = sub.brandName
