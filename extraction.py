@@ -59,7 +59,7 @@ class FileNames(object):
 
 class Debug(object):
     def __init__(self, scrapeUrl, urlList, start, end, scrapeData, htmlLoc,
-               uploadData, updateWebsite):
+               uploadData, uploadSubs, updateWebsite):
         self.scrapeUrl = scrapeUrl
         self.urlList = urlList
         self.start = start
@@ -67,6 +67,7 @@ class Debug(object):
         self.scrapeData = scrapeData
         self.htmlLoc = htmlLoc
         self.uploadData = uploadData
+        self.uploadSubs = uploadSubs
         self.updateWebsite = updateWebsite
 
 
@@ -86,6 +87,7 @@ def get_debug(conf):
         start = 0
         end = len(urlList) - 1
         
+
     # Check if pages will be scraped
     scrapeData = conf.getboolean("debug", "scrape_data")
 
@@ -101,6 +103,7 @@ def get_debug(conf):
         start = 0
         end = len(urlList) - 1
     
+
     # Check if data will be uploaded to database    
     uploadData = conf.getboolean("debug", "upload_data")
     
@@ -108,6 +111,14 @@ def get_debug(conf):
         log.debug("DATA UPLOAD ENABLED")
     else:
         log.debug("DEBUG MODE - SKIPPING DATABASE UPLOADS")
+
+
+    # Check if sub data will be uploaded to database
+    uploadSub = conf.getboolean("debug", "upload_sub")
+    if uploadSub:
+        log.debug("SUB UPLOAD ENABLED")
+    else:
+        log.debug("DEBUG MODE - SKIPPING SUB UPLOADS")
 
     # Check if details.php will be updated
     updateWebsite = conf.getboolean("debug", "update_website")
@@ -217,10 +228,10 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
                 content.criteria.criteria, content.criteria.special, 
                 content.criteria.palliative, content.clients.g1, 
                 content.clients.g66, content.clients.g66a,
-                content.clients.g19823, content.clients.g19824, 
-                content.clients.g20400, content.clients.g20403,
-                content.clients.g20514, content.clients.g22128,
-                content.clients.g23609]
+                content.clients.g19823, content.clients.g19823a, 
+                content.clients.g19824, content.clients.g20400, 
+                content.clients.g20403, content.clients.g20514, 
+                content.clients.g22128, content.clients.g23609]
     
     try:
         cCoverage.writerow(coverage)
@@ -405,6 +416,10 @@ if can_crawl:
                 # UPLOAD INFORMATION TO DATABASE
                 if debug.uploadData:
                     upload_data(content, dbCursor, log)
+
+                # UPLOAD SUBS INFORMATION TO DATABASE
+                if debug.uploadSubs:
+                    uploads(issubclass, content, dbCursor, log)
 
                 # UPDATE WEBSITE DETAILS
                 if debug.updateWebsite:
