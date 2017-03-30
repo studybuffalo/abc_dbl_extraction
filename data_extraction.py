@@ -354,7 +354,7 @@ def extract_page_content(url, page, parseData, log):
             text = re.sub(r"\s/\s", "/", text)
 
             # Remove any spaces between numbers and %
-            text = re.sub(r"\s%\b", "%", text)
+            text = re.sub(r"\s%(\b|\s)", "%", text)
 
             # Applies any remaining corrections
             for sub in unitSubs:
@@ -462,7 +462,7 @@ def extract_page_content(url, page, parseData, log):
                 # encountered with a non-numeric character behind it 
                 # (excluding commas in numbers, as this is assumed
                 # to be a unit)
-                search = re.search(r"\b[0-9,]+\D+", brandStrength)
+                search = re.search(r"\s\b[0-9,]+\D+", brandStrength)
 
                 if search:
                     split = search.start()
