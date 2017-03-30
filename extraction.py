@@ -91,6 +91,7 @@ def get_debug(conf):
 
     if scrapeData:
         log.debug("WEBSITE SCRAPING ENABLED")
+        htmlLoc = None
     else:
         log.debug("DEBUG MODE - SKIPPING WEBSITE SCRAPING")
         htmlLoc = Path(conf.get("debug", "data_loc"))

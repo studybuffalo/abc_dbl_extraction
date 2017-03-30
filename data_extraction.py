@@ -433,9 +433,8 @@ def extract_page_content(url, page, parseData, log):
                         route = None
                         dosageForm = None
 
-                # Format: B S   F
-                # Note: There is a B R   F format as well, but cannot 
-                # be separated from this case
+                # Format: B S   F   or   B R   F
+                # Note: cannot properly extract the B R   F cases
                 elif re.search(match3, text):
                     try:
                         text = text.split("   ")
