@@ -157,7 +157,7 @@ def upload_sub(content, cursor, log):
         s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
              "VALUES (%s, %s, %s) "
              "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc1 = (content.url, content.ptc.html, 
+        ptc1 = (content.url, content.ptc.html1, 
                 content.ptc.text1, content.ptc.text1)
 
         cursor.execute(s, ptc1)
@@ -166,7 +166,7 @@ def upload_sub(content, cursor, log):
         s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
              "VALUES (%s, %s, %s) "
              "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc2 = (content.url, content.ptc.html, 
+        ptc2 = (content.url, content.ptc.html2, 
                 content.ptc.text2, content.ptc.text2)
 
         cursor.execute(s, ptc2)
@@ -175,7 +175,7 @@ def upload_sub(content, cursor, log):
         s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
              "VALUES (%s, %s, %s) "
              "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc3 = (content.url, content.ptc.html, 
+        ptc3 = (content.url, content.ptc.html3, 
                 content.ptc.text3, content.ptc.text3)
 
         cursor.execute(s, ptc3)
@@ -184,7 +184,7 @@ def upload_sub(content, cursor, log):
         s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
              "VALUES (%s, %s, %s) "
              "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc4 = (content.url, content.ptc.html, 
+        ptc4 = (content.url, content.ptc.html4, 
                 content.ptc.text4, content.ptc.text4)
 
         cursor.execute(s, ptc4)

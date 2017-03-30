@@ -34,17 +34,20 @@ class PTC(object):
     def __init__(self, ptcList, html, matchList):
         self.code1 = ptcList[0]
         self.text1 = ptcList[1]
+        self.html1 = html[0]
         self.matched1 = matchList[0]
         self.code2 = ptcList[2]
         self.text2 = ptcList[3]
+        self.html2 = html[1]
         self.matched2 = matchList[1]
         self.code3 = ptcList[4]
         self.text3 = ptcList[5]
+        self.html3 = html[2]
         self.matched3 = matchList[2]
         self.code4 = ptcList[6]
         self.text4 = ptcList[7]
+        self.html4 = html[3]
         self.matched4 = matchList[3]
-        self.html = html
 
 
 class BSRF(object):
@@ -237,15 +240,16 @@ def extract_page_content(url, page, parseData, log):
 
         def parse_ptc(ptcList):
             """Corrects formatting of description"""
-            # Compile the original ptcList into a single string
-            original = "\n".join(ptcList)
-
-            # Cycles through each description to parse it
+            
             i = 1
+            original = []
             matchList = []
 
             while i <= 7:
                 if ptcList[i]:
+                    # Collect original text before parsing
+                    original.append(ptcList[i])
+
                     # Look to see if this text has a sub
                     sub = binary_search(ptcList[i], subs)
 
@@ -259,6 +263,7 @@ def extract_page_content(url, page, parseData, log):
                         ptcList[i] = ptcList[i].title()
                         matchList.append(False)
                 else:
+                    original.append(None)
                     matchList.append(False)
 
                 i = i + 2
@@ -326,7 +331,7 @@ def extract_page_content(url, page, parseData, log):
             log.exception("Unable to extract PTC string for %s" % url)
 
         ptcStrings = collect_ptc_strings(ptcString)
-        ptcList = parse_ptc(ptcStrings, ptcString)
+        ptcList = parse_ptc(ptcStrings)
 
         return ptcList
 
