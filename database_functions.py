@@ -47,21 +47,21 @@ def remove_data(cursor, url):
     s = "DELETE FROM abc_ptc WHERE url = %s"
     cursor.execute(s, url)
 
-    s = "DELETE FROM abc_special_authorizaiton WHERE url = %s"
+    s = "DELETE FROM abc_special_authorization WHERE url = %s"
     cursor.execute(s, url)
 
-def upload_data(content, cursor):
+def upload_data(content, cursor, log):
     """Uploads the content to the respective database tables"""
     # Construct and execute abc_price query
     s = ("INSERT INTO abc_price (url, din, brand_name, strength, "
          "route, dosage_form, generic_name, unit_price, lca, lca_text, "
          "unit_issue) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    price = (content.url, content.din, content.bsrf.brand, 
+    price = (content.url, content.din.parse, content.bsrf.brand, 
              content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
-             content.genericName, content.unitPrice,content.lca.value, 
-             content.lca.text, content.unitIssue)
+             content.genericName.parse, content.unitPrice.parse, 
+             content.lca.value, content.lca.text, content.unitIssue.parse)
 
-    cursor.excecute(s, price)
+    cursor.execute(s, price)
 
     # Construct and execute abc_coverage query
     s = ("INSERT INTO abc_coverage (url, coverage, criteria, criteria_sa, "
@@ -73,10 +73,10 @@ def upload_data(content, cursor):
                 content.criteria.criteria, content.criteria.special, 
                 content.criteria.palliative, content.clients.g1, 
                 content.clients.g66, content.clients.g66a,
-                content.clients.g19823, content.clients.g19824, 
-                content.clients.g20400, content.clients.g20403,
-                content.clients.g20514, content.clients.g22128,
-                content.clients.g23609)
+                content.clients.g19823, content.clients.g19823a, 
+                content.clients.g19824, content.clients.g20400, 
+                content.clients.g20403, content.clients.g20514, 
+                content.clients.g22128, content.clients.g23609)
     cursor.execute(s, coverage)
 
     # Construct and execute abc_special_authorization query 
@@ -84,7 +84,7 @@ def upload_data(content, cursor):
     s = ("INSERT INTO abc_special_authorization (url, title, link) "
             "VALUES (%s, %s, %s)")
         
-    for spec in content.SpecialAuth:
+    for spec in content.specialAuth:
         special = (content.url, spec.text, spec.link)
         cursor.execute(s, special)
 
@@ -96,7 +96,7 @@ def upload_data(content, cursor):
            content.ptc.code2, content.ptc.text2, 
            content.ptc.code3, content.ptc.text3, 
            content.ptc.code4, content.ptc.text4)
-    cursor.execute(s, special)
+    cursor.execute(s, ptc)
 
     # Construct and execute abc_atc query
     s = ("INSERT INTO abc_atc (url, atc_1, atc_1_text, atc_2, atc_2_text, "

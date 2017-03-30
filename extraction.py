@@ -369,10 +369,12 @@ if can_crawl:
             start = debug.start
             end = debug.end
             
+
+        # Cycle through the range of URLs
         for i in range(start, end + 1):
             # Remove old entry from the database
             if debug.uploadData:
-                remove_data(cursor, i)
+                remove_data(dbCursor, i)
             
             
             # Get the URL data

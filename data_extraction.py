@@ -99,12 +99,13 @@ class Clients(object):
         self.g66 = list[1]
         self.g66a = list[2]
         self.g19823 = list[3]
-        self.g19824 = list[4]
-        self.g20400 = list[5]
-        self.g20403 = list[6]
-        self.g20514 = list[7]
-        self.g22128 = list[8]
-        self.g23609 = list[9]
+        self.g19823a = list[4]
+        self.g19824 = list[5]
+        self.g20400 = list[6]
+        self.g20403 = list[7]
+        self.g20514 = list[8]
+        self.g22128 = list[9]
+        self.g23609 = list[10]
         self.html = html
 
 
