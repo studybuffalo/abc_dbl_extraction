@@ -129,7 +129,7 @@ def get_debug(conf):
         log.debug("DEBUG MODE - SKIPPING 'details.php' UPDATE")
 
     debug = Debug(scrapeUrl, urlList, start, end, scrapeData, htmlLoc, 
-                  uploadData, updateWebsite)
+                  uploadData, uploadSub, updateWebsite)
 
     return debug
 
