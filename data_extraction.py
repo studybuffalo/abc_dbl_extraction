@@ -354,7 +354,7 @@ def extract_page_content(url, page, parseData, log):
             text = re.sub(r"\s/\s", "/", text)
 
             # Remove any spaces between numbers and %
-            text = re.sub(r"\s%(\b|\s)", "%", text)
+            text = re.sub(r"\s%", "%", text)
 
             # Applies any remaining corrections
             for sub in unitSubs:
