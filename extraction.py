@@ -336,7 +336,7 @@ else:
 if can_crawl:
     from collect_parse_data import collect_parse_data
     from database_functions import return_connection, return_cursor, \
-                                   remove_data, upload_data
+                                   remove_data, upload_data, upload_sub
     from update_website import update_details
 
     log.info("Permissing granted to crawl site")
@@ -419,7 +419,7 @@ if can_crawl:
 
                 # UPLOAD SUBS INFORMATION TO DATABASE
                 if debug.uploadSubs:
-                    uploads(issubclass, content, dbCursor, log)
+                    upload_sub(content, dbCursor, log)
 
                 # UPDATE WEBSITE DETAILS
                 if debug.updateWebsite:

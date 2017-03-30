@@ -117,3 +117,18 @@ def upload_data(content, cursor, log):
              content.dateDiscontinued.parse, content.manufacturer.parse, 
              content.schedule.parse, content.interchangeable.parse)
     cursor.execute(s, extra)
+
+def upload_sub(content, cursor, log):
+    # Upload the BSRF sub data
+    if content.bsrf.matched == False:
+        s = ("INSERT INTO abc_pend_bsrf (url, original, parsed) "
+              "VALUES (%s, %s, %s)")
+        bsrf = (content.url, content.bsrf.html, content.bsrf.parsed)
+
+    cursor.execute(s, bsrf)
+
+    # Upload the generic sub data
+
+    # Upload the manufacturer sub data
+
+    # Upload the manufacturer sub data
