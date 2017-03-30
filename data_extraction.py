@@ -235,8 +235,12 @@ def extract_page_content(url, page, parseData, log):
     def extract_ptc(html, subs):
         """Extracts the PTC numbers and descriptions"""
 
-        def parse_ptc(ptcList, html):
+        def parse_ptc(ptcList):
             """Corrects formatting of description"""
+            # Compile the original ptcList into a single string
+            original = "\n".join(ptcList)
+
+            # Cycles through each description to parse it
             i = 1
             matchList = []
 
@@ -259,7 +263,7 @@ def extract_page_content(url, page, parseData, log):
 
                 i = i + 2
 
-            return PTC(ptcList, html, matchList)
+            return PTC(ptcList, original, matchList)
 
         def collect_ptc_strings(ptcString):
             """Separates out each number and formats descriptions
