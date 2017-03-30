@@ -511,14 +511,13 @@ def extract_page_content(url, page, parseData, log):
 
     def extract_generic_name(html, subs):
         """Extracts the generic name"""
-        def parse_generic(text, html):
+        def parse_generic(text):
             """Correct formatting of generic name to be lowercase"""
-
             # Remove parenthesis
-            generic = text[1:len(text) - 1]
+            original = text[1:len(text) - 1]
 
             # Check if this text has a substitution
-            sub = binary_search(generic, subs)
+            sub = binary_search(original, subs)
 
             # If there is a sub, apply it
             if sub:
@@ -528,7 +527,7 @@ def extract_page_content(url, page, parseData, log):
             # Otherwise apply regular processing
             else:
                 # Convert to lower case
-                generic = generic.lower()
+                generic = original.lower()
 
                 # Removes extra space characters
                 generic = re.sub(r"\s{2,}", " ", generic)
@@ -538,12 +537,12 @@ def extract_page_content(url, page, parseData, log):
 
                 matched = False
 
-            return Generic(generic, html, matched)
+            return Generic(generic, original, matched)
             
         genericText = html.find_all('tr', class_="idblTable")[2]\
                           .td.div.string.strip()
         
-        generic = parse_generic(genericText, genericText)
+        generic = parse_generic(genericText)
 
         return generic
 
