@@ -379,7 +379,7 @@ def extract_page_content(url, page, parseData, log):
 
             return text
         
-        def split_brand_strength_route_form(text, html):
+        def split_brand_strength_route_form(text):
             """Extracts brand name, strength, route, dosage form"""
             
             # Checks if the text has a substitution
@@ -491,7 +491,7 @@ def extract_page_content(url, page, parseData, log):
 
 
             output = BSRF(brandName, strength, route, dosageForm, 
-                          html, matched)
+                          searchText, matched)
 
             return output
 
@@ -501,7 +501,7 @@ def extract_page_content(url, page, parseData, log):
         except:
             log.exception("Unable to extract BSRF string for %s" % url)
         
-        bsrf = split_brand_strength_route_form(bsrf, bsrf)
+        bsrf = split_brand_strength_route_form(bsrf)
 
         return bsrf
 
