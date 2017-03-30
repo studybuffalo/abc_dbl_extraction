@@ -4,6 +4,16 @@ class URLData(object):
         self.url = url
         self.status = status
 
+def assemble_url(id):
+    """Constructs a valid iDBL url based on the drug ID"""
+    # Base URL to construct final URL from
+    base = ("https://idbl.ab.bluecross.ca/idbl/"
+            "lookupDinPinDetail.do?productID=")
+        
+    # Assembles the url form the base + 10 digit productID
+    url = "%s%010d" % (base, id)
+
+    return url
 
 def check_url(id, url, session, log):
     """Checks the provided URL for an active status code"""
@@ -45,12 +55,7 @@ def scrape_url(id, session, log):
             none.
     """
 
-	# Base URL to construct final URL from
-    base = ("https://idbl.ab.bluecross.ca/idbl/"
-            "lookupDinPinDetail.do?productID=")
-
-    # Assembles the url form the base + 10 digit productID
-    url = "%s%010d" % (base, id)
+    url = assemble_url(id)
             
     data = check_url(id, url, session, log)
             
@@ -61,11 +66,42 @@ def scrape_url(id, session, log):
 def debug_url(fileLoc):
     """Returns data from text file instead of website"""
     with open(fileLoc.absolute(), "r") as file:
-        urls = file.split("\n")
+        urls = file.read().split("\n")
 
     urlList = []
 
-    for url in urls:
-        urlList.append(url, "active")
+    for id in urls:
+        if id:
+            # Construct the full URL
+            id = int(id)
+            url = assemble_url(id)
+
+            # Create the URLData object and append it
+            urlList.append(URLData(id, url, "active"))
+        
+    return urlList
+
+def debug_url_data(htmlLoc):
+    """Builds a urlList out of the html file names"""
+    # Get all the file names in the directory
+    files = htmlLoc.listdir(pattern="*.html", names_only=True)
+
+    # Extracts all the ids from the file names
+    idList = []
+
+    for file in files:
+        idList.append(int(file[:-5]))
+
+    # Sorts the ids numerically
+    idList = sorted(idList, key=int)
+
+    # Creates a URL list from the sorted IDs
+    urlList = []
+
+    for id in idList:
+        url = assemble_url(id)
+
+        # Create the URLData object and append it
+        urlList.append(URLData(id, url, "active"))
 
     return urlList

@@ -583,7 +583,7 @@ def extract_page_content(url, page, parseData, log):
         """Extract LCA price and any accompanying text"""
         lcaString = html.find_all('tr', class_="idblTable")[6]\
                         .find_all('td')[1].div.get_text().strip()
-
+        
         # If the string has a space, it will have LCA text
         if " " in lcaString:
             if "N/A" in lcaString:
@@ -591,13 +591,13 @@ def extract_page_content(url, page, parseData, log):
                 # a line with a space and N/A, but I could not find
                 # such an example; this is for theory only
                 lca = None
-                lcaText = lcaString[4:]
+                lcaText = lcaString[4:].strip()
             else:
                 # LCA with text - split at first space to extract
                 index = lcaString.find(" ")
 
                 lca = lcaString[0:index]
-                lcaText = lcaString[index + 1:]
+                lcaText = lcaString[index + 1:].strip()
         # No LCA text present
         else:
             lcaText = None
@@ -876,13 +876,15 @@ def collect_content(urlData, session, parseData, log):
 
 def debug_data(urlData, htmlLoc, parseData, log):
     """Collects HTML data from provided location instead of website"""
-    htmlFile = htmlLoc.child("%.html" % urlData.id).absolute()
+    htmlFile = htmlLoc.child("%s.html" % urlData.id).absolute()
+    log.debug("Extracting data from %s" % htmlFile)
 
-    with open(htmlFile, "w") as html:
+    with open(htmlFile, "r") as html:
         page = html.read()
 
         try:
-            pageContent = extract_page_content(urlData.id, page, parseData)
+            pageContent = extract_page_content(urlData.id, page, parseData, 
+                                               log)
         except Exception as e:
             log.warn("Unable to extract %s page content: %s" 
                         % (urlData.id, e))

@@ -41,6 +41,8 @@ from urllib import robotparser
 import requests
 import csv
 import time
+from url_scrape import scrape_url, debug_url, debug_url_data
+from data_extraction import collect_content, debug_data
 
 class FileNames(object):
     def __init__(self, url, html, price, coverage, 
@@ -55,11 +57,69 @@ class FileNames(object):
         self.extra = extra
 
 
-def setup_config():
-	config = configparser.ConfigParser()
-	config.read(root.parent.child("config", "python_config.cfg").absolute())
+class Debug(object):
+    def __init__(self, scrapeUrl, urlList, start, end, scrapeData, htmlLoc,
+               uploadData, updateWebsite):
+        self.scrapeUrl = scrapeUrl
+        self.urlList = urlList
+        self.start = start
+        self.end = end
+        self.scrapeData = scrapeData
+        self.htmlLoc = htmlLoc
+        self.uploadData = uploadData
+        self.updateWebsite = updateWebsite
 
-	return config
+
+def get_debug(conf):
+    # Check if the URLs will be scrapped
+    scrapeUrl = conf.getboolean("debug", "scrape_urls")
+
+    if scrapeUrl:
+        log.debug("URL SCRAPING ENABLED")
+        urlList = None
+        start = None
+        end = None
+    else:
+        log.debug("DEBUG MODE - SKIPPING URL SCRAPING")
+
+        urlList = debug_url(Path(conf.get("debug", "url_loc")))
+        start = 0
+        end = len(urlList) - 1
+        
+    # Check if pages will be scraped
+    scrapeData = conf.getboolean("debug", "scrape_data")
+
+    if scrapeData:
+        log.debug("WEBSITE SCRAPING ENABLED")
+    else:
+        log.debug("DEBUG MODE - SKIPPING WEBSITE SCRAPING")
+        htmlLoc = Path(conf.get("debug", "data_loc"))
+
+        # Replaces any urlList data with the html content
+        urlList = debug_url_data(htmlLoc)
+        start = 0
+        end = len(urlList) - 1
+    
+    # Check if data will be uploaded to database    
+    uploadData = conf.getboolean("debug", "upload_data")
+    
+    if uploadData:
+        log.debug("DATA UPLOAD ENABLED")
+    else:
+        log.debug("DEBUG MODE - SKIPPING DATABASE UPLOADS")
+
+    # Check if details.php will be updated
+    updateWebsite = conf.getboolean("debug", "update_website")
+
+    if updateWebsite:
+        log.debug("UPDATING 'details.php' ENABLED")
+    else:
+        log.debug("DEBUG MODE - SKIPPING 'details.php' UPDATE")
+
+    debug = Debug(scrapeUrl, urlList, start, end, scrapeData, htmlLoc, 
+                  uploadData, updateWebsite)
+
+    return debug
 
 
 def get_today():
@@ -237,12 +297,8 @@ priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
 log = python_logging.start(priCon)
 
 
-# Check debug status
-scrapeUrl = pubCon.getboolean("debug", "scrape_urls")
-scrapeData = pubCon.getboolean("debug", "scrape_data")
-uploadData = pubCon.getboolean("debug", "upload_data")
-updateWebsite = pubCon.getboolean("debug", "update_website")
-
+# Collect debug status
+debug = get_debug(pubCon)
 
 # Get robot details
 userAgent = pubCon.get("robot", "user_agent", raw=True)
@@ -258,20 +314,15 @@ log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
 # SCRAPE ACTIVE URLS FROM WEBSITE
 # Checking the robots.txt file for permission to crawl
-if scrapeUrl:
-    log.debug("URL SCRAPING ENABLED")
+if debug.scrapeUrl:
     can_crawl = get_permission()
 else:
-    # Debug set to False; set can_crawl to true to continue program
-    log.debug("URL DEBUG ENABLED - SKIPPING URL EXTRACTION")
     can_crawl = True
 
 
 # If crawling is permitted, run the program
 if can_crawl:
     from collect_parse_data import collect_parse_data
-    from url_scrape import scrape_url, debug_url
-    from data_extraction import collect_content, debug_data
     from database_functions import return_connection, return_cursor, \
                                    remove_data, upload_data
     from update_website import update_details
@@ -309,23 +360,22 @@ if can_crawl:
         pHTML = files.html
 
         # Set the start and end for loop
-        if scrapeUrl:
+        if debug.scrapeUrl or debug.scrapeData:
             start = int(sys.argv[2])
             end = int(sys.argv[3])
         else:
-            # Grabbing data from text file if set to debug
-            urlList = debug_url(Path(pubCon.get("debug", "url_loc")))
-            start = 0
-            end = len(urlList) - 1
-        
+            urlList = debug.urlList
+            start = debug.start
+            end = debug.end
+            
         for i in range(start, end + 1):
             # Remove old entry from the database
-            if uploadData:
+            if debug.uploadData:
                 remove_data(cursor, i)
             
             
             # Get the URL data
-            if scrapeUrl:
+            if debug.scrapeUrl:
                 # Apply delay before crawling URL
                 time.sleep(crawlDelay)
             
@@ -336,25 +386,25 @@ if can_crawl:
 
             # Collect the content for active URLs
             if urlData.status == "active":
-                if scrapeData:
+                if debug.scrapeData:
                     # Apply delay before accessing page
                     time.sleep(crawlDelay)
 
                     content = collect_content(urlData, session, 
                                               parseData, log)
                 else:
-                    htmlLoc = Path(pubCon.get("debug", "data_loc"))
-                    content = debug_data(urlData, htmlLoc, parseData, log)
+                    content = debug_data(urlData, debug.htmlLoc, parseData, 
+                                         log)
             else:
                 content = None
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
-                if uploadData:
+                if debug.uploadData:
                     upload_data(content, dbCursor, log)
 
                 # UPDATE WEBSITE DETAILS
-                if updateWebsite:
+                if debug.updateWebsite:
                     update_details(priCon, today, log)
 
 
