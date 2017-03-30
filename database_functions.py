@@ -121,9 +121,14 @@ def upload_data(content, cursor, log):
 def upload_sub(content, cursor, log):
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
-        s = ("INSERT INTO abc_pend_bsrf (url, original, parsed) "
-              "VALUES (%s, %s, %s)")
-        bsrf = (content.url, content.bsrf.html, content.bsrf.parsed)
+        s = ("INSERT INTO abc_pend_bsrf (url, original, brand_name, "
+             "strength, route, dosage_form) VALUES (%s, %s, %s) "
+             "ON DUPLICATE KEY UPDATE brand_name = %s, strength = %s",
+             "route = %s, dosage_form = %s")
+        bsrf = (content.url, content.bsrf.html, content.bsrf.brand,
+                content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
+                content.bsrf.brand, content.bsrf.strength, content.bsrf.route, 
+                content.bsrf.form)
 
     cursor.execute(s, bsrf)
 
