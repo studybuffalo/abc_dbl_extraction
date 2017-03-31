@@ -122,6 +122,21 @@ class SpecialAuthorization(object):
         self.link = link
         self.html = html
 
+# ROBOT PARSING FUNCTIONS
+def get_permission():
+    """Checks robots.txt for permission to crawl site"""
+    textURL = "https://www.ab.bluecross.ca/robots.txt"
+    pageURL = "https://idbl.ab.bluecross.ca/idbl/load.do"
+
+    robot = robotparser.RobotFileParser()
+    robot.set_url(textURL)
+    robot.read()
+    
+    can_crawl = robot.can_fetch(userAgent, pageURL)
+
+    return can_crawl
+
+
 # URL SCRAPING FUNCTIONS
 def assemble_url(id):
     """Constructs a valid iDBL url based on the drug ID"""

@@ -47,18 +47,6 @@ def get_today():
     
     return today
 
-def get_permission():
-    textURL = "https://www.ab.bluecross.ca/robots.txt"
-    pageURL = "https://idbl.ab.bluecross.ca/idbl/load.do"
-
-    robot = robotparser.RobotFileParser()
-    robot.set_url(textURL)
-    robot.read()
-    
-    can_crawl = robot.can_fetch(userAgent, pageURL)
-
-    return can_crawl
-
 
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
@@ -120,7 +108,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
     # Checking the robots.txt file for permission to crawl
     if debugData.scrapeUrl:
-        can_crawl = get_permission()
+        can_crawl = extraction.get_permission()
     else:
         # Program set to debug - use pre-set data
         can_crawl = True
