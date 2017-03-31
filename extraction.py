@@ -30,22 +30,11 @@ import sys
 from unipath import Path
 import configparser
 import python_logging
-import datetime
 from urllib import robotparser
 import requests
 import csv
 import time
 from modules import extraction, saving, database, website, debugging
-
-def get_today():
-    today = datetime.date.today()
-    year = today.year
-    month = "%02d" % today.month
-    day = "%02d" % today.day
-    
-    today = "%s-%s-%s" % (year, month, day)
-    
-    return today
 
 
 # APPLICATION SETUP

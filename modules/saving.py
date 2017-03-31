@@ -22,6 +22,18 @@ class SaveFiles(object):
         self.atc = atc
         self.extra = extra
 
+def get_today():
+    import datetime
+
+    today = datetime.date.today()
+    year = today.year
+    month = "%02d" % today.month
+    day = "%02d" % today.day
+    
+    today = "%s-%s-%s" % (year, month, day)
+    
+    return today
+
 def collect_file_paths(con):
     """Collects extraction file paths and creates needed directories"""
     # Get Current today
