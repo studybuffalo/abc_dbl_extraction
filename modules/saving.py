@@ -84,12 +84,12 @@ def create_csv_writer(path):
 
 def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
     # Create appropriate CSV writers
-    cPrice = create_csv_writer(fPrice)
-    cCoverage = create_csv_writer(fCoverage)
-    cSpecial = create_csv_writer(fSpecial)
-    cPTC = create_csv_writer(fPTC)
-    cATC = create_csv_writer(fATC)
-    cExtra = create_csv_writer(fExtra)
+    cPrice = create_csv_writer(price)
+    cCoverage = create_csv_writer(coverage)
+    cSpecial = create_csv_writer(special)
+    cPTC = create_csv_writer(ptc)
+    cATC = create_csv_writer(atc)
+    cExtra = create_csv_writer(extra)
 
     saveFiles = SaveFiles(url, html, cPrice, cCoverage, cSpecial, cPTC, 
                           cATC, cExtra)
@@ -150,7 +150,7 @@ def save_data(content, save):
            content.ptc.code4, content.ptc.text4]
 
     try:
-        save.PTC.writerow(ptc)
+        save.ptc.writerow(ptc)
     except Exception as e:
         log.warn("Unable to write %s to ptc.csv: %s" % (content.url, e))
 
@@ -162,7 +162,7 @@ def save_data(content, save):
            content.atc.code5, content.atc.text5]
 
     try:
-        save.ATC.writerow(atc)
+        save.atc.writerow(atc)
     except Exception as e:
         log.warn("Unable to write %s to atc.csv: %s" % (content.url, e))
 
