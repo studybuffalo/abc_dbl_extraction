@@ -35,6 +35,8 @@ def get_today():
     return today
 
 def collect_file_paths(con):
+    from unipath import Path
+
     """Collects extraction file paths and creates needed directories"""
     # Get Current today
     today = get_today()
