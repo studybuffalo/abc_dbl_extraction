@@ -100,6 +100,8 @@ def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
 
 def save_data(content, save, log):
     """Saves the information in content to respective files"""
+    log.debug("URL %s: Saving data to file" % content.url)
+
     # Save URL data
     try:
         save.url.write("%s\n" % content.url)

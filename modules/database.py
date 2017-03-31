@@ -162,7 +162,7 @@ def collect_parse_data(cursor):
 
 def remove_data(cursor, url, log):
     """Removes the data for the specified URL"""
-    log.debug("Removing database entries for Page %s" % url)
+    log.debug("URL %s: Removing database entries" % url)
 
     s = "DELETE FROM abc_atc WHERE url = %s"
     cursor.execute(s, url)
@@ -184,7 +184,7 @@ def remove_data(cursor, url, log):
  
 def upload_data(content, cursor, log):
     """Uploads the content to the respective database tables"""
-    log.debug("Uploading data to database for Page %s" % content.url)
+    log.debug("URL %s: Uploading data to database" % content.url)
 
     # Construct and execute abc_price query
     s = ("INSERT INTO abc_price (url, din, brand_name, strength, "
@@ -254,7 +254,7 @@ def upload_data(content, cursor, log):
 
 def upload_sub(content, cursor, log):
     """Uploads any data missing a substitution to database"""
-    log.debug("Uploading sub data for Page %s" % content.url)
+    log.debug("URL %s: Uploading sub data" % content.url)
 
     # Upload the BSRF sub data
     if content.bsrf.matched == False:

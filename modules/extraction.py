@@ -163,15 +163,15 @@ def check_url(id, url, session, log):
     
     # Check status and create the URL Status object
     if code == 200:
-        log.debug("ACTIVE   - %s" % url)
+        log.debug("URL %s: ACTIVE" % url)
         status = URLData(id, url, "active")
 
     elif code == 302:
-        log.debug("INACTIVE - %s" % url)
+        log.debug("URL %s: INACTIVE" % url)
         status = URLData(id, url, "inactive")
 
     else:
-        log.warn("Unexpected %d error with %s" % (code, url))
+        log.warn("URL %s: Unexpected %d error" % (code, url))
         status = URLData(id, url, "error")
 
     return status
@@ -308,7 +308,7 @@ def extract_page_content(url, page, parseData, log):
             html = BeautifulSoup(page, "html.parser")
             trunc = html.findAll("div", {"class": "columnLeftFull"})[0]
         except:
-            log.exception("Unable to create Soup for %s" % url)
+            log.exception("URL %s: unable to create Soup" % url)
 
         return trunc
     
@@ -327,7 +327,7 @@ def extract_page_content(url, page, parseData, log):
             # Expected behaviour for most situations without a date
             date = None
         except Exception as e:
-            log.warn("Error trying to parse date for %s - %s" % (url, e))
+            log.warn("URL %s: error trying to parse date: %s" % (url, e))
             date = None
 
         return date
@@ -339,7 +339,7 @@ def extract_page_content(url, page, parseData, log):
             dinText = html.p.string
             din = dinText.replace("DIN/PIN Detail - ", "")
         except:
-            log.exception("Unable to extract DIN for %s" % url)
+            log.critical("URL %s: unable to extract DIN" % url)
             din = ""
 
         # Extract the DIN
@@ -441,7 +441,7 @@ def extract_page_content(url, page, parseData, log):
             ptcString = html.find_all('tr', class_="idblTable")[0]\
                             .td.div.p.get_text().strip()
         except:
-            log.exception("Unable to extract PTC string for %s" % url)
+            log.critical("URL %s: unable to extract PTC string" % url)
 
         ptcStrings = collect_ptc_strings(ptcString)
         ptcList = parse_ptc(ptcStrings)
@@ -534,7 +534,7 @@ def extract_page_content(url, page, parseData, log):
                         route = text[1].strip()
                         dosageForm = text[2].strip()
                     except:
-                        log.exception("Error extracting BSRF for %s" % url)
+                        log.critical("URL %s: Error extracting BSRF" % url)
 
                         brandStrength = text
                         route = None
@@ -549,7 +549,7 @@ def extract_page_content(url, page, parseData, log):
                         route = None
                         dosageForm = text[1].strip()
                     except:
-                        log.exception("Error extracting 4 space BSF for %s" 
+                        log.critical("URL %s: Error extracting 4 space BSF" 
                                       % url)
 
                         brandStrength = text
@@ -566,7 +566,7 @@ def extract_page_content(url, page, parseData, log):
                         route = None
                         dosageForm = text[1].strip()
                     except:
-                        log.exception("Error extracting 3 space BSF for %s" 
+                        log.critical("URL %s: Error extracting 3 space BSF" 
                                       % url)
                         
                         brandStrength = text
@@ -621,7 +621,7 @@ def extract_page_content(url, page, parseData, log):
             bsrf = html.find_all('tr', class_="idblTable")[1]\
                        .td.div.string.strip()
         except:
-            log.exception("Unable to extract BSRF string for %s" % url)
+            log.critical("URL %s: unable to extract BSRF string" % url)
         
         bsrf = split_brand_strength_route_form(bsrf)
 
@@ -656,11 +656,14 @@ def extract_page_content(url, page, parseData, log):
                 matched = False
 
             return Generic(generic, original, matched)
-            
-        genericText = html.find_all('tr', class_="idblTable")[2]\
-                          .td.div.string.strip()
         
-        generic = parse_generic(genericText)
+        try:    
+            genericText = html.find_all('tr', class_="idblTable")[2]\
+                              .td.div.string.strip()
+        
+            generic = parse_generic(genericText)
+        except:
+            log.critical("URL %s: unable to extract generic name" % url)
 
         return generic
 
@@ -669,10 +672,9 @@ def extract_page_content(url, page, parseData, log):
         try:
             dateText = html.find_all('tr', class_="idblTable")[3]\
                            .find_all('td')[1].string.strip()
+            dateListed = convert_date(dateText)
         except:
-            log.exception("Unable to extract date listed for %s" % url)
-
-        dateListed = convert_date(dateText)
+            log.critical("URL %s: unable to extract date listed" % url)
 
         return BasicParse(dateListed, dateText)
 
@@ -681,77 +683,99 @@ def extract_page_content(url, page, parseData, log):
         try:
             dateText  = html.find_all('tr', class_="idblTable")[4]\
                             .find_all('td')[1].string.strip()
+            dateDiscontinued = convert_date(dateText)
         except:
-            log.exception("Unable to extract discontinued date for %s" % url)
+            log.critical("URL %s: unable to extract discontinued date" % url)
 
-        dateDiscontinued = convert_date(dateText)
-        
         return BasicParse(dateDiscontinued, dateText)
 
     def extract_unit_price(html):
         """Extracts the unit price"""
-        priceText = html.find_all('tr', class_="idblTable")[5]\
-                        .find_all('td')[1].string.strip()
+        try:
+            priceText = html.find_all('tr', class_="idblTable")[5]\
+                            .find_all('td')[1].string.strip()
 
-        if priceText == "N/A":
-            unitPrice = None
-        else:
-            unitPrice = priceText
+            if priceText == "N/A":
+                unitPrice = None
+            else:
+                unitPrice = priceText
+        except:
+            log.critical("URL %s: unable to extra unit price" % url)
 
         return BasicParse(unitPrice, priceText)
 
     def extract_lca(html):
         """Extract LCA price and any accompanying text"""
-        lcaString = html.find_all('tr', class_="idblTable")[6]\
-                        .find_all('td')[1].div.get_text().strip()
-        
-        # If the string has a space, it will have LCA text
-        if " " in lcaString:
-            if "N/A" in lcaString:
-                # Note there is a weird case in the old code where
-                # a line with a space and N/A, but I could not find
-                # such an example; this is for theory only
-                lca = None
-                lcaText = lcaString[4:].strip()
+        def parse_lca(lcaString):
+            # If the string has a space, it will have LCA text
+            if " " in lcaString:
+                if "N/A" in lcaString:
+                    # Note there is a weird case in the old code where
+                    # a line with a space and N/A, but I could not find
+                    # such an example; this is for theory only
+                    lca = None
+                    lcaText = lcaString[4:].strip()
+                else:
+                    # LCA with text - split at first space to extract
+                    index = lcaString.find(" ")
+
+                    lca = lcaString[0:index]
+                    lcaText = lcaString[index + 1:].strip()
+            # No LCA text present
             else:
-                # LCA with text - split at first space to extract
-                index = lcaString.find(" ")
+                lcaText = None
 
-                lca = lcaString[0:index]
-                lcaText = lcaString[index + 1:].strip()
-        # No LCA text present
-        else:
-            lcaText = None
+                # Check if there is any price data
+                if "N/A" in lcaString:
+                    lca = None
+                else:
+                    lca = lcaString
 
-            # Check if there is any price data
-            if "N/A" in lcaString:
-                lca = None
-            else:
-                lca = lcaString
+            return LCA(lca, lcaText, lcaString)
 
-        return LCA(lca, lcaText, lcaString)
+        try:
+            lcaString = html.find_all('tr', class_="idblTable")[6]\
+                            .find_all('td')[1].div.get_text().strip()
+            lca = parse_lca(lcaString)
+        except:
+            log.critical("URL: %s: unable to extract LCA" % url)
+
+        return lca
 
     def extract_unit_issue(html, subs):
         """Extracts the unit of issue"""
-        unitText =  html.find_all('tr', class_="idblTable")[7]\
-                        .find_all('td')[1].string.strip()
+        def parse_unit_issue(unitText):
+            unitIssue = unitText.lower()
 
-        # Unit of Issue
-        unitIssue = unitText.lower()
+            return BasicParse(unitIssue, unitText)
 
-        return BasicParse(unitIssue, unitText)
+        try:
+            unitText =  html.find_all('tr', class_="idblTable")[7]\
+                            .find_all('td')[1].string.strip()
+            unitIssue = parse_unit_issue(unitText)
+        except:
+            log.critical("URL %s: unable to extract unit of issue" % url)
 
+        return unitIssue
+        
     def extract_interchangeable(html):
         """Extracts if drug is interchangeable or not"""
-        interText = html.find_all('tr', class_="idblTable")[8]\
-                              .find_all('td')[1].get_text()
-          
-        if "YES" in interText:
-            interchangeable = 1
-        else:
-            interchangeable = 0
+        def parse_interchange(text):
+            if "YES" in interText:
+                interchangeable = 1
+            else:
+                interchangeable = 0
 
-        return BasicParse(interchangeable, interText)
+            return BasicParse(interchangeable, interText)
+
+        try:
+            interText = html.find_all('tr', class_="idblTable")[8]\
+                            .find_all('td')[1].get_text()
+            interchangeable = parse_interchange(interText)
+        except:
+            log.critical("URL %s: unable to extract interchangeable" % url)
+         
+        return interchangeable
 
     def extract_manufacturer(html, subs):
         """Extracts and parses the manufacturer"""
@@ -777,10 +801,12 @@ def extract_page_content(url, page, parseData, log):
             
             return Manufacturer(manufacturer, text, matched)
 
-        manufacturer = html.find_all('tr', class_="idblTable")[9]\
+        try:
+            manuText = html.find_all('tr', class_="idblTable")[9]\
                            .find_all('td')[1].a.string.strip()
-
-        manufacturer = parse_manufactuer(manufacturer)
+            manufacturer = parse_manufactuer(manuText)
+        except:
+            log.critical("URL %s: unable to extract manufacturer" % url)
 
         return manufacturer
 
@@ -824,105 +850,140 @@ def extract_page_content(url, page, parseData, log):
 
             return atcList 
 
-        atc = html.find_all('tr', class_="idblTable")[10]\
-                  .find_all('td')[1].string.strip()
+        try:
+            atcText = html.find_all('tr', class_="idblTable")[10]\
+                      .find_all('td')[1].string.strip()
+            atcList = parse_atc(atcText)
+            atc = ATC(atcList, atcText)
+        except:
+            log.critical("URL %s: unable to extract ATC" % url)
 
-        atcList = parse_atc(atc)
-
-        return ATC(atcList, atc)
+        return atc
 
     def extract_schedule(html):
         """Extracts the provincial drug schedule"""
-        schedule = html.find_all('tr', class_="idblTable")[11]\
-                       .find_all('td')[1].string.strip()
+        try:
+            schedText = html.find_all('tr', class_="idblTable")[11]\
+                            .find_all('td')[1].string.strip()
+            schedule = BasicParse(schedText, schedText)
+        except:
+            log.critical("URL %s: unable to extract schedule" % url)
 
-        return BasicParse(schedule, schedule)
+        return schedule
 
     def extract_coverage(html):
         """Extract the coverage status"""
-        coverageText = html.find_all('tr', class_="idblTable")[12]\
-                           .find_all('td')[1].string.strip()
+        def parse_coverage(text):
+            coverage = text.title()
 
-        coverage = coverageText.title()
+            return BasicParse(coverage, text)
 
-        return BasicParse(coverage, coverageText)
+        try:
+            coverageText = html.find_all('tr', class_="idblTable")[12]\
+                               .find_all('td')[1].string.strip()
+            coverage = parse_coverage(coverageText)
+        except:
+            log.critical("URL %s: unable to extract coverage" % url)
+
+        return coverage
 
     def extract_clients(html):
         """Extracts clients and converts to 1/0 representation"""
-
-        clients = html.find_all('tr', class_="idblTable")[13]\
-                      .find_all('td')[1].get_text().strip()
-
-        # List of strings to match against
-        stringList = ["(Group 1)", "(Group 66)", "(Group 66A", 
-                      "Income Support", "(AISH)", "(Group 19824", 
-                      "(Group 20400", "(Group 20403", "(Group 20514", 
-                      "(Group 22128", "(Group 23609"]
+        def parse_clients(clientText):
+            # List of strings to match against
+            stringList = ["(Group 1)", "(Group 66)", "(Group 66A", 
+                          "Income Support", "(AISH)", "(Group 19824", 
+                          "(Group 20400", "(Group 20403", "(Group 20514", 
+                          "(Group 22128", "(Group 23609"]
         
-        # If string is found in clients text, return 1, otherwise 0
-        clientList = []
+            # If string is found in clients text, return 1, otherwise 0
+            clientList = []
 
-        for name in stringList:
-            if name in clients:
-                clientList.append(1)
-            else:
-                clientList.append(0)
+            for name in stringList:
+                if name in clientText:
+                    clientList.append(1)
+                else:
+                    clientList.append(0)
 
-        return Clients(clientList, clients)
+            return Clients(clientList, clientText)
+
+        try:
+            clientText = html.find_all('tr', class_="idblTable")[13]\
+                             .find_all('td')[1].get_text().strip()
+            clients = parse_clients(clientText)
+        except:
+            log.critical("URL %s: unable to extract clients" % url)
+
+        return clients
 
     def extract_coverage_criteria(html):
         """Extracts any coverage criteria data"""
-        criteriaText = html.find_all('tr', class_="idblTable")[14]\
-                           .find_all('td')[1].get_text()
-        
-        # Default values incase desired info is not found
-        criteria = 0
-        criteriaSA = None
-        criteriaP = None
+        def parse_criteria(criteriaText):
+            # Default values incase desired info is not found
+            criteria = 0
+            criteriaSA = None
+            criteriaP = None
 
-        if "coverage" in criteriaText:
-            criteria = 1
+            if "coverage" in criteriaText:
+                criteria = 1
 
-            # Extracts the link element
-            criteriaSA = html.find_all('tr', class_="idblTable")[14]\
-                             .find_all('td')[1].p\
-                             .find_all('a')[0]['onclick']
+                # Extracts the link element
+                criteriaSA = html.find_all('tr', class_="idblTable")[14]\
+                                 .find_all('td')[1].p\
+                                 .find_all('a')[0]['onclick']
 
-            # Extracts just the URL for the special auth criteria
-            criteriaSA = ("https://idbl.ab.bluecross.ca/idbl/%s" %
-                          re.search(r"\('(.+\d)','", criteriaSA).group(1))
+                # Extracts just the URL for the special auth criteria
+                criteriaSA = ("https://idbl.ab.bluecross.ca/idbl/%s" %
+                              re.search(r"\('(.+\d)','", criteriaSA).group(1))
             
 
-        if "program" in criteriaText:
-            criteria = 1
+            if "program" in criteriaText:
+                criteria = 1
 
-            # Palliative care link is always the same
-            criteriaP = ("http://www.health.alberta.ca/services/"
-                            "drugs-palliative-care.html")
+                # Palliative care link is always the same
+                criteriaP = ("http://www.health.alberta.ca/services/"
+                                "drugs-palliative-care.html")
 
-        return CoverageCriteria(criteria, criteriaSA, criteriaP, criteriaText)
+            return CoverageCriteria(criteria, criteriaSA, criteriaP, 
+                                    criteriaText)
+
+        try:
+            criteriaText = html.find_all('tr', class_="idblTable")[14]\
+                               .find_all('td')[1].get_text()
+            criteria = parse_criteria(criteriaText)
+        except:
+            log.critical("URL %s: unable to extract criteria" % url)
+        
+            return criteria
 
     def extract_special_auth(html):
         """Extract any special authorization links"""
-
-        specialElem = html.find_all('tr', class_="idblTable")[15]\
-                          .find_all('td')[1]
-        
-        specialAuth = []
+        def parse_special(elem):
+            specialAuth = []
       
-        if "N/A" not in specialElem.get_text():
-            for a in specialElem.find_all('a'):
-                # Grab the text for the special auth link
-                text = a.string.strip()
+            if "N/A" not in elem.get_text():
+                for a in elem.find_all('a'):
+                    # Grab the text for the special auth link
+                    text = a.string.strip()
 
-                # Grab and format the pdf link
-                link = a['onclick']
-                link = ("https://idbl.ab.bluecross.ca%s" 
-                        % re.search(r"\('(.+\.pdf)','", link).group(1))
+                    # Grab and format the pdf link
+                    link = a['onclick']
+                    link = ("https://idbl.ab.bluecross.ca%s" 
+                            % re.search(r"\('(.+\.pdf)','", link).group(1))
 
-                specialAuth.append(
-                    SpecialAuthorization(text, link, specialElem)
-                )
+                    specialAuth.append(
+                        SpecialAuthorization(text, link, elem)
+                    )
+
+            return specialAuth
+
+        try:
+            specialElem = html.find_all('tr', class_="idblTable")[15]\
+                              .find_all('td')[1]
+            specialAuth = parse_special(specialElem)
+        except:
+            log.critical("URL %s: unable to extract special authorization"
+                         % url)
 
         return specialAuth
         
@@ -976,10 +1037,9 @@ def collect_content(urlData, session, parseData, log):
     # Download the page content
     try:
         page = download_page(session, urlData.url)
-        log.debug("Page %s downloaded successfully" % urlData.id)
+        log.debug("URL %s: Page downloaded successfully" % urlData.id)
     except Exception as e:
-        log.warn("Unable to download %s content: %s"
-                    % (urlData.id, e))
+        log.warn("URL %s: Unable to download content" % (urlData.id, e))
         page = None
         pageContent = None
 
@@ -988,9 +1048,9 @@ def collect_content(urlData, session, parseData, log):
         try:
             pageContent = extract_page_content(urlData.id, page, parseData, 
                                                log)
-            log.debug("Page %s content extracted successfully" % urlData.id)
+            log.debug("URL %s: Content extracted successfully" % urlData.id)
         except:
-            log.exception("Unable to extract %s page content" % urlData.id)
+            log.exception("URL %s: Unable to extract content" % urlData.id)
             pageContent = None
 
     return pageContent
@@ -1007,7 +1067,7 @@ def debug_data(urlData, htmlLoc, parseData, log):
             pageContent = extract_page_content(urlData.id, page, parseData, 
                                                log)
         except Exception as e:
-            log.warn("Unable to extract %s page content: %s" 
+            log.warn("URL %s: Unable to extract page content: %s" 
                         % (urlData.id, e))
             pageContent = None
     
