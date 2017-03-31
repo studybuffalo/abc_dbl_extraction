@@ -1,34 +1,7 @@
-def return_connection(conf, log):
-    """Connects to a MySQL DB with the provided details"""
-    import pymysql.cursors
-
-    db = conf.get("mysql", "db")
-    host = conf.get("mysql", "host")
-    user = conf.get("mysql", "user")
-    pw = conf.get("mysql", "password")
-
-    try:
-        connection = pymysql.connect(host=host, 
-                                     user=user, 
-                                     password=pw, 
-                                     db=db, 
-                                     charset="utf8",
-                                     cursorclass=pymysql.cursors.DictCursor)
-    except:
-        log.exception("Unable to connect to database")
-        connection = None
-
-    return connection
-
-def return_cursor(conn, log):
-    """Creates a cursor for the DB connection"""
-    try:
-        cursor = conn.cursor()
-    except:
-        log.exception("Unable to establish database cursor")
-        cursor = None
-
-    return cursor
+class DB(object):
+    def __init__(self, connection, cursor):
+        self.connection = connection
+        self.cursor = cursor
 
 class BSRFSub(object):
     def __init__(self, brandName, strength, route, dosageForm):
@@ -59,6 +32,36 @@ class ParseData(object):
         self.manufacturer = manufacturer
         self.atc = atc
 
+
+def setup_db_connection(conf, log):
+    """Sets up MySQL database connections and cursor"""
+    import pymysql.cursors
+
+    db = conf.get("mysql", "db")
+    host = conf.get("mysql", "host")
+    user = conf.get("mysql", "user")
+    pw = conf.get("mysql", "password")
+
+    try:
+        connection = pymysql.connect(host=host, 
+                                     user=user, 
+                                     password=pw, 
+                                     db=db, 
+                                     charset="utf8",
+                                     cursorclass=pymysql.cursors.DictCursor)
+    except:
+        log.exception("Unable to connect to database")
+        connection = None
+
+    try:
+        cursor = conn.cursor()
+    except:
+        log.exception("Unable to establish database cursor")
+        cursor = None
+
+    db = DB(connection, cursor)
+
+    return db
 
 def collect_parse_data(cursor):
     """Retrieves all the required parsing data from the database

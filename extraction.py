@@ -84,116 +84,121 @@ log = python_logging.start(priCon)
 debugData = debugging.get_debug_status(pubCon, log)
 
 
-# Get robot details
+# Setup robot details and create session
 userAgent = pubCon.get("robot", "user_agent", raw=True)
 userFrom = pubCon.get("robot", "from", raw=True)
 crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 
-# Create a requests session for use to access data
 session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
 
-
 # Create a database cursor and connection cursor to run queries
-dbConn = return_connection(priCon, log)
-dbCursor = return_cursor(dbConn, log)
+db = database.setup_db_connection(priCon, log)
 
 # Collects relevant data from database to enable data parsing
-parseData = collect_parse_data(dbCursor)
+parseData = database.collect_parse_data(db.cursor)
 
-# Open required files for data extraction logging
-fileNames = collect_file_paths(pubCon)
 
-# SCRAPE ACTIVE URLS FROM WEBSITE
-# Checking the robots.txt file for permission to crawl
-if debug.scrapeUrl:
-    can_crawl = get_permission()
-else:
-    can_crawl = True
+# Collect locations to save all files
+fileNames = saving.collect_file_paths(pubCon)
 
-# If crawling is permitted, run the program
-if can_crawl:
-    log.info("Permissing granted to crawl site")
-    log.info("Starting URL extraction")
+# Create all save files
+with open(fileNames.url.absolute(), "w") as fURL, \
+        open(fileNames.price.absolute(), "w") as fPrice, \
+        open(fileNames.coverage.absolute(), "w") as fCoverage, \
+        open(fileNames.specialAuth.absolute(), "w") as fSpecial, \
+        open(fileNames.ptc.absolute(), "w") as fPTC, \
+        open(fileNames.atc.absolute(), "w") as fATC, \
+        open(fileNames.extra.absolute(), "w") as fExtra:
 
-    # Assemble the files to save data
-    with open(fileNames.url.absolute(), "w") as fURL, \
-            open(fileNames.price.absolute(), "w") as fPrice, \
-            open(fileNames.coverage.absolute(), "w") as fCoverage, \
-            open(fileNames.specialAuth.absolute(), "w") as fSpecial, \
-            open(fileNames.ptc.absolute(), "w") as fPTC, \
-            open(fileNames.atc.absolute(), "w") as fATC, \
-            open(fileNames.extra.absolute(), "w") as fExtra:
-
-        # Save all opened files into on object for easier use
-        files = organize_save_files(fURL, files.html, fPrice, fCoverage, 
+    # Save all opened files into on object for easier use
+    saveFiles = organize_save_files(fURL, files.html, fPrice, fCoverage, 
                                     fSpecial, fPTC, fATC, fExtra)
 
+
+    # Checking the robots.txt file for permission to crawl
+    if debugData.scrapeUrl:
+        can_crawl = get_permission()
+    else:
+        # Program set to debug - use pre-set data
+        can_crawl = True
+
+    # If crawling is permitted, run the program
+    if can_crawl:
+        log.info("Permissing granted to crawl site")
+        log.info("Starting URL extraction")
+        
         # Set the start and end for loop
-        if debug.scrapeUrl or debug.scrapeData:
+        if debugData.scrapeUrl or debugData.scrapeData:
             start = int(sys.argv[2])
             end = int(sys.argv[3])
         else:
-            urlList = debug.urlList
-            start = debug.start
-            end = debug.end
+            # Program set to debug - use pre-set data
+            urlList = debugData.urlList
+            start = debugData.start
+            end = debugData.end
             
 
         # Cycle through the range of URLs
         for i in range(start, end + 1):
-            # Remove old entry from the database
-            if debug.uploadData:
-                remove_data(dbCursor, i)
+            # REMOVE OLD DATABASE ENTRIES
+            if debugData.uploadData:
+                remove_data(db.cursor, i)
             
             
-            # Get the URL data
+            # TEST FOR ACTIVE URL
             if debug.scrapeUrl:
                 # Apply delay before crawling URL
                 time.sleep(crawlDelay)
             
                 urlData = scrape_url(i, session, log)
             else:
+                 # Program set to debug - use pre-set data
                 urlData = urlList[i]
 
 
-            # Collect the content for active URLs
+            # SCRAPE DATA FROM ACTIVE URLS
             if urlData.status == "active":
-                if debug.scrapeData:
+                if debugData.scrapeData:
                     # Apply delay before accessing page
                     time.sleep(crawlDelay)
 
-                    content = collect_content(urlData, session, 
-                                              parseData, log)
+                    content = extraction.collect_content(
+                        urlData, session, parseData, log
+                    )
                 else:
-                    content = debug_data(urlData, debug.htmlLoc, parseData, 
-                                         log)
+                    # Program set to debug - use pre-saved data
+                    content = extraction.debug_data(
+                        urlData, debug.htmlLoc, parseData, log
+                    )
             else:
                 content = None
 
             if content:
                 # UPLOAD INFORMATION TO DATABASE
-                if debug.uploadData:
-                    upload_data(content, dbCursor, log)
+                if debugData.uploadData:
+                    database.upload_data(content, db.cursor, log)
+
 
                 # UPLOAD SUBS INFORMATION TO DATABASE
-                if debug.uploadSubs:
-                    upload_sub(content, dbCursor, log)
+                if debugData.uploadSubs:
+                    database.upload_sub(content, db.cursor, log)
+
 
                 # UPDATE WEBSITE DETAILS
-                if debug.updateWebsite:
-                    update_details(priCon, today, log)
+                if debugData.updateWebsite:
+                    database.update_details(priCon, today, log)
 
 
                 # SAVE BACKUP COPY OF DATA TO SERVER
-                save_data(content, fURL, cPrice, cCoverage, cSpecial, 
-                          cPTC, cATC, cExtra, pHTML)
+                saving.save_data(content, saveFiles)
 
             # Commit the database queries
             try:
-                dbConn.commit()
-            except:
-                log.exception("Unable to update database for %s" % i)
+                db.connection.commit()
+            except Exception as e:
+                log.critical("Unable to update database for %s: %e" % (i, e))
 
     # Close Database Connection
-    dbConn.close()
+    db.connection.close()
