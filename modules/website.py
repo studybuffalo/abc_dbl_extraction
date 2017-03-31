@@ -1,10 +1,22 @@
-def update_details(conf, today, log):
-    from ftplib import FTP
+def get_today():
+    import datetime
 
+    today = datetime.date.today()
+    year = today.year
+    month = "%02d" % today.month
+    day = "%02d" % today.day
+    
+    today = "%s-%s-%s" % (year, month, day)
+    
+    return today
+
+def update_details(conf, log):
+    from ftplib import FTP
+    from unipath import Path
     # Connect to server
-    ftp_address = conf.get("ftp_sb", "address")
-    ftp_user = conf.get("ftp_sb", "user")
-    ftp_password = conf.get("ftp_sb", "password")
+    ftp_address = conf.get("ftp", "address")
+    ftp_user = conf.get("ftp", "user")
+    ftp_password = conf.get("ftp", "password")
 
     try:
         ftp = FTP(ftp_address, ftp_user, ftp_password)
@@ -22,6 +34,8 @@ def update_details(conf, today, log):
 
     # Create the details.php file
     with open('details.php', 'w') as file:
+        today = get_today()
+
         file.write("<?\n"
                    "\t$title = 'Alberta Drug Price Calculator';\n"
                    "\t$description = 'Calculates the cost of a list "
@@ -44,4 +58,4 @@ def update_details(conf, today, log):
         log.critical("Unable to upload details.php")
         return None
 
-    os.remove("details.php")
+    Path("details.php").remove()

@@ -173,7 +173,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
         
         # UPDATE WEBSITE DETAILS
         if debugData.updateWebsite:
-            database.update_details(priCon, today, log)
+            website.update_details(priCon, log)
 
     # Close Database Connection
     db.connection.close()
