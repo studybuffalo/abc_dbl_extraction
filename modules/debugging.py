@@ -99,4 +99,3 @@ def get_debug_status(conf):
                       uploadData, uploadSub, updateWebsite)
 
     return debugData
-

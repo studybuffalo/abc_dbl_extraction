@@ -10,18 +10,15 @@ class BSRFSub(object):
         self.route = route
         self.dosageForm = dosageForm
 
-
 class Units(object):
     def __init__(self, original, correction):
         self.original = original
         self.correction = correction
 
-
 class SearchList(object):
     def __init__(self, originalList, corrList):
         self.original = originalList
         self.correction = corrList
-
 
 class ParseData(object):
     def __init__(self, ptc, bsrf, units, generic, manufacturer, atc):
