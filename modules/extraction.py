@@ -1037,9 +1037,9 @@ def collect_content(urlData, session, parseData, log):
     # Download the page content
     try:
         page = download_page(session, urlData.url)
-        log.debug("URL %s: Page downloaded successfully" % urlData.id)
+        log.debug("URL %s: page downloaded successfully" % urlData.id)
     except Exception as e:
-        log.warn("URL %s: Unable to download content" % (urlData.id, e))
+        log.warn("URL %s: unable to download content" % (urlData.id, e))
         page = None
         pageContent = None
 
@@ -1048,9 +1048,9 @@ def collect_content(urlData, session, parseData, log):
         try:
             pageContent = extract_page_content(urlData.id, page, parseData, 
                                                log)
-            log.debug("URL %s: Content extracted successfully" % urlData.id)
+            log.debug("URL %s: content extracted successfully" % urlData.id)
         except:
-            log.exception("URL %s: Unable to extract content" % urlData.id)
+            log.exception("URL %s: unable to extract content" % urlData.id)
             pageContent = None
 
     return pageContent
@@ -1058,7 +1058,7 @@ def collect_content(urlData, session, parseData, log):
 def debug_data(urlData, htmlLoc, parseData, log):
     """Collects HTML data from provided location instead of website"""
     htmlFile = htmlLoc.child("%s.html" % urlData.id).absolute()
-    log.debug("Extracting data from %s" % htmlFile)
+    log.debug("File %s.html: extracting data" % urlData.id)
 
     with open(htmlFile, "r") as html:
         page = html.read()
@@ -1067,7 +1067,7 @@ def debug_data(urlData, htmlLoc, parseData, log):
             pageContent = extract_page_content(urlData.id, page, parseData, 
                                                log)
         except Exception as e:
-            log.warn("URL %s: Unable to extract page content: %s" 
+            log.warn("File %s: unable to extract page content: %s" 
                         % (urlData.id, e))
             pageContent = None
     
