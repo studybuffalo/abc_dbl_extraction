@@ -122,7 +122,7 @@ class SpecialAuthorization(object):
         self.link = link
         self.html = html
 
-
+# URL SCRAPING FUNCTIONS
 def assemble_url(id):
     """Constructs a valid iDBL url based on the drug ID"""
     # Base URL to construct final URL from
@@ -224,6 +224,7 @@ def debug_url_data(htmlLoc):
     return urlList
 
 
+# DATA SCRAPING FUNCTIONS
 def binary_search(term, lists):
     """Searches for term in provided list
         args:
