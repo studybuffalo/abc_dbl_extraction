@@ -976,6 +976,7 @@ def collect_content(urlData, session, parseData, log):
     # Download the page content
     try:
         page = download_page(session, urlData.url)
+        log.debug("Page %s downloaded successfully" % urlData.id)
     except Exception as e:
         log.warn("Unable to download %s content: %s"
                     % (urlData.id, e))
@@ -987,6 +988,7 @@ def collect_content(urlData, session, parseData, log):
         try:
             pageContent = extract_page_content(urlData.id, page, parseData, 
                                                log)
+            log.debug("Page %s content extracted successfully" % urlData.id)
         except:
             log.exception("Unable to extract %s page content" % urlData.id)
             pageContent = None

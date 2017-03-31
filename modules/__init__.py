@@ -1,5 +1,1 @@
-import extraction
-import database
-import saving
-import website
-import debugging
+__all__ = ["extraction", "database", "saving", "website", "debugging"]
