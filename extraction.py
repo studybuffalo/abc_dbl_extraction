@@ -125,11 +125,11 @@ with open(fileNames.url.absolute(), "w") as fURL, \
             
             
             # TEST FOR ACTIVE URL
-            if debug.scrapeUrl:
+            if debugData.scrapeUrl:
                 # Apply delay before crawling URL
                 time.sleep(crawlDelay)
             
-                urlData = scrape_url(i, session, log)
+                urlData = extraction.scrape_url(i, session, log)
             else:
                  # Program set to debug - use pre-set data
                 urlData = urlList[i]
