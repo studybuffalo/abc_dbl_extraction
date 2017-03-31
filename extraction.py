@@ -48,8 +48,6 @@ def get_today():
     return today
 
 
-log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
-
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
 root = Path(sys.argv[1])
@@ -91,6 +89,8 @@ parseData = database.collect_parse_data(db.cursor)
 # Collect locations to save all files
 fileNames = saving.collect_file_paths(pubCon)
 
+
+log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
 
 # Create all save files
 with open(fileNames.url.absolute(), "w") as fURL, \
