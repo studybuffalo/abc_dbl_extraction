@@ -163,15 +163,15 @@ def check_url(id, url, session, log):
     
     # Check status and create the URL Status object
     if code == 200:
-        log.debug("URL %s: ACTIVE" % url)
+        log.debug("URL %s: ACTIVE" % id)
         status = URLData(id, url, "active")
 
     elif code == 302:
-        log.debug("URL %s: INACTIVE" % url)
+        log.debug("URL %s: INACTIVE" % id)
         status = URLData(id, url, "inactive")
 
     else:
-        log.warn("URL %s: Unexpected %d error" % (code, url))
+        log.warn("URL %s: Unexpected %d error" % (id, code))
         status = URLData(id, url, "error")
 
     return status
@@ -954,7 +954,7 @@ def extract_page_content(url, page, parseData, log):
         except:
             log.critical("URL %s: unable to extract criteria" % url)
         
-            return criteria
+        return criteria
 
     def extract_special_auth(html):
         """Extract any special authorization links"""
