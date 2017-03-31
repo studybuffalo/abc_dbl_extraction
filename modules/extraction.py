@@ -1,3 +1,9 @@
+class URLData(object):
+    def __init__(self, id, url, status):
+        self.id = id
+        self.url = url
+        self.status = status
+
 class PageContent(object):
     def __init__(self, url, html, din, ptc, bsrf, genericName, dateListed, 
                  dateDiscontinued, unitPrice, lca, unitIssue, 
@@ -23,12 +29,10 @@ class PageContent(object):
         self.criteria = coverageCriteria
         self.specialAuth = specialAuth
 
-
 class BasicParse(object):
     def __init__(self, parse, html):
         self.parse = parse
         self.html = html
-
 
 class PTC(object):
     def __init__(self, ptcList, html, matchList):
@@ -49,7 +53,6 @@ class PTC(object):
         self.html4 = html[3]
         self.matched4 = matchList[3]
 
-
 class BSRF(object):
     def __init__(self, brand, strength, route, form, html, matched):
         self.brand = brand
@@ -59,13 +62,11 @@ class BSRF(object):
         self.html = html
         self.matched = matched
 
-
 class Generic(object):
     def __init__(self, parse, html, matched):
         self.parse = parse
         self.html = html
         self.matched = matched
-
 
 class LCA(object):
     def __init__(self, value, text, html):
@@ -73,13 +74,11 @@ class LCA(object):
         self.text = text
         self.html = html
 
-
 class Manufacturer(object):
     def __init__(self, parse, html, matched):
         self.parse = parse
         self.html = html
         self.matched = matched
-
 
 class ATC(object):
     def __init__(self, atcList, html):
@@ -94,7 +93,6 @@ class ATC(object):
         self.code5 = atcList[8]
         self.text5 = atcList[9]
         self.html = html
-
 
 class Clients(object):
     def __init__(self, list, html):
@@ -111,7 +109,6 @@ class Clients(object):
         self.g23609 = list[10]
         self.html = html
 
-
 class CoverageCriteria(object):
     def __init__(self, criteria, criteriaSA, criteriaP, html):
         self.criteria = criteria
@@ -119,18 +116,12 @@ class CoverageCriteria(object):
         self.palliative = criteriaP
         self.html = html
 
-
 class SpecialAuthorization(object):
     def __init__(self, text, link, html):
         self.text = text
         self.link = link
         self.html = html
 
-class URLData(object):
-    def __init__(self, id, url, status):
-        self.id = id
-        self.url = url
-        self.status = status
 
 def assemble_url(id):
     """Constructs a valid iDBL url based on the drug ID"""
@@ -168,7 +159,6 @@ def check_url(id, url, session, log):
 
     return status
 
-
 def scrape_url(id, session, log):
     """Takes the provided ID # and checks if it returns active URL
         args:
@@ -177,7 +167,7 @@ def scrape_url(id, session, log):
             log:        a logging object to send logs to
 
         returns:
-            urlList:    A list of active URLs from the website
+            data:       a URLData object with server response data
 
         raises:
             none.
@@ -189,7 +179,6 @@ def scrape_url(id, session, log):
             
     # Return the URL
     return data
-
 
 def debug_url(fileLoc):
     """Returns data from text file instead of website"""
@@ -234,16 +223,6 @@ def debug_url_data(htmlLoc):
 
     return urlList
 
-def download_page(session, url):
-    """Downloads the webpage at the provided URL"""
-    response = session.get(url)
-    status = response.status_code
-    
-    if status == 200:
-        return response.text
-    else:
-        raise IOError("%s returned status code %d" % (url, status))
-
 
 def binary_search(term, lists):
     """Searches for term in provided list
@@ -275,6 +254,15 @@ def binary_search(term, lists):
     else:
         return None
 
+def download_page(session, url):
+    """Downloads the webpage at the provided URL"""
+    response = session.get(url)
+    status = response.status_code
+    
+    if status == 200:
+        return response.text
+    else:
+        raise IOError("%s returned status code %d" % (url, status))
 
 def extract_page_content(url, page, parseData, log):
     """Takes the provided HTML page and extracts all relevant content
@@ -952,7 +940,6 @@ def extract_page_content(url, page, parseData, log):
 
     return pageContent
 
-
 def collect_content(urlData, session, parseData, log):
     """Extracts the page content from the provided url
         args:
@@ -987,7 +974,6 @@ def collect_content(urlData, session, parseData, log):
             pageContent = None
 
     return pageContent
-
 
 def debug_data(urlData, htmlLoc, parseData, log):
     """Collects HTML data from provided location instead of website"""
