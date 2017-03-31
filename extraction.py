@@ -169,7 +169,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
 
                 # SAVE BACKUP COPY OF DATA TO SERVER
-                saving.save_data(content, saveFiles)
+                saving.save_data(content, saveFiles, log)
 
             # Commit the database queries
             try:

@@ -98,7 +98,7 @@ def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
 
     return saveFiles
 
-def save_data(content, save):
+def save_data(content, save, log):
     """Saves the information in content to respective files"""
     # Save URL data
     try:
@@ -174,7 +174,7 @@ def save_data(content, save):
              content.schedule.parse, content.interchangeable.parse]
 
     try:
-        cExtra.writerow(extra)
+        save.extra.writerow(extra)
     except Exception as e:
         log.warn("Unable to write %s to extra.csv: %s" % (content.url, e))
 
