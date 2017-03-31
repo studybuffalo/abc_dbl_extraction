@@ -123,8 +123,10 @@ class SpecialAuthorization(object):
         self.html = html
 
 # ROBOT PARSING FUNCTIONS
-def get_permission():
+def get_permission(userAgent):
     """Checks robots.txt for permission to crawl site"""
+    from urllib import robotparser
+
     textURL = "https://www.ab.bluecross.ca/robots.txt"
     pageURL = "https://idbl.ab.bluecross.ca/idbl/load.do"
 

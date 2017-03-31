@@ -30,9 +30,7 @@ import sys
 from unipath import Path
 import configparser
 import python_logging
-from urllib import robotparser
 import requests
-import csv
 import time
 from modules import extraction, saving, database, website, debugging
 
@@ -98,7 +96,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
     # Checking the robots.txt file for permission to crawl
     if debugData.scrapeUrl:
-        can_crawl = extraction.get_permission()
+        can_crawl = extraction.get_permission(userAgent)
     else:
         # Program set to debug - use pre-set data
         can_crawl = True
