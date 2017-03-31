@@ -160,8 +160,10 @@ def collect_parse_data(cursor):
 
     return ParseData(ptc, bsrf, units, generic, manufacturer, atc)
 
-def remove_data(cursor, url):
+def remove_data(cursor, url, log):
     """Removes the data for the specified URL"""
+    log.debug("Removing database entries for Page %s" % url)
+
     s = "DELETE FROM abc_atc WHERE url = %s"
     cursor.execute(s, url)
     
@@ -180,6 +182,7 @@ def remove_data(cursor, url):
     s = "DELETE FROM abc_special_authorization WHERE url = %s"
     cursor.execute(s, url)
 
+    
 def upload_data(content, cursor, log):
     """Uploads the content to the respective database tables"""
     # Construct and execute abc_price query

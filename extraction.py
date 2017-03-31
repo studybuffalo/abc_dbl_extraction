@@ -121,7 +121,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
         for i in range(start, end + 1):
             # REMOVE OLD DATABASE ENTRIES
             if debugData.uploadData:
-                remove_data(db.cursor, i)
+                database.remove_data(db.cursor, i, log)
             
             
             # TEST FOR ACTIVE URL
