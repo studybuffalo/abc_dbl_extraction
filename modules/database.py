@@ -181,10 +181,11 @@ def remove_data(cursor, url, log):
 
     s = "DELETE FROM abc_special_authorization WHERE url = %s"
     cursor.execute(s, url)
-
-    
+ 
 def upload_data(content, cursor, log):
     """Uploads the content to the respective database tables"""
+    log.debug("Uploading data to database for Page %s" % content.url)
+
     # Construct and execute abc_price query
     s = ("INSERT INTO abc_price (url, din, brand_name, strength, "
          "route, dosage_form, generic_name, unit_price, lca, lca_text, "
@@ -252,6 +253,9 @@ def upload_data(content, cursor, log):
     cursor.execute(s, extra)
 
 def upload_sub(content, cursor, log):
+    """Uploads any data missing a substitution to database"""
+    log.debug("Uploading sub data for Page %s" % content.url)
+
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
         s = ("INSERT INTO abc_pend_bsrf (url, original, brand_name, "
