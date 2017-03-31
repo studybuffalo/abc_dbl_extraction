@@ -103,6 +103,7 @@ parseData = database.collect_parse_data(db.cursor)
 # Collect locations to save all files
 fileNames = saving.collect_file_paths(pubCon)
 
+
 # Create all save files
 with open(fileNames.url.absolute(), "w") as fURL, \
         open(fileNames.price.absolute(), "w") as fPrice, \

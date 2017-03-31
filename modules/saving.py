@@ -61,14 +61,12 @@ def collect_file_paths(con):
 
     return FileNames(url, html, price, cov, special, ptc, atc, extra)
 
-
 def create_csv_writer(path):
     writer = csv.writer(path, 
                         quoting=csv.QUOTE_NONNUMERIC, 
                         lineterminator="\n")
 
     return writer
-
 
 def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
     # Create appropriate CSV writers
@@ -84,11 +82,13 @@ def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
 
     return saveFiles
 
-def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC, 
-              cExtra, pHTML):
+def save_data(content, save):
     """Saves the information in content to respective files"""
     # Save URL data
-    fURL.write("%s\n" % content.url)
+    try:
+        save.url.write("%s\n" % content.url)
+    except Exception as e:
+        log.warn("Unable to write %s to url.txt: %s" % (content.url, e))
 
     # Save the price data
     price = [content.url, content.din.parse, content.bsrf.brand, 
@@ -97,9 +97,9 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
              content.lca.value, content.lca.text, content.unitIssue.parse]
 
     try:
-        cPrice.writerow(price)
-    except:
-        log.exception("Unable to write %s to price.csv" % content.url)
+        save.price.writerow(price)
+    except Exception as e:
+        log.warn("Unable to write %s to price.csv: %s" % (content.url, e))
 
     # Save the coverage data
     coverage = [content.url, content.coverage.parse, 
@@ -112,9 +112,10 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
                 content.clients.g22128, content.clients.g23609]
     
     try:
-        cCoverage.writerow(coverage)
-    except:
-        log.exception("Unable to write %s to coverage.csv" % content.url)
+        save.coverage.writerow(coverage)
+    except Exception as e:
+        log.warn("Unable to write %s to coverage.csv: %s" % 
+                      (content.url, e))
 
     # Save the special authorization data
     special = []
@@ -123,9 +124,10 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
         special.append([content.url, item.text, item.link])
 
     try:
-        cSpecial.writerows(special)
-    except:
-        log.exception("Unable to write %s to special.csv" % content.url)
+        save.special.writerows(special)
+    except Exception as e:
+        log.warn("Unable to write %s to special.csv: %s" 
+                      % (content.url, e))
 
     # Save the PTC data
     ptc = [content.url, content.ptc.code1, content.ptc.text1, 
@@ -134,9 +136,9 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
            content.ptc.code4, content.ptc.text4]
 
     try:
-        cPTC.writerow(ptc)
-    except:
-        log.exception("Unable to write %s to ptc.csv" % content.url)
+        save.PTC.writerow(ptc)
+    except Exception as e:
+        log.warn("Unable to write %s to ptc.csv: %s" % (content.url, e))
 
     # Save the ATC data
     atc = [content.url, content.atc.code1, content.atc.text1, 
@@ -146,9 +148,9 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
            content.atc.code5, content.atc.text5]
 
     try:
-        cATC.writerow(atc)
-    except:
-        log.exception("Unable to write %s to atc.csv" % content.url)
+        save.ATC.writerow(atc)
+    except Exception as e:
+        log.warn("Unable to write %s to atc.csv: %s" % (content.url, e))
 
     # Save the extra information data
     extra = [content.url, content.dateListed.parse, 
@@ -157,14 +159,14 @@ def save_data(content, fURL, cPrice, cCoverage, cSpecial, cPTC, cATC,
 
     try:
         cExtra.writerow(extra)
-    except:
-        log.exception("Unable to write %s to extra.csv" % content.url)
+    except Exception as e:
+        log.warn("Unable to write %s to extra.csv: %s" % (content.url, e))
 
     # Save a copy of the HTML page
-    htmlPath = pHTML.child("%s.html" % content.url).absolute()
+    htmlPath = save.html.child("%s.html" % content.url).absolute()
+
     try:
         with open(htmlPath, "w") as fHTML:
             fHTML.write(content.html)
-    except:
-        log.exception("Unable to save HTML for %s" % content.url)
-
+    except Exception as e:
+        log.critical("Unable to save HTML for %s: %s" % (content.url, e))
