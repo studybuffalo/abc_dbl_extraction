@@ -51,7 +51,7 @@ def setup_db_connection(conf, log):
         connection = None
 
     try:
-        cursor = conn.cursor()
+        cursor = connection.cursor()
     except:
         log.exception("Unable to establish database cursor")
         cursor = None
