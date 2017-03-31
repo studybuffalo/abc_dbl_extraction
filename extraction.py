@@ -162,13 +162,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 if debugData.uploadSubs:
                     database.upload_sub(content, db.cursor, log)
 
-
-                # UPDATE WEBSITE DETAILS
-                if debugData.updateWebsite:
-                    database.update_details(priCon, today, log)
-
-
-                # SAVE BACKUP COPY OF DATA TO SERVER
+                # SAVE BACKUP COPY OF DATA
                 saving.save_data(content, saveFiles, log)
 
             # Commit the database queries
@@ -176,6 +170,10 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 db.connection.commit()
             except Exception as e:
                 log.critical("Unable to update database for %s: %e" % (i, e))
+        
+        # UPDATE WEBSITE DETAILS
+        if debugData.updateWebsite:
+            database.update_details(priCon, today, log)
 
     # Close Database Connection
     db.connection.close()

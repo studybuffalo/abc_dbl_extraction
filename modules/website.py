@@ -1,16 +1,24 @@
-def update_details(conf, today):
+def update_details(conf, today, log):
     from ftplib import FTP
 
     # Connect to server
-    ftp_address = conf.get('ftp_sb', 'address')
-    ftp_user = conf.get('ftp_sb', 'user')
-    ftp_password = conf.get('ftp_sb', 'password')
+    ftp_address = conf.get("ftp_sb", "address")
+    ftp_user = conf.get("ftp_sb", "user")
+    ftp_password = conf.get("ftp_sb", "password")
 
-    print("Connecting to Study Buffalo server")
-    ftp = FTP(ftp_address, ftp_user, ftp_password)
+    try:
+        ftp = FTP(ftp_address, ftp_user, ftp_password)
+        log.debug("Connecting to FTP server")
+    except:
+        log.critical("Unable to connect to FTP server")
+        return None
 
     # Change to proper directory
-    ftp.cwd('/public_html/studybuffalo/practicetools/albertadrugprice')
+    try:
+        ftp.cwd("/public_html/studybuffalo/practicetools/albertadrugprice")
+    except:
+        log.critical("Unable to access proper sesrver directory")
+        return None
 
     # Create the details.php file
     with open('details.php', 'w') as file:
@@ -23,13 +31,17 @@ def update_details(conf, today):
                    "\t$update = '%s';" % today)
 
     # Access the details file to upload
-    phpFile = open('details.php', 'rb')
+    phpFile = open("details.php", "rb")
 
     # Upload the temp file
-    print (("Uploading new 'details.php'... "), end='')
-    ftp.storlines('STOR details.php', phpFile)
+    try:
+        ftp.storlines('STOR details.php', phpFile)
+        log.debug("Successfully uploaded details.php")
 
-    phpFile.close()
-    ftp.quit()
+        phpFile.close()
+        ftp.quit()
+    except:
+        log.critical("Unable to upload details.php")
+        return None
 
-    os.remove('details.php')
+    os.remove("details.php")
