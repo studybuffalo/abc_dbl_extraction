@@ -91,8 +91,9 @@ with open(fileNames.url.absolute(), "w") as fURL, \
         open(fileNames.extra.absolute(), "w") as fExtra:
 
     # Save all opened files into on object for easier use
-    saveFiles = organize_save_files(fURL, files.html, fPrice, fCoverage, 
-                                    fSpecial, fPTC, fATC, fExtra)
+    saveFiles = saving.organize_save_files(
+        fURL, fileNames.html, fPrice, fCoverage, fSpecial, fPTC, fATC, fExtra
+    )
 
 
     # Checking the robots.txt file for permission to crawl

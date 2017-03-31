@@ -76,6 +76,8 @@ def collect_file_paths(con):
     return FileNames(url, html, price, cov, special, ptc, atc, extra)
 
 def create_csv_writer(path):
+    import csv
+
     writer = csv.writer(path, 
                         quoting=csv.QUOTE_NONNUMERIC, 
                         lineterminator="\n")
