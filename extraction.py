@@ -62,13 +62,13 @@ crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
-
+"""
 # Create a database cursor and connection cursor to run queries
 db = database.setup_db_connection(priCon, log)
 
 # Collects relevant data from database to enable data parsing
 parseData = database.collect_parse_data(db.cursor)
-
+"""
 
 # Collect locations to save all files
 fileNames = saving.collect_file_paths(pubCon)
@@ -116,10 +116,11 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
         # Cycle through the range of URLs
         for i in range(start, end + 1):
+            """
             # REMOVE OLD DATABASE ENTRIES
             if debugData.uploadData:
                 database.remove_data(db.cursor, i, log)
-            
+            """
             
             # TEST FOR ACTIVE URL
             if debugData.scrapeUrl:
@@ -148,7 +149,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                     )
             else:
                 content = None
-
+            """
             if content:
                 # UPLOAD INFORMATION TO DATABASE
                 if debugData.uploadData:
@@ -167,10 +168,13 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 db.connection.commit()
             except Exception as e:
                 log.critical("Unable to update database for %s: %e" % (i, e))
-        
+            """
+        """
         # UPDATE WEBSITE DETAILS
         if debugData.updateWebsite:
             website.update_details(priCon, log)
-
+        """
+    """
     # Close Database Connection
     db.connection.close()
+    """
