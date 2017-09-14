@@ -62,6 +62,35 @@ crawlDelay = pubCon.getfloat("misc", "crawl_delay")
 session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
+# Set up the connection to the Django models
+import os
+djangoApp = priCon.get("django", "location")
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sb_django.settings")
+sys.path.append(djangoApp)
+os.chdir(djangoApp)
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+
+from drug_price_calculator.models import SubsUnit
+
+for item in SubsUnit.objects.all():
+    print (item.original)
+# your imports, e.g. Django models
+
+
+"""
+settings.configure(
+    DATABASE_ENGINE ='django.db.backends.postgresql_psycopg2',
+    DATABASE_NAME = priCon.get("postgresql", "name"),
+    DATABASE_USER = priCon.get("postgresql", "user"),
+    DATABASE_PASSWORD = priCon.get("postgresql", "password"),
+    DATABASE_HOST = priCon.get("postgresql", "host"),
+    DATABASE_PORTPORT= priCon.get("postgresql", "port"),    
+)
+
+from sb_django.models import SubsUnit
+"""
 """
 # Create a database cursor and connection cursor to run queries
 db = database.setup_db_connection(priCon, log)
@@ -149,8 +178,9 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                     )
             else:
                 content = None
-            """
+            
             if content:
+                """
                 # UPLOAD INFORMATION TO DATABASE
                 if debugData.uploadData:
                     database.upload_data(content, db.cursor, log)
@@ -159,11 +189,12 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 # UPLOAD SUBS INFORMATION TO DATABASE
                 if debugData.uploadSubs:
                     database.upload_sub(content, db.cursor, log)
-
+                """
                 # SAVE BACKUP COPY OF DATA
                 saving.save_data(content, saveFiles, log)
 
             # Commit the database queries
+            """
             try:
                 db.connection.commit()
             except Exception as e:
