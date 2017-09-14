@@ -3,7 +3,7 @@
 
 """Extracts and saves the Alberta Blue Cross idbl.
 
-    Last Update: 2017-Mar-30
+    Last Update: 2017-Sep-14
 
     Copyright (c) Notices
 	    2017	Joshua R. Torrance	<studybuffalo@studybuffalo.com>
@@ -21,9 +21,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, 
     see <http://www.gnu.org/licenses/>.
-
-    SHOULD YOU REQUIRE ANY EXCEPTIONS TO THIS LICENSE, PLEASE CONTACT 
-    THE COPYRIGHT HOLDERS.
 """
 
 import sys
