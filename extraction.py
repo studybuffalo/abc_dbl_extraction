@@ -64,40 +64,21 @@ session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
 # Set up the connection to the Django models
 import os
+from django.core.wsgi import get_wsgi_application
+
+# Connect to to Django database
 djangoApp = priCon.get("django", "location")
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sb_django.settings")
 sys.path.append(djangoApp)
-os.chdir(djangoApp)
-from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
-from drug_price_calculator.models import SubsUnit
+from drug_price_calculator.models import ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, SubsUnit
 
-for item in SubsUnit.objects.all():
-    print (item.original)
-# your imports, e.g. Django models
-
-
-"""
-settings.configure(
-    DATABASE_ENGINE ='django.db.backends.postgresql_psycopg2',
-    DATABASE_NAME = priCon.get("postgresql", "name"),
-    DATABASE_USER = priCon.get("postgresql", "user"),
-    DATABASE_PASSWORD = priCon.get("postgresql", "password"),
-    DATABASE_HOST = priCon.get("postgresql", "host"),
-    DATABASE_PORTPORT= priCon.get("postgresql", "port"),    
+parseData = database.collect_parse_data(
+    ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, 
+    SubsPTC, SubsUnit
 )
-
-from sb_django.models import SubsUnit
-"""
-"""
-# Create a database cursor and connection cursor to run queries
-db = database.setup_db_connection(priCon, log)
-
-# Collects relevant data from database to enable data parsing
-parseData = database.collect_parse_data(db.cursor)
-"""
 
 # Collect locations to save all files
 fileNames = saving.collect_file_paths(pubCon)

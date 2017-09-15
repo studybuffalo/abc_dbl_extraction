@@ -60,10 +60,16 @@ def setup_db_connection(conf, log):
 
     return db
 
-def collect_parse_data(cursor):
+def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric, 
+                       SubsManufacturer, SubsPTC, SubsUnit):
     """Retrieves all the required parsing data from the database
         args:
-            cursor: a PyMySQL cursor connected to the proper database
+            SubsATC: The Django ATCDescriptions model
+            SubsBSRF: The Django SubsBSRF model
+            SubsGeneric: The Django SubsGeneric model
+            SubsManufactuer: The Django SubsManufacturer Model
+            SubsPTC: The Django SubsPTC model
+            SubsUnit: The Django SubsUnit model
 
         returns:
             ParseData:  an object containing all the parse data. All 
@@ -74,89 +80,64 @@ def collect_parse_data(cursor):
         raises:
             none.
     """
-
-    # Get the PTC subs
-    s = "SELECT original, correction FROM abc_subs_ptc ORDER BY original"
-    results = cursor.execute(s)
-
-    ptcO = []
-    ptcC = []
-
-    for row in cursor:
-        ptcO.append(row["original"])
-        ptcC.append(row["correction"])
-
-    ptc = SearchList(ptcO, ptcC)
-
-
-    # Get the BSRF subs
-    s = ("SELECT bsrf, brand_name, strength, route, dosage_form "
-         "FROM abc_subs_bsrf ORDER BY bsrf")
-    results = cursor.execute(s)
-
-    bsrfO = []
-    bsrfC = []
-
-    for row in cursor:
-        bsrfO.append(row["bsrf"])
-        bsrfC.append(BSRFSub(row["brand_name"], row["strength"], 
-                             row["route"], row["dosage_form"]))
-    
-    bsrf = SearchList(bsrfO, bsrfC)
-
-
-    # Get the Units Subs
-    s = "SELECT original, correction FROM abc_subs_unit ORDER BY original"
-    results = cursor.execute(s)
-
-    units = []
-
-    for row in cursor:
-        units.append(Units(row["original"], row["correction"]))
-
-
-    # Get the Generic Name subs
-    s = "SELECT original, correction FROM abc_subs_generic ORDER BY original"
-    results = cursor.execute(s)
-
-    genericO = []
-    genericC = []
-
-    for row in cursor:
-        genericO.append(row["original"])
-        genericC.append(row["correction"])
-
-    generic = SearchList(genericO, genericC)
-
-
-    # Get the Manufacturer subs
-    s = ("SELECT original, correction FROM abc_subs_manufacturer "
-         "ORDER BY original")
-    results = cursor.execute(s)
-
-    manufO = []
-    manufC = []
-
-    for row in cursor:
-        manufO.append(row["original"])
-        manufC.append(row["correction"])
-
-    manufacturer = SearchList(manufO, manufC)
-
-
     # Get the ATC subs
-    s = "SELECT code, description FROM abc_atc_descriptions ORDER BY code"
-    results = cursor.execute(s)
-
     atcC = []
     atcD = []
 
-    for row in cursor:
-        atcC.append(row["code"])
-        atcD.append(row["description"])
+    for item in SubsATC.objects.all().order_by("code"):
+        atcC.append(item.code)
+        atcD.append(item.description)
 
     atc = SearchList(atcC, atcD)
 
+    # Get the Brand name, Strength, Route, Form subs
+    bsrfO = []
+    bsrfC = []
+
+    for item in SubsBSRF.objects.all().order_by("bsrf"):
+        bsrfO.append(item.bsrf)
+        bsrfC.append(BSRFSub(
+            item.brand_name, item.strength, item.route, item.dosage_form
+        ))
+    
+    bsrf = SearchList(bsrfO, bsrfC)
+
+    # Get the Generic Name subs
+    genericO = []
+    genericC = []
+
+    for item in SubsGeneric.objects.all().order_by("original"):
+        genericO.append(item.original)
+        genericC.append(item.correction)
+
+    generic = SearchList(genericO, genericC)
+
+    # Get the Manufacturer subs
+    manufO = []
+    manufC = []
+
+    for item in SubsManufacturer.objects.all().order_by("original"):
+        manufO.append(item.original)
+        manufC.append(item.correction)
+
+    manufacturer = SearchList(manufO, manufC)
+
+    # Get the PTC subs
+    ptcO = []
+    ptcC = []
+
+    for item in SubsPTC.objects.all().order_by("original"):
+        ptcO.append(item.original)
+        ptcC.append(item.correction)
+
+    ptc = SearchList(ptcO, ptcC)
+
+    # Get the Units Subs
+    
+    units = []
+
+    for item in SubsUnit.objects.all().order_by("original"):
+        units.append(Units(item.original, item.correction))
 
     return ParseData(ptc, bsrf, units, generic, manufacturer, atc)
 
