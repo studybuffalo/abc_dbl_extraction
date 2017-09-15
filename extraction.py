@@ -73,12 +73,30 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sb_django.settings")
 sys.path.append(djangoApp)
 application = get_wsgi_application()
 
-from drug_price_calculator.models import ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, SubsUnit
-
-parseData = database.collect_parse_data(
-    ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, 
-    SubsPTC, SubsUnit
+from drug_price_calculator.models import (
+    ATC, Coverage, ExtraInformation, PTC, Price, SpecialAuthorization, 
+    ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, 
+    SubsUnit
 )
+db = {
+    "atc": ATC,
+    "coverage": Coverage,
+    "extra": ExtraInformation,
+    "ptc": PTC,
+    "price": Price,
+    "special": SpecialAuthorization,
+}
+
+subs = {
+    "atc": ATCDescriptions,
+    "bsrf": SubsBSRF,
+    "generic": SubsGeneric,
+    "manufacturer": SubsGeneric,
+    "ptc": SubsPTC,
+    "unit": SubsUnit,
+}
+
+parseData = database.collect_parse_data(subs)
 
 # Collect locations to save all files
 fileNames = saving.collect_file_paths(pubCon)
@@ -126,11 +144,8 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
         # Cycle through the range of URLs
         for i in range(start, end + 1):
-            """
-            # REMOVE OLD DATABASE ENTRIES
             if debugData.uploadData:
-                database.remove_data(db.cursor, i, log)
-            """
+                database.remove_data(db, i, log)
             
             # TEST FOR ACTIVE URL
             if debugData.scrapeUrl:
@@ -161,12 +176,9 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 content = None
             
             if content:
-                """
-                # UPLOAD INFORMATION TO DATABASE
                 if debugData.uploadData:
-                    database.upload_data(content, db.cursor, log)
-
-
+                    database.upload_data(content, db, log)
+                """
                 # UPLOAD SUBS INFORMATION TO DATABASE
                 if debugData.uploadSubs:
                     database.upload_sub(content, db.cursor, log)
@@ -174,19 +186,8 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 # SAVE BACKUP COPY OF DATA
                 saving.save_data(content, saveFiles, log)
 
-            # Commit the database queries
-            """
-            try:
-                db.connection.commit()
-            except Exception as e:
-                log.critical("Unable to update database for %s: %e" % (i, e))
-            """
         """
         # UPDATE WEBSITE DETAILS
         if debugData.updateWebsite:
             website.update_details(priCon, log)
         """
-    """
-    # Close Database Connection
-    db.connection.close()
-    """

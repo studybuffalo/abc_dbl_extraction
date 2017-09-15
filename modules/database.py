@@ -29,47 +29,10 @@ class ParseData(object):
         self.manufacturer = manufacturer
         self.atc = atc
 
-
-def setup_db_connection(conf, log):
-    """Sets up MySQL database connections and cursor"""
-    import pymysql.cursors
-
-    db = conf.get("mysql", "db")
-    host = conf.get("mysql", "host")
-    user = conf.get("mysql", "user")
-    pw = conf.get("mysql", "password")
-
-    try:
-        connection = pymysql.connect(host=host, 
-                                     user=user, 
-                                     password=pw, 
-                                     db=db, 
-                                     charset="utf8",
-                                     cursorclass=pymysql.cursors.DictCursor)
-    except:
-        log.exception("Unable to connect to database")
-        connection = None
-
-    try:
-        cursor = connection.cursor()
-    except:
-        log.exception("Unable to establish database cursor")
-        cursor = None
-
-    db = DB(connection, cursor)
-
-    return db
-
-def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric, 
-                       SubsManufacturer, SubsPTC, SubsUnit):
+def collect_parse_data(subs):
     """Retrieves all the required parsing data from the database
         args:
-            SubsATC: The Django ATCDescriptions model
-            SubsBSRF: The Django SubsBSRF model
-            SubsGeneric: The Django SubsGeneric model
-            SubsManufactuer: The Django SubsManufacturer Model
-            SubsPTC: The Django SubsPTC model
-            SubsUnit: The Django SubsUnit model
+            subs: a dictionary of Django substitution models
 
         returns:
             ParseData:  an object containing all the parse data. All 
@@ -84,7 +47,7 @@ def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric,
     atcC = []
     atcD = []
 
-    for item in SubsATC.objects.all().order_by("code"):
+    for item in subs["atc"].objects.all().order_by("code"):
         atcC.append(item.code)
         atcD.append(item.description)
 
@@ -94,7 +57,7 @@ def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric,
     bsrfO = []
     bsrfC = []
 
-    for item in SubsBSRF.objects.all().order_by("bsrf"):
+    for item in subs["bsrf"].objects.all().order_by("bsrf"):
         bsrfO.append(item.bsrf)
         bsrfC.append(BSRFSub(
             item.brand_name, item.strength, item.route, item.dosage_form
@@ -106,7 +69,7 @@ def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric,
     genericO = []
     genericC = []
 
-    for item in SubsGeneric.objects.all().order_by("original"):
+    for item in subs["generic"].objects.all().order_by("original"):
         genericO.append(item.original)
         genericC.append(item.correction)
 
@@ -116,7 +79,7 @@ def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric,
     manufO = []
     manufC = []
 
-    for item in SubsManufacturer.objects.all().order_by("original"):
+    for item in subs["manufacturer"].objects.all().order_by("original"):
         manufO.append(item.original)
         manufC.append(item.correction)
 
@@ -126,7 +89,7 @@ def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric,
     ptcO = []
     ptcC = []
 
-    for item in SubsPTC.objects.all().order_by("original"):
+    for item in subs["ptc"].objects.all().order_by("original"):
         ptcO.append(item.original)
         ptcC.append(item.correction)
 
@@ -136,103 +99,110 @@ def collect_parse_data(SubsATC, SubsBSRF, SubsGeneric,
     
     units = []
 
-    for item in SubsUnit.objects.all().order_by("original"):
+    for item in subs["unit"].objects.all().order_by("original"):
         units.append(Units(item.original, item.correction))
 
     return ParseData(ptc, bsrf, units, generic, manufacturer, atc)
 
-def remove_data(cursor, url, log):
+def remove_data(db, url, log):
     """Removes the data for the specified URL"""
     log.debug("URL %s: Removing database entries" % url)
-
-    s = "DELETE FROM abc_atc WHERE url = %s"
-    cursor.execute(s, url)
     
-    s = "DELETE FROM abc_coverage WHERE url = %s"
-    cursor.execute(s, url)
-    
-    s = "DELETE FROM abc_extra_information WHERE url = %s"
-    cursor.execute(s, url)
-    
-    s = "DELETE FROM abc_price WHERE url = %s"
-    cursor.execute(s, url)
-    
-    s = "DELETE FROM abc_ptc WHERE url = %s"
-    cursor.execute(s, url)
-
-    s = "DELETE FROM abc_special_authorization WHERE url = %s"
-    cursor.execute(s, url)
+    db["atc"].objects.filter(url=url).delete()
+    db["coverage"].objects.filter(url=url).delete()
+    db["extra"].objects.filter(url=url).delete()
+    db["ptc"].objects.filter(url=url).delete()
+    db["price"].objects.filter(url=url).delete()
+    db["special"].objects.filter(url=url).delete()
  
-def upload_data(content, cursor, log):
+def upload_data(content, db, log):
     """Uploads the content to the respective database tables"""
     log.debug("URL %s: Uploading data to database" % content.url)
 
-    # Construct and execute abc_price query
-    s = ("INSERT INTO abc_price (url, din, brand_name, strength, "
-         "route, dosage_form, generic_name, unit_price, lca, lca_text, "
-         "unit_issue) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    price = (content.url, content.din.parse, content.bsrf.brand, 
-             content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
-             content.genericName.parse, content.unitPrice.parse, 
-             content.lca.value, content.lca.text, content.unitIssue.parse)
+    # save the ATC data to the Django DB
+    atc = db["atc"](
+        url=content.url,
+        atc_1=content.atc.code1,
+        atc_1_text=content.atc.text1,
+        atc_2=content.atc.code2,
+        atc_2_text=content.atc.text2,
+        atc_3=content.atc.code3,
+        atc_3_text=content.atc.text3,
+        atc_4=content.atc.code4,
+        atc_4_text=content.atc.text4,
+    )
+    atc.save()
+    # Save the Coverage data to the Django DB
+    coverage = db["coverage"](
+        url=content.url,
+        coverage=content.coverage.parse,
+        criteria=content.criteria.criteria,
+        criteria_sa=content.criteria.special,
+        criteria_p=content.criteria.palliative,
+        group_1=content.clients.g1,
+        group_66=content.clients.g66,
+        group_66a=content.clients.g66a,
+        group_19823=content.clients.g19823,
+        group_19823a=content.clients.g19823a,
+        group_19824=content.clients.g19824,
+        group_20400=content.clients.g20400,
+        group_20403=content.clients.g20403,
+        group_20514=content.clients.g20514,
+        group_22128=content.clients.g22128,
+        group_23609=content.clients.g23609,
+    )
+    coverage.save()
 
-    cursor.execute(s, price)
+    # Save the Extra Information to the django DB
+    extra = db["extra"](
+        url=content.url,
+        date_listed=content.dateListed.parse,
+        date_discontinued=content.dateDiscontinued.parse,
+        manufacturer=content.manufacturer.parse,
+        schedule=content.schedule.parse,
+        interchangeable=content.interchangeable.parse,
+    )
+    extra.save()
+    
+    # Save the price data to the Django DB
+    price = db["price"](
+        url=content.url,
+        din=content.din.parse,
+        brand_name=content.bsrf.brand,
+        strength=content.bsrf.strength,
+        route=content.bsrf.route,
+        dosage_form=content.bsrf.form,
+        generic_name=content.genericName.parse,
+        unit_price=content.unitPrice.parse,
+        lca=content.lca.value,
+        lca_text=content.lca.text,
+        unit_issue=content.unitIssue.parse,
+    )
+    price.save()
 
-    # Construct and execute abc_coverage query
-    s = ("INSERT INTO abc_coverage (url, coverage, criteria, criteria_sa, "
-         "criteria_p, group_1, group_66, group_66a, group_19823, "
-         "group_19823a, group_19824, group_20400, group_20403, group_20514, "
-         "group_22128, group_23609) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, "
-         "%s, %s, %s, %s, %s, %s, %s, %s)")
-    coverage = (content.url, content.coverage.parse, 
-                content.criteria.criteria, content.criteria.special, 
-                content.criteria.palliative, content.clients.g1, 
-                content.clients.g66, content.clients.g66a,
-                content.clients.g19823, content.clients.g19823a, 
-                content.clients.g19824, content.clients.g20400, 
-                content.clients.g20403, content.clients.g20514, 
-                content.clients.g22128, content.clients.g23609)
-    cursor.execute(s, coverage)
+    # Save the PTC data to the Django DB
+    ptc = db["ptc"](
+        url=content.url,
+        ptc_1=content.ptc.code1,
+        ptc_1_text=content.ptc.text1,
+        ptc_2=content.ptc.code2,
+        ptc_2_text=content.ptc.text2,
+        ptc_3=content.ptc.code3,
+        ptc_3_text=content.ptc.text3,
+        ptc_4=content.ptc.code4,
+        ptc_4_text=content.ptc.text4,
+    )
+    ptc.save()
 
-    # Construct and execute abc_special_authorization query 
-    # (if there are values)
-    s = ("INSERT INTO abc_special_authorization (url, title, link) "
-            "VALUES (%s, %s, %s)")
-        
+    # Save any special auth results to the Django DB
     for spec in content.specialAuth:
-        special = (content.url, spec.text, spec.link)
-        cursor.execute(s, special)
-
-    # Construct and execute abc_ptc query
-    s = ("INSERT INTO abc_ptc (url, ptc_1, ptc_1_text, ptc_2, ptc_2_text, "
-         "ptc_3, ptc_3_text, ptc_4, ptc_4_text) "
-         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    ptc = (content.url, content.ptc.code1, content.ptc.text1, 
-           content.ptc.code2, content.ptc.text2, 
-           content.ptc.code3, content.ptc.text3, 
-           content.ptc.code4, content.ptc.text4)
-    cursor.execute(s, ptc)
-
-    # Construct and execute abc_atc query
-    s = ("INSERT INTO abc_atc (url, atc_1, atc_1_text, atc_2, atc_2_text, "
-         "atc_3, atc_3_text, atc_4, atc_4_text, atc_5, atc_5_text) "
-         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    atc = (content.url, content.atc.code1, content.atc.text1, 
-           content.atc.code2, content.atc.text2, 
-           content.atc.code3, content.atc.text3, 
-           content.atc.code4, content.atc.text4, 
-           content.atc.code5, content.atc.text5)
-    cursor.execute(s, atc)
-
-    # Construct and execute abc_extra_information query
-    s = ("INSERT INTO abc_extra_information (url, date_listed, "
-         "date_discontinued, manufacturer, schedule, interchangeable) "
-         "VALUES (%s, %s, %s, %s, %s, %s)")
-    extra = (content.url, content.dateListed.parse, 
-             content.dateDiscontinued.parse, content.manufacturer.parse, 
-             content.schedule.parse, content.interchangeable.parse)
-    cursor.execute(s, extra)
-
+        special = db["special"](
+            url=content.url,
+            text=spec.text,
+            link=spec.link,
+        )
+        special.save()
+    
 def upload_sub(content, cursor, log):
     """Uploads any data missing a substitution to database"""
     log.debug("URL %s: Uploading sub data" % content.url)

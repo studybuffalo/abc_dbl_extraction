@@ -322,7 +322,7 @@ def extract_page_content(url, page, parseData, log):
             date = datetime.strptime(dateString, "%d-%b-%Y")
 
             # Format for MySQL (yyyy-mm-dd)
-            date = date.strftime("%y-%m-%d")
+            date = date.strftime("%Y-%m-%d")
         except ValueError:
             # Expected behaviour for most situations without a date
             date = None
