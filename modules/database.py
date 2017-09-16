@@ -198,7 +198,7 @@ def upload_data(content, db, log):
     for spec in content.specialAuth:
         special = db["special"](
             url=content.url,
-            text=spec.text,
+            title=spec.text,
             link=spec.link,
         )
         special.save()
