@@ -207,12 +207,13 @@ def upload_sub(content, pend, log):
     """Uploads any data missing a substitution to database"""
     log.debug("URL %s: Uploading sub data" % content.url)
 
-    #TODO: Replace the INSERT ... UPDATE ON DUPLICATE KEY
+    # TODO: Replace the INSERT ... UPDATE ON DUPLICATE KEY
+    # TODO: Figure out if a URL field is needed or not 
+    # (or if it is tied to a separate table)
 
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
         bsrf = pend["bsrf"](
-            url=content.url,
             original=content.bsrf.html,
             brand_name=content.bsrf.brand,
             strength=content.bsrf.strength,
@@ -224,7 +225,6 @@ def upload_sub(content, pend, log):
     # Upload the generic sub data
     if content.genericName.matched == False:
         generic = pend["generic"](
-            url=content.url,
             original=content.genericName.html,
             correction=content.genericName.parse,
         )
@@ -232,8 +232,7 @@ def upload_sub(content, pend, log):
 
     # Upload the manufacturer sub data
     if content.manufacturer.matched == False:
-        manufacturer = pend["generic"](
-            url=content.url,
+        manufacturer = pend["manufacturer"](
             original=content.manufacturer.html,
             correction=content.manufacturer.parse,
         )
@@ -242,7 +241,6 @@ def upload_sub(content, pend, log):
     # Upload the PTC sub data
     if content.ptc.matched1 == False and content.ptc.text1:
         ptc1 = pend["ptc"](
-            url=content.url,
             original=content.ptc.html1,
             correction=content.ptc.text1,
         )
@@ -250,7 +248,6 @@ def upload_sub(content, pend, log):
 
     if content.ptc.matched2 == False and content.ptc.text2:
         ptc2 = pend["ptc"](
-            url=content.url,
             original=content.ptc.html2,
             correction=content.ptc.text2,
         )
@@ -258,7 +255,6 @@ def upload_sub(content, pend, log):
 
     if content.ptc.matched3 == False and content.ptc.text3:
         ptc3 = pend["ptc"](
-            url=content.url,
             original=content.ptc.html3,
             correction=content.ptc.text3,
         )
@@ -266,7 +262,6 @@ def upload_sub(content, pend, log):
 
     if content.ptc.matched4 == False and content.ptc.text4:
         ptc14 = pend["ptc"](
-            url=content.url,
             original=content.ptc.html4,
             correction=content.ptc.text4,
         )
