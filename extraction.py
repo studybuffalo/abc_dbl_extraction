@@ -76,7 +76,7 @@ application = get_wsgi_application()
 from drug_price_calculator.models import (
     ATC, Coverage, ExtraInformation, PTC, Price, SpecialAuthorization, 
     ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, 
-    SubsUnit
+    SubsUnit, PendBSRF, PendGeneric, PendManufacturer, PendPTC
 )
 db = {
     "atc": ATC,
@@ -94,6 +94,13 @@ subs = {
     "manufacturer": SubsGeneric,
     "ptc": SubsPTC,
     "unit": SubsUnit,
+}
+
+pend = {
+    "bsrf": PendBSRF,
+    "generic": PendGeneric,
+    "manufacturer": PendManufacturer,
+    "ptc": PendPTC,
 }
 
 parseData = database.collect_parse_data(subs)
@@ -178,11 +185,11 @@ with open(fileNames.url.absolute(), "w") as fURL, \
             if content:
                 if debugData.uploadData:
                     database.upload_data(content, db, log)
-                """
+                
                 # UPLOAD SUBS INFORMATION TO DATABASE
-                if debugData.uploadSubs:
-                    database.upload_sub(content, db.cursor, log)
-                """
+                # if debugData.uploadSubs:
+                #    database.upload_sub(content, pend, log)
+                
                 # SAVE BACKUP COPY OF DATA
                 saving.save_data(content, saveFiles, log)
 

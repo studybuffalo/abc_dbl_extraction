@@ -203,76 +203,71 @@ def upload_data(content, db, log):
         )
         special.save()
     
-def upload_sub(content, cursor, log):
+def upload_sub(content, pend, log):
     """Uploads any data missing a substitution to database"""
     log.debug("URL %s: Uploading sub data" % content.url)
 
+    #TODO: Replace the INSERT ... UPDATE ON DUPLICATE KEY
+
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
-        s = ("INSERT INTO abc_pend_bsrf (url, original, brand_name, "
-             "strength, route, dosage_form) VALUES (%s, %s, %s, %s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE brand_name = %s, strength = %s, "
-             "route = %s, dosage_form = %s")
-        bsrf = (content.url, content.bsrf.html, content.bsrf.brand,
-                content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
-                content.bsrf.brand, content.bsrf.strength, content.bsrf.route, 
-                content.bsrf.form)
-
-        cursor.execute(s, bsrf)
+        bsrf = pend["bsrf"](
+            url=content.url,
+            original=content.bsrf.html,
+            brand_name=content.bsrf.brand,
+            strength=content.bsrf.strength,
+            route=content.bsrf.route,
+            dosage_form=content.bsrf.form,
+        )
+        bsrf.save()
 
     # Upload the generic sub data
     if content.genericName.matched == False:
-        s = ("INSERT INTO abc_pend_generic (url, original, correction) "
-             "VALUES (%s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE correction = %s")
-        generic = (content.url, content.genericName.html, 
-                   content.genericName.parse, content.genericName.parse)
-
-        cursor.execute(s, generic)
+        generic = pend["generic"](
+            url=content.url,
+            original=content.genericName.html,
+            correction=content.genericName.parse,
+        )
+        generic.save()
 
     # Upload the manufacturer sub data
     if content.manufacturer.matched == False:
-        s = ("INSERT INTO abc_pend_manufacturer (url, original, correction) "
-             "VALUES (%s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE correction = %s")
-        manuf = (content.url, content.manufacturer.html, 
-                   content.manufacturer.parse, content.manufacturer.parse)
-
-        cursor.execute(s, manuf)
+        manufacturer = pend["generic"](
+            url=content.url,
+            original=content.manufacturer.html,
+            correction=content.manufacturer.parse,
+        )
+        generic.save()
 
     # Upload the PTC sub data
     if content.ptc.matched1 == False and content.ptc.text1:
-        s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
-             "VALUES (%s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc1 = (content.url, content.ptc.html1, 
-                content.ptc.text1, content.ptc.text1)
-
-        cursor.execute(s, ptc1)
+        ptc1 = pend["ptc"](
+            url=content.url,
+            original=content.ptc.html1,
+            correction=content.ptc.text1,
+        )
+        ptc1.save()
 
     if content.ptc.matched2 == False and content.ptc.text2:
-        s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
-             "VALUES (%s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc2 = (content.url, content.ptc.html2, 
-                content.ptc.text2, content.ptc.text2)
-
-        cursor.execute(s, ptc2)
+        ptc2 = pend["ptc"](
+            url=content.url,
+            original=content.ptc.html2,
+            correction=content.ptc.text2,
+        )
+        ptc2.save()
 
     if content.ptc.matched3 == False and content.ptc.text3:
-        s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
-             "VALUES (%s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc3 = (content.url, content.ptc.html3, 
-                content.ptc.text3, content.ptc.text3)
-
-        cursor.execute(s, ptc3)
+        ptc3 = pend["ptc"](
+            url=content.url,
+            original=content.ptc.html3,
+            correction=content.ptc.text3,
+        )
+        ptc3.save()
 
     if content.ptc.matched4 == False and content.ptc.text4:
-        s = ("INSERT INTO abc_pend_ptc (url, original, correction) "
-             "VALUES (%s, %s, %s) "
-             "ON DUPLICATE KEY UPDATE correction = %s")
-        ptc4 = (content.url, content.ptc.html4, 
-                content.ptc.text4, content.ptc.text4)
-
-        cursor.execute(s, ptc4)
+        ptc14 = pend["ptc"](
+            url=content.url,
+            original=content.ptc.html4,
+            correction=content.ptc.text4,
+        )
+        ptc4.save()
