@@ -206,63 +206,62 @@ def upload_data(content, db, log):
 def upload_sub(content, pend, log):
     """Uploads any data missing a substitution to database"""
     log.debug("URL %s: Uploading sub data" % content.url)
-
-    # TODO: Replace the INSERT ... UPDATE ON DUPLICATE KEY
+    
     # TODO: Figure out if a URL field is needed or not 
     # (or if it is tied to a separate table)
 
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
-        bsrf = pend["bsrf"](
-            original=content.bsrf.html,
-            brand_name=content.bsrf.brand,
-            strength=content.bsrf.strength,
-            route=content.bsrf.route,
-            dosage_form=content.bsrf.form,
+        bsrf, created = pend["bsrf"].get_or_create(
+            original=content.bsrf.html
         )
+        bsrf.brand_name=content.bsrf.brand
+        bsrf.strength=content.bsrf.strength
+        bsrf.route=content.bsrf.route
+        bsrf.dosage_form=content.bsrf.form
         bsrf.save()
 
     # Upload the generic sub data
     if content.genericName.matched == False:
-        generic = pend["generic"](
+        generic, created = pend["generic"].get_or_create(
             original=content.genericName.html,
-            correction=content.genericName.parse,
         )
+        generic.correction=content.genericName.parse
         generic.save()
 
     # Upload the manufacturer sub data
     if content.manufacturer.matched == False:
-        manufacturer = pend["manufacturer"](
+        manufacturer, created = pend["manufacturer"].get_or_create(
             original=content.manufacturer.html,
-            correction=content.manufacturer.parse,
         )
-        generic.save()
+        manufacturer.correction=content.manufacturer.parse
+        manufacturer.save()
 
     # Upload the PTC sub data
     if content.ptc.matched1 == False and content.ptc.text1:
-        ptc1 = pend["ptc"](
+        ptc1, created = pend["ptc"].get_or_create(
             original=content.ptc.html1,
-            correction=content.ptc.text1,
         )
+        ptc1.correction=content.ptc.text1
         ptc1.save()
 
     if content.ptc.matched2 == False and content.ptc.text2:
-        ptc2 = pend["ptc"](
+        ptc2, created = pend["ptc"].get_or_create(
             original=content.ptc.html2,
-            correction=content.ptc.text2,
         )
+        ptc2.correction=content.ptc.text2
         ptc2.save()
 
     if content.ptc.matched3 == False and content.ptc.text3:
-        ptc3 = pend["ptc"](
+        ptc3, created = pend["ptc"].get_or_create(
             original=content.ptc.html3,
-            correction=content.ptc.text3,
         )
+        ptc3.correction=content.ptc.text3
         ptc3.save()
 
     if content.ptc.matched4 == False and content.ptc.text4:
-        ptc14 = pend["ptc"](
+        ptc4, created = pend["ptc"](
             original=content.ptc.html4,
-            correction=content.ptc.text4,
         )
+        ptc4.correction=content.ptc.text4
         ptc4.save()
