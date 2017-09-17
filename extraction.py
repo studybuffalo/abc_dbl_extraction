@@ -187,8 +187,8 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                     database.upload_data(content, db, log)
                 
                 # UPLOAD SUBS INFORMATION TO DATABASE
-                # if debugData.uploadSubs:
-                #    database.upload_sub(content, pend, log)
+                if debugData.uploadSubs:
+                    database.upload_sub(content, pend, log)
                 
                 # SAVE BACKUP COPY OF DATA
                 saving.save_data(content, saveFiles, log)
