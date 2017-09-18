@@ -212,7 +212,7 @@ def upload_sub(content, pend, log):
 
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
-        bsrf, created = pend["bsrf"].get_or_create(
+        bsrf, created = pend["bsrf"].objects.get_or_create(
             original=content.bsrf.html
         )
         bsrf.brand_name=content.bsrf.brand
@@ -223,7 +223,7 @@ def upload_sub(content, pend, log):
 
     # Upload the generic sub data
     if content.genericName.matched == False:
-        generic, created = pend["generic"].get_or_create(
+        generic, created = pend["generic"].objects.get_or_create(
             original=content.genericName.html,
         )
         generic.correction=content.genericName.parse
@@ -231,7 +231,7 @@ def upload_sub(content, pend, log):
 
     # Upload the manufacturer sub data
     if content.manufacturer.matched == False:
-        manufacturer, created = pend["manufacturer"].get_or_create(
+        manufacturer, created = pend["manufacturer"].objects.get_or_create(
             original=content.manufacturer.html,
         )
         manufacturer.correction=content.manufacturer.parse
@@ -239,28 +239,28 @@ def upload_sub(content, pend, log):
 
     # Upload the PTC sub data
     if content.ptc.matched1 == False and content.ptc.text1:
-        ptc1, created = pend["ptc"].get_or_create(
+        ptc1, created = pend["ptc"].objects.get_or_create(
             original=content.ptc.html1,
         )
         ptc1.correction=content.ptc.text1
         ptc1.save()
 
     if content.ptc.matched2 == False and content.ptc.text2:
-        ptc2, created = pend["ptc"].get_or_create(
+        ptc2, created = pend["ptc"].objects.get_or_create(
             original=content.ptc.html2,
         )
         ptc2.correction=content.ptc.text2
         ptc2.save()
 
     if content.ptc.matched3 == False and content.ptc.text3:
-        ptc3, created = pend["ptc"].get_or_create(
+        ptc3, created = pend["ptc"].objects.get_or_create(
             original=content.ptc.html3,
         )
         ptc3.correction=content.ptc.text3
         ptc3.save()
 
     if content.ptc.matched4 == False and content.ptc.text4:
-        ptc4, created = pend["ptc"](
+        ptc4, created = pend["ptc"].objects.get_or_create(
             original=content.ptc.html4,
         )
         ptc4.correction=content.ptc.text4
