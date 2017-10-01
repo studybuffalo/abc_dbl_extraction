@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Extracts and saves the Alberta Blue Cross idbl.
+"""Extracts and saves the Alberta Blue Cross iDBL.
 
     Last Update: 2017-Sep-14
 
@@ -37,27 +37,22 @@ from modules import extraction, saving, database, website, debugging
 root = Path(sys.argv[1])
 
 
-# Get the public config file
-pubCon = configparser.ConfigParser()
-pubCon.read(root.child("abc_config.cfg").absolute())
-
-# Get the private config file
-priCon = configparser.ConfigParser()
-priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
-
+# Get the config file
+config = configparser.ConfigParser()
+config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
 # Set up logging
-log = python_logging.start(priCon)
+log = python_logging.start(config)
 
 
 # Collect debug status
-debugData = debugging.get_debug_status(pubCon, log)
+debugData = debugging.get_debug_status(config, log)
 
 
 # Setup robot details and create session
-userAgent = pubCon.get("robot", "user_agent", raw=True)
-userFrom = pubCon.get("robot", "from", raw=True)
-crawlDelay = pubCon.getfloat("misc", "crawl_delay")
+userAgent = config.get("robot", "user_agent", raw=True)
+userFrom = config.get("robot", "from", raw=True)
+crawlDelay = config.getfloat("misc", "crawl_delay")
 
 session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
@@ -67,9 +62,9 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 # Connect to to Django database
-djangoApp = priCon.get("django", "location")
+djangoApp = config.get("django", "location")
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sb_django.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "studybuffalo.settings")
 sys.path.append(djangoApp)
 application = get_wsgi_application()
 
@@ -106,7 +101,7 @@ pend = {
 parseData = database.collect_parse_data(subs)
 
 # Collect locations to save all files
-fileNames = saving.collect_file_paths(pubCon)
+fileNames = saving.collect_file_paths(config)
 
 
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
