@@ -181,7 +181,10 @@ def upload_data(content, db):
         lca_text=content.lca.text,
         unit_issue=content.unitIssue.parse,
     )
-    price.save()
+    try:
+        price.save()
+    except Exception as e:
+        log.debug("Unable to save to price model: %s" % e)
 
     # Save the PTC data to the Django DB
     ptc = db["ptc"](
