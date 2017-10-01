@@ -26,9 +26,15 @@
 import sys
 from unipath import Path
 import configparser
-import python_logging
+
 import requests
 import time
+import os
+from django.core.wsgi import get_wsgi_application
+import environ
+import PIL
+import logging
+import logging.config
 from modules import extraction, saving, database, website, debugging
 
 
@@ -42,8 +48,12 @@ config = configparser.ConfigParser()
 config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
 # Set up logging
-log = python_logging.start(config)
+# log = python_logging.start(config)
 
+log_config = Path(root.parent, "config", "abc_dbl_extraction_logging.cfg")
+logging.config.fileConfig(log_config)
+log = logging.getLogger("simple")
+log.propagate = False
 
 # Collect debug status
 debugData = debugging.get_debug_status(config, log)
@@ -58,9 +68,6 @@ session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
 # Set up the connection to the Django models
-import os
-from django.core.wsgi import get_wsgi_application
-
 # Connect to to Django database
 djangoApp = config.get("django", "location")
 
@@ -73,6 +80,7 @@ from drug_price_calculator.models import (
     ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, 
     SubsUnit, PendBSRF, PendGeneric, PendManufacturer, PendPTC
 )
+
 db = {
     "atc": ATC,
     "coverage": Coverage,
