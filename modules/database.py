@@ -121,7 +121,7 @@ def remove_data(db, url):
 def upload_data(content, db):
     """Uploads the content to the respective database tables"""
     log.debug("URL %s: Uploading data to database" % content.url)
-
+    
     # save the ATC data to the Django DB
     atc = db["atc"](
         url=content.url,
@@ -181,10 +181,7 @@ def upload_data(content, db):
         lca_text=content.lca.text,
         unit_issue=content.unitIssue.parse,
     )
-    try:
-        price.save()
-    except Exception as e:
-        log.debug("Unable to save to price model: %s" % e)
+    price.save()
 
     # Save the PTC data to the Django DB
     ptc = db["ptc"](
