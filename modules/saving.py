@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 class FileNames(object):
     def __init__(self, url, html, price, coverage, 
                  specialAuth, ptc, atc, extra):
@@ -98,7 +101,7 @@ def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
 
     return saveFiles
 
-def save_data(content, save, log):
+def save_data(content, save):
     """Saves the information in content to respective files"""
     log.debug("URL %s: Saving data to file" % content.url)
 

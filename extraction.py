@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Extracts and saves the Alberta Blue Cross idbl.
+"""Extracts and saves the Alberta Blue Cross iDBL.
 
-    Last Update: 2017-Mar-30
+    Last Update: 2017-Sep-14
 
     Copyright (c) Notices
 	    2017	Joshua R. Torrance	<studybuffalo@studybuffalo.com>
@@ -21,60 +21,90 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, 
     see <http://www.gnu.org/licenses/>.
-
-    SHOULD YOU REQUIRE ANY EXCEPTIONS TO THIS LICENSE, PLEASE CONTACT 
-    THE COPYRIGHT HOLDERS.
 """
 
-import sys
-from unipath import Path
 import configparser
-import python_logging
+from django.core.wsgi import get_wsgi_application
+import logging
+import logging.config
+from modules import extraction, saving, database, debugging
+import os
 import requests
+import sys
 import time
-from modules import extraction, saving, database, website, debugging
-
+from unipath import Path
 
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
 root = Path(sys.argv[1])
 
 
-# Get the public config file
-pubCon = configparser.ConfigParser()
-pubCon.read(root.child("abc_config.cfg").absolute())
-
-# Get the private config file
-priCon = configparser.ConfigParser()
-priCon.read(Path(pubCon.get("misc", "private_config")).absolute())
-
+# Get the config file
+config = configparser.ConfigParser()
+config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
 # Set up logging
-log = python_logging.start(priCon)
+# log = python_logging.start(config)
 
+log_config = Path(root.parent, "config", "abc_dbl_extraction_logging.cfg")
+logging.config.fileConfig(log_config)
+log = logging.getLogger(__name__)
 
 # Collect debug status
-debugData = debugging.get_debug_status(pubCon, log)
+debugData = debugging.get_debug_status(config)
 
 
 # Setup robot details and create session
-userAgent = pubCon.get("robot", "user_agent", raw=True)
-userFrom = pubCon.get("robot", "from", raw=True)
-crawlDelay = pubCon.getfloat("misc", "crawl_delay")
+userAgent = config.get("robot", "user_agent", raw=True)
+userFrom = config.get("robot", "from", raw=True)
+crawlDelay = config.getfloat("misc", "crawl_delay")
 
 session = requests.Session()
 session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
+# Set up the connection to the Django models
+# Connect to to Django database
+djangoApp = config.get("django", "location")
 
-# Create a database cursor and connection cursor to run queries
-db = database.setup_db_connection(priCon, log)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "studybuffalo.settings")
+sys.path.append(djangoApp)
+application = get_wsgi_application()
 
-# Collects relevant data from database to enable data parsing
-parseData = database.collect_parse_data(db.cursor)
+from drug_price_calculator.models import (
+    ATC, Coverage, ExtraInformation, PTC, Price, SpecialAuthorization, 
+    ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, 
+    SubsUnit, PendBSRF, PendGeneric, PendManufacturer, PendPTC
+)
 
+db = {
+    "atc": ATC,
+    "coverage": Coverage,
+    "extra": ExtraInformation,
+    "ptc": PTC,
+    "price": Price,
+    "special": SpecialAuthorization,
+}
+
+subs = {
+    "atc": ATCDescriptions,
+    "bsrf": SubsBSRF,
+    "generic": SubsGeneric,
+    "manufacturer": SubsGeneric,
+    "ptc": SubsPTC,
+    "unit": SubsUnit,
+}
+
+pend = {
+    "bsrf": PendBSRF,
+    "generic": PendGeneric,
+    "manufacturer": PendManufacturer,
+    "ptc": PendPTC,
+}
+
+parseData = database.collect_parse_data(subs)
 
 # Collect locations to save all files
-fileNames = saving.collect_file_paths(pubCon)
+fileNames = saving.collect_file_paths(config)
 
 
 log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
@@ -119,17 +149,15 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
         # Cycle through the range of URLs
         for i in range(start, end + 1):
-            # REMOVE OLD DATABASE ENTRIES
             if debugData.uploadData:
-                database.remove_data(db.cursor, i, log)
-            
+                database.remove_data(db, i)
             
             # TEST FOR ACTIVE URL
             if debugData.scrapeUrl:
                 # Apply delay before crawling URL
                 time.sleep(crawlDelay)
             
-                urlData = extraction.scrape_url(i, session, log)
+                urlData = extraction.scrape_url(i, session)
             else:
                  # Program set to debug - use pre-set data
                 urlData = urlList[i]
@@ -142,38 +170,23 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                     time.sleep(crawlDelay)
 
                     content = extraction.collect_content(
-                        urlData, session, parseData, log
+                        urlData, session, parseData
                     )
                 else:
                     # Program set to debug - use pre-saved data
                     content = extraction.debug_data(
-                        urlData, debug.htmlLoc, parseData, log
+                        urlData, debug.htmlLoc, parseData
                     )
             else:
                 content = None
-
+            
             if content:
-                # UPLOAD INFORMATION TO DATABASE
                 if debugData.uploadData:
-                    database.upload_data(content, db.cursor, log)
-
-
+                    database.upload_data(content, db)
+                
                 # UPLOAD SUBS INFORMATION TO DATABASE
                 if debugData.uploadSubs:
-                    database.upload_sub(content, db.cursor, log)
-
+                    database.upload_sub(content, pend)
+                
                 # SAVE BACKUP COPY OF DATA
-                saving.save_data(content, saveFiles, log)
-
-            # Commit the database queries
-            try:
-                db.connection.commit()
-            except Exception as e:
-                log.critical("Unable to update database for %s: %e" % (i, e))
-        
-        # UPDATE WEBSITE DETAILS
-        if debugData.updateWebsite:
-            website.update_details(priCon, log)
-
-    # Close Database Connection
-    db.connection.close()
+                saving.save_data(content, saveFiles)

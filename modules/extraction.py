@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 class URLData(object):
     def __init__(self, id, url, status):
         self.id = id
@@ -151,7 +154,7 @@ def assemble_url(id):
 
     return url
 
-def check_url(id, url, session, log):
+def check_url(id, url, session):
     """Checks the provided URL for an active status code"""
     # Request the header for the provided url
     try:
@@ -176,7 +179,7 @@ def check_url(id, url, session, log):
 
     return status
 
-def scrape_url(id, session, log):
+def scrape_url(id, session):
     """Takes the provided ID # and checks if it returns active URL
         args:
             session:    a requests session to request headers
@@ -189,10 +192,9 @@ def scrape_url(id, session, log):
         raises:
             none.
     """
-
     url = assemble_url(id)
             
-    data = check_url(id, url, session, log)
+    data = check_url(id, url, session)
             
     # Return the URL
     return data
@@ -282,7 +284,7 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
-def extract_page_content(url, page, parseData, log):
+def extract_page_content(url, page, parseData):
     """Takes the provided HTML page and extracts all relevant content
         args:
             url:        url to extract data from
@@ -322,7 +324,7 @@ def extract_page_content(url, page, parseData, log):
             date = datetime.strptime(dateString, "%d-%b-%Y")
 
             # Format for MySQL (yyyy-mm-dd)
-            date = date.strftime("%y-%m-%d")
+            date = date.strftime("%Y-%m-%d")
         except ValueError:
             # Expected behaviour for most situations without a date
             date = None
@@ -1019,7 +1021,7 @@ def extract_page_content(url, page, parseData, log):
 
     return pageContent
 
-def collect_content(urlData, session, parseData, log):
+def collect_content(urlData, session, parseData):
     """Extracts the page content from the provided url
         args:
             urlData:    a URL data object with the url to extract
@@ -1046,8 +1048,7 @@ def collect_content(urlData, session, parseData, log):
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(urlData.id, page, parseData, 
-                                               log)
+            pageContent = extract_page_content(urlData.id, page, parseData)
             log.debug("URL %s: content extracted successfully" % urlData.id)
         except:
             log.exception("URL %s: unable to extract content" % urlData.id)

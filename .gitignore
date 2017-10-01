@@ -1,7 +1,2 @@
-# Ignore Visual Studio Solution Files
-*.pyproj
-*.sln
-*.suo
-
-/__pycache__
-/logs
+abc_dbl_extraction_logs.json
+extracted_data
