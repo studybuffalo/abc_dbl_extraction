@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 class Debug(object):
     def __init__(self, scrapeUrl, urlList, start, end, scrapeData, htmlLoc,
                uploadData, uploadSubs, updateWebsite):
@@ -12,7 +15,7 @@ class Debug(object):
         self.updateWebsite = updateWebsite
 
 
-def get_debug_status(conf, log):
+def get_debug_status(conf):
     """Collects all required data to enable program debugging modes"""
     from modules import extraction
 

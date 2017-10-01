@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 class DB(object):
     def __init__(self, connection, cursor):
         self.connection = connection
@@ -104,7 +107,7 @@ def collect_parse_data(subs):
 
     return ParseData(ptc, bsrf, units, generic, manufacturer, atc)
 
-def remove_data(db, url, log):
+def remove_data(db, url):
     """Removes the data for the specified URL"""
     log.debug("URL %s: Removing database entries" % url)
     
@@ -115,7 +118,7 @@ def remove_data(db, url, log):
     db["price"].objects.filter(url=url).delete()
     db["special"].objects.filter(url=url).delete()
  
-def upload_data(content, db, log):
+def upload_data(content, db):
     """Uploads the content to the respective database tables"""
     log.debug("URL %s: Uploading data to database" % content.url)
 
@@ -203,7 +206,7 @@ def upload_data(content, db, log):
         )
         special.save()
     
-def upload_sub(content, pend, log):
+def upload_sub(content, pend):
     """Uploads any data missing a substitution to database"""
     log.debug("URL %s: Uploading sub data" % content.url)
     

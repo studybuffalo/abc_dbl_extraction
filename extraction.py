@@ -23,20 +23,16 @@
     see <http://www.gnu.org/licenses/>.
 """
 
-import sys
-from unipath import Path
 import configparser
-
-import requests
-import time
-import os
 from django.core.wsgi import get_wsgi_application
-import environ
-import PIL
 import logging
 import logging.config
-from modules import extraction, saving, database, website, debugging
-
+from modules import extraction, saving, database, debugging
+import os
+import requests
+import sys
+import time
+from unipath import Path
 
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
@@ -52,11 +48,10 @@ config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
 log_config = Path(root.parent, "config", "abc_dbl_extraction_logging.cfg")
 logging.config.fileConfig(log_config)
-log = logging.getLogger("simple")
-log.propagate = False
+log = logging.getLogger(__name__)
 
 # Collect debug status
-debugData = debugging.get_debug_status(config, log)
+debugData = debugging.get_debug_status(config)
 
 
 # Setup robot details and create session
@@ -155,14 +150,14 @@ with open(fileNames.url.absolute(), "w") as fURL, \
         # Cycle through the range of URLs
         for i in range(start, end + 1):
             if debugData.uploadData:
-                database.remove_data(db, i, log)
+                database.remove_data(db, i)
             
             # TEST FOR ACTIVE URL
             if debugData.scrapeUrl:
                 # Apply delay before crawling URL
                 time.sleep(crawlDelay)
             
-                urlData = extraction.scrape_url(i, session, log)
+                urlData = extraction.scrape_url(i, session)
             else:
                  # Program set to debug - use pre-set data
                 urlData = urlList[i]
@@ -175,29 +170,23 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                     time.sleep(crawlDelay)
 
                     content = extraction.collect_content(
-                        urlData, session, parseData, log
+                        urlData, session, parseData
                     )
                 else:
                     # Program set to debug - use pre-saved data
                     content = extraction.debug_data(
-                        urlData, debug.htmlLoc, parseData, log
+                        urlData, debug.htmlLoc, parseData
                     )
             else:
                 content = None
             
             if content:
                 if debugData.uploadData:
-                    database.upload_data(content, db, log)
+                    database.upload_data(content, db)
                 
                 # UPLOAD SUBS INFORMATION TO DATABASE
                 if debugData.uploadSubs:
-                    database.upload_sub(content, pend, log)
+                    database.upload_sub(content, pend)
                 
                 # SAVE BACKUP COPY OF DATA
-                saving.save_data(content, saveFiles, log)
-
-        """
-        # UPDATE WEBSITE DETAILS
-        if debugData.updateWebsite:
-            website.update_details(priCon, log)
-        """
+                saving.save_data(content, saveFiles)
