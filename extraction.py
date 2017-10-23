@@ -190,3 +190,5 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 
                 # SAVE BACKUP COPY OF DATA
                 saving.save_data(content, saveFiles)
+
+log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION COMPLETE")
