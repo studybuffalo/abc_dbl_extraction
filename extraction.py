@@ -133,7 +133,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
 
     # If crawling is permitted, run the program
     if can_crawl:
-        log.info("Permissing granted to crawl site")
+        log.info("Permission granted to crawl site")
         log.info("Starting URL extraction")
         
         # Set the start and end for loop
