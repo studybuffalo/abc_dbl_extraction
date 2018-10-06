@@ -1,4 +1,0 @@
-django>=1.11.4
-bs4>=4.5.3
-requests>=2.14.2
-unipath>=1.1
