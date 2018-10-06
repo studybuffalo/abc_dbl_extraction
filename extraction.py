@@ -69,7 +69,7 @@ session.headers.update({"User-Agent": userAgent, "From": userFrom})
 # Connect to to Django database
 djangoApp = config.get("django", "location")
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "studybuffalo.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", config.get('django', 'settings'))
 sys.path.append(djangoApp)
 application = get_wsgi_application()
 
