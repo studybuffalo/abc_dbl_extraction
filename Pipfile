@@ -6,9 +6,11 @@ name = "pypi"
 [packages]
 bs4 = "*"  # https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 Django = "*"  # https://www.djangoproject.com/
+python-json-logger = "*"
 raven = "*"  # https://github.com/getsentry/raven-python
 requests = "*"  # https://github.com/requests/requests
 Unipath = "*"  # https://github.com/mikeorr/Unipath
+
 
 [dev-packages]
 # Code quality
