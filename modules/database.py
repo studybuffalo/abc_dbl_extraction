@@ -1,6 +1,9 @@
 # TODO: Determine if get_or_create is needed or if get can be used
 
+from django.db import DataError
 import logging
+
+
 log = logging.getLogger(__name__)
 
 class BSRFSub(object):
@@ -120,88 +123,115 @@ def upload_data(content, db):
     log.debug("URL %s: Uploading data to database" % content.url)
     
     # save the ATC data to the Django DB
-    atc = db["atc"](
-        url=content.url,
-        atc_1=content.atc.code1,
-        atc_1_text=content.atc.text1,
-        atc_2=content.atc.code2,
-        atc_2_text=content.atc.text2,
-        atc_3=content.atc.code3,
-        atc_3_text=content.atc.text3,
-        atc_4=content.atc.code4,
-        atc_4_text=content.atc.text4,
-    )
-    atc.save()
+    try:
+        atc = db["atc"](
+            url=content.url,
+            atc_1=content.atc.code1,
+            atc_1_text=content.atc.text1,
+            atc_2=content.atc.code2,
+            atc_2_text=content.atc.text2,
+            atc_3=content.atc.code3,
+            atc_3_text=content.atc.text3,
+            atc_4=content.atc.code4,
+            atc_4_text=content.atc.text4,
+        )
+        atc.save()
+    except DataError as e:
+        log.critical('Error uploading ATC data: {}'.format(e))
+
+
     # Save the Coverage data to the Django DB
-    coverage = db["coverage"](
-        url=content.url,
-        coverage=content.coverage.parse,
-        criteria=content.criteria.criteria,
-        criteria_sa=content.criteria.special,
-        criteria_p=content.criteria.palliative,
-        group_1=content.clients.g1,
-        group_66=content.clients.g66,
-        group_66a=content.clients.g66a,
-        group_19823=content.clients.g19823,
-        group_19823a=content.clients.g19823a,
-        group_19824=content.clients.g19824,
-        group_20400=content.clients.g20400,
-        group_20403=content.clients.g20403,
-        group_20514=content.clients.g20514,
-        group_22128=content.clients.g22128,
-        group_23609=content.clients.g23609,
-    )
-    coverage.save()
+    try:
+        coverage = db["coverage"](
+            url=content.url,
+            coverage=content.coverage.parse,
+            criteria=content.criteria.criteria,
+            criteria_sa=content.criteria.special,
+            criteria_p=content.criteria.palliative,
+            group_1=content.clients.g1,
+            group_66=content.clients.g66,
+            group_66a=content.clients.g66a,
+            group_19823=content.clients.g19823,
+            group_19823a=content.clients.g19823a,
+            group_19824=content.clients.g19824,
+            group_20400=content.clients.g20400,
+            group_20403=content.clients.g20403,
+            group_20514=content.clients.g20514,
+            group_22128=content.clients.g22128,
+            group_23609=content.clients.g23609,
+        )
+        coverage.save()
+    except DataError as e:
+        log.critical('Error uploading Coverage data: {}'.format(e))
+
 
     # Save the Extra Information to the django DB
-    extra = db["extra"](
-        url=content.url,
-        date_listed=content.dateListed.parse,
-        date_discontinued=content.dateDiscontinued.parse,
-        manufacturer=content.manufacturer.parse,
-        schedule=content.schedule.parse,
-        interchangeable=content.interchangeable.parse,
-    )
-    extra.save()
+    try:
+        extra = db["extra"](
+            url=content.url,
+            date_listed=content.dateListed.parse,
+            date_discontinued=content.dateDiscontinued.parse,
+            manufacturer=content.manufacturer.parse,
+            schedule=content.schedule.parse,
+            interchangeable=content.interchangeable.parse,
+        )
+        extra.save()
+    except DataError as e:
+        log.critical('Error uploading Extra data: {}'.format(e))
+
     
     # Save the price data to the Django DB
-    price = db["price"](
-        url=content.url,
-        din=content.din.parse,
-        brand_name=content.bsrf.brand,
-        strength=content.bsrf.strength,
-        route=content.bsrf.route,
-        dosage_form=content.bsrf.form,
-        generic_name=content.genericName.parse,
-        unit_price=content.unitPrice.parse,
-        lca=content.lca.value,
-        lca_text=content.lca.text,
-        unit_issue=content.unitIssue.parse,
-    )
-    price.save()
+    try:
+        price = db["price"](
+            url=content.url,
+            din=content.din.parse,
+            brand_name=content.bsrf.brand,
+            strength=content.bsrf.strength,
+            route=content.bsrf.route,
+            dosage_form=content.bsrf.form,
+            generic_name=content.genericName.parse,
+            unit_price=content.unitPrice.parse,
+            lca=content.lca.value,
+            lca_text=content.lca.text,
+            unit_issue=content.unitIssue.parse,
+        )
+        price.save()
+    except DataError as e:
+        log.critical('Error uploading Price data: {}'.format(e))
+
 
     # Save the PTC data to the Django DB
-    ptc = db["ptc"](
-        url=content.url,
-        ptc_1=content.ptc.code1,
-        ptc_1_text=content.ptc.text1,
-        ptc_2=content.ptc.code2,
-        ptc_2_text=content.ptc.text2,
-        ptc_3=content.ptc.code3,
-        ptc_3_text=content.ptc.text3,
-        ptc_4=content.ptc.code4,
-        ptc_4_text=content.ptc.text4,
-    )
-    ptc.save()
+    try:
+        ptc = db["ptc"](
+            url=content.url,
+            ptc_1=content.ptc.code1,
+            ptc_1_text=content.ptc.text1,
+            ptc_2=content.ptc.code2,
+            ptc_2_text=content.ptc.text2,
+            ptc_3=content.ptc.code3,
+            ptc_3_text=content.ptc.text3,
+            ptc_4=content.ptc.code4,
+            ptc_4_text=content.ptc.text4,
+        )
+        ptc.save()
+    except DataError as e:
+        log.critical('Error uploading PTC data: {}'.format(e))
+
 
     # Save any special auth results to the Django DB
-    for spec in content.specialAuth:
-        special = db["special"](
-            url=content.url,
-            title=spec.text,
-            link=spec.link,
+    try:
+        for spec in content.specialAuth:
+            special = db["special"](
+                url=content.url,
+                title=spec.text,
+                link=spec.link,
+            )
+            special.save()
+    except DataError as e:
+        log.critical(
+            'Error uploading Special Authorization data: {}'.format(e)
         )
-        special.save()
+
     
 def upload_sub(content, pend):
     """Uploads any data missing a substitution to database"""
@@ -212,56 +242,93 @@ def upload_sub(content, pend):
 
     # Upload the BSRF sub data
     if content.bsrf.matched == False:
-        bsrf, _ = pend["bsrf"].objects.get_or_create(
-            original=content.bsrf.html
-        )
-        bsrf.brand_name=content.bsrf.brand
-        bsrf.strength=content.bsrf.strength
-        bsrf.route=content.bsrf.route
-        bsrf.dosage_form=content.bsrf.form
-        bsrf.save()
+        try:
+            bsrf, _ = pend["bsrf"].objects.get_or_create(
+                original=content.bsrf.html
+            )
+            bsrf.brand_name=content.bsrf.brand
+            bsrf.strength=content.bsrf.strength
+            bsrf.route=content.bsrf.route
+            bsrf.dosage_form=content.bsrf.form
+            bsrf.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading BSRF Substitution data: {}'.format(e)
+            )
+
 
     # Upload the generic sub data
     if content.genericName.matched == False:
-        generic, _ = pend["generic"].objects.get_or_create(
-            original=content.genericName.html,
-        )
-        generic.correction=content.genericName.parse
-        generic.save()
+        try:
+            generic, _ = pend["generic"].objects.get_or_create(
+                original=content.genericName.html,
+            )
+            generic.correction=content.genericName.parse
+            generic.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading Generic Substitution data: {}'.format(e)
+            )
+
 
     # Upload the manufacturer sub data
     if content.manufacturer.matched == False:
-        manufacturer, _ = pend["manufacturer"].objects.get_or_create(
-            original=content.manufacturer.html,
-        )
-        manufacturer.correction=content.manufacturer.parse
-        manufacturer.save()
+        try:
+            manufacturer, _ = pend["manufacturer"].objects.get_or_create(
+                original=content.manufacturer.html,
+            )
+            manufacturer.correction=content.manufacturer.parse
+            manufacturer.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading Manufacturer Substitution data: {}'.format(e)
+            )
 
     # Upload the PTC sub data
     if content.ptc.matched1 == False and content.ptc.text1:
-        ptc1, _ = pend["ptc"].objects.get_or_create(
-            original=content.ptc.html1,
-        )
-        ptc1.correction=content.ptc.text1
-        ptc1.save()
+        try:
+            ptc1, _ = pend["ptc"].objects.get_or_create(
+                original=content.ptc.html1,
+            )
+            ptc1.correction=content.ptc.text1
+            ptc1.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading PTC1 Substitution data: {}'.format(e)
+            )
 
     if content.ptc.matched2 == False and content.ptc.text2:
-        ptc2, _ = pend["ptc"].objects.get_or_create(
-            original=content.ptc.html2,
-        )
-        ptc2.correction=content.ptc.text2
-        ptc2.save()
+        try:
+            ptc2, _ = pend["ptc"].objects.get_or_create(
+                original=content.ptc.html2,
+            )
+            ptc2.correction=content.ptc.text2
+            ptc2.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading PTC2 Substitution data: {}'.format(e)
+            )
 
     if content.ptc.matched3 == False and content.ptc.text3:
-        ptc3, _ = pend["ptc"].objects.get_or_create(
-            original=content.ptc.html3,
-        )
-        ptc3.correction=content.ptc.text3
-        ptc3.save()
+        try:
+            ptc3, _ = pend["ptc"].objects.get_or_create(
+                original=content.ptc.html3,
+            )
+            ptc3.correction=content.ptc.text3
+            ptc3.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading PTC3 Substitution data: {}'.format(e)
+            )
 
     if content.ptc.matched4 == False and content.ptc.text4:
-        ptc4, _ = pend["ptc"].objects.get_or_create(
-            original=content.ptc.html4,
-        )
-        ptc4.correction=content.ptc.text4
-        ptc4.save()
+        try:
+            ptc4, _ = pend["ptc"].objects.get_or_create(
+                original=content.ptc.html4,
+            )
+            ptc4.correction=content.ptc.text4
+            ptc4.save()
+        except DataError as e:
+            log.critical(
+                'Error uploading PTC4 Substitution data: {}'.format(e)
+            )
