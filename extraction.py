@@ -44,8 +44,11 @@ config = configparser.ConfigParser()
 config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
 # Set up logging & Sentry
-client = Client(config.get("sentry", "dsn"))
+if bool(config.getboolean('sentry', 'debug', fallback=False)) is False:
+    print('test')
+    client = Client(config.get("sentry", "dsn"))
 
+# TODO: Determine if this logging data can be cleaned up with Sentry now
 log_config = Path(root.parent, "config", "abc_dbl_extraction_logging.cfg")
 logging.config.fileConfig(log_config)
 log = logging.getLogger(__name__)
