@@ -67,10 +67,11 @@ session.headers.update({"User-Agent": userAgent, "From": userFrom})
 
 # Set up the connection to the Django models
 # Connect to to Django database
-djangoApp = config.get("django", "location")
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", config.get('django', 'settings'))
-sys.path.append(djangoApp)
+
+# Add required system paths to make connection work
+sys.path.append(config.get("django", "root_path"))
+sys.path.append(config.get("django", "app_path"))
 application = get_wsgi_application()
 
 from drug_price_calculator.models import ( # pylint: disable=import-error
