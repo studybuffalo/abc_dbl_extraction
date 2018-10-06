@@ -29,6 +29,7 @@ import logging
 import logging.config
 from modules import extraction, saving, database, debugging
 import os
+from raven import Client
 import requests
 import sys
 import time
@@ -43,8 +44,8 @@ root = Path(sys.argv[1])
 config = configparser.ConfigParser()
 config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
-# Set up logging
-# log = python_logging.start(config)
+# Set up logging & Sentry
+client = Client(config.get("sentry", "dsn"))
 
 log_config = Path(root.parent, "config", "abc_dbl_extraction_logging.cfg")
 logging.config.fileConfig(log_config)

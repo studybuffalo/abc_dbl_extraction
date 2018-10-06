@@ -4,12 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-bs4 = "*"
-requests = "*"
-Django = "*"
-Unipath = "*"
+bs4 = "*"  # https://www.crummy.com/software/BeautifulSoup/bs4/doc/
+Django = "*"  # https://www.djangoproject.com/
+raven = "*"  # https://github.com/getsentry/raven-python
+requests = "*"  # https://github.com/requests/requests
+Unipath = "*"  # https://github.com/mikeorr/Unipath
 
 [dev-packages]
+# Code quality
+# ------------------------------------------------------------------------------
+pylint = "*"  # https://github.com/PyCQA/pylint/
+coverage = "*"  # https://github.com/nedbat/coveragepy
 
 [requires]
 python_version = "3.6"
