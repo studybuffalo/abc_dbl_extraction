@@ -284,7 +284,7 @@ def download_page(session, url):
     else:
         raise IOError("%s returned status code %d" % (url, status))
 
-def extract_page_content(url, page, parseData):
+def extract_page_content(url, page, parseData, log):
     """Takes the provided HTML page and extracts all relevant content
         args:
             url:        url to extract data from
@@ -434,7 +434,7 @@ def extract_page_content(url, page, parseData):
                     numPrev = False
 
             # Pad list to 8 items
-            for i in range(0, 8 - len(newList)):
+            for _ in range(0, 8 - len(newList)):
                 newList.append(None)
 
             return newList
@@ -508,7 +508,7 @@ def extract_page_content(url, page, parseData):
             
             # Checks if the text has a substitution
             # Remove extra white space from searchText
-            searchText = re.sub("\s{2,}", " ", text)
+            searchText = re.sub(r"\s{2,}", " ", text)
             sub = binary_search(searchText, bsrfSubs)
 
             if sub:
@@ -822,19 +822,19 @@ def extract_page_content(url, page, parseData):
             # The regex matches to extract specific content
             searchList = [
                 # Level 1: Anatomical Main Group
-                "([a-zA-Z]).*$",
-		
+                r"([a-zA-Z]).*$",
+
                 # Level 2: Therapeutic Subgroup
-                "([a-zA-Z]\d\d).*$",
+                r"([a-zA-Z]\d\d).*$",
 
                 # Level 3: Pharmacological Subgroup
-                "([a-zA-Z]\d\d[a-zA-Z]).*$",
+                r"([a-zA-Z]\d\d[a-zA-Z]).*$",
 
                 # Level 4: Chemical Subgroup
-                "([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]).*$",
+                r"([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]).*$",
 
                 # Level 5: Chemical Substance
-                "([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]\d\d)*$"
+                r"([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]\d\d)*$"
             ]
 
             for search in searchList:
@@ -1041,14 +1041,14 @@ def collect_content(urlData, session, parseData):
         page = download_page(session, urlData.url)
         log.debug("URL %s: page downloaded successfully" % urlData.id)
     except Exception as e:
-        log.warn("URL %s: unable to download content" % (urlData.id, e))
+        log.warn("{} - URL {}: unable to download content".format(e, urlData.id))
         page = None
         pageContent = None
 
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(urlData.id, page, parseData)
+            pageContent = extract_page_content(urlData.id, page, parseData, log)
             log.debug("URL %s: content extracted successfully" % urlData.id)
         except:
             log.exception("URL %s: unable to extract content" % urlData.id)
