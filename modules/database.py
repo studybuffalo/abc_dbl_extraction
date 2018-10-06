@@ -3,11 +3,6 @@
 import logging
 log = logging.getLogger(__name__)
 
-class DB(object):
-    def __init__(self, connection, cursor):
-        self.connection = connection
-        self.cursor = cursor
-
 class BSRFSub(object):
     def __init__(self, brandName, strength, route, dosageForm):
         self.brandName = brandName
