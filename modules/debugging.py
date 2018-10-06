@@ -1,4 +1,9 @@
 import logging
+from unipath import Path
+
+from modules import extraction
+
+
 log = logging.getLogger(__name__)
 
 class Debug(object):
@@ -17,8 +22,6 @@ class Debug(object):
 
 def get_debug_status(conf):
     """Collects all required data to enable program debugging modes"""
-    from modules import extraction
-
     # Check if the URLs will be scrapped
     try:
         scrapeUrl = conf.getboolean("debug", "scrape_urls")
