@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """Extracts and saves the Alberta Blue Cross iDBL.
 
-    Last Update: 2017-Sep-14
+    Last Update: 2018-Oct-05
 
     Copyright (c) Notices
 	    2017	Joshua R. Torrance	<studybuffalo@studybuffalo.com>
@@ -71,11 +70,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "studybuffalo.settings")
 sys.path.append(djangoApp)
 application = get_wsgi_application()
 
-from drug_price_calculator.models import (
+from drug_price_calculator.models import ( # pylint: disable=import-error
     ATC, Coverage, ExtraInformation, PTC, Price, SpecialAuthorization, 
     ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC, 
     SubsUnit, PendBSRF, PendGeneric, PendManufacturer, PendPTC
-)
+) 
 
 db = {
     "atc": ATC,
@@ -176,7 +175,7 @@ with open(fileNames.url.absolute(), "w") as fURL, \
                 else:
                     # Program set to debug - use pre-saved data
                     content = extraction.debug_data(
-                        urlData, debug.htmlLoc, parseData
+                        urlData, debugData.htmlLoc, parseData, log
                     )
             else:
                 content = None
