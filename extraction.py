@@ -28,12 +28,12 @@ import logging
 import logging.config
 from modules import extraction, saving, database, debugging
 import os
-from raven import Client
 import requests
+import sentry_sdk
 import sys
 import time
 from unipath import Path
-
+ 
 # APPLICATION SETUP
 # Set up root path to generate absolute paths to files
 root = Path(sys.argv[1])
@@ -45,8 +45,7 @@ config.read(Path(root.parent, "config", "abc_dbl_extraction.cfg"))
 
 # Set up logging & Sentry
 if bool(config.getboolean('sentry', 'debug', fallback=False)) is False:
-    print('test')
-    client = Client(config.get("sentry", "dsn"))
+    sentry_sdk.init(config.get('sentry', 'dsn'))
 
 # TODO: Determine if this logging data can be cleaned up with Sentry now
 log_config = Path(root.parent, "config", "abc_dbl_extraction_logging.cfg")
