@@ -25,15 +25,13 @@
 import configparser
 import logging
 import logging.config
-from modules import extraction, saving, database, debugging
-import os
-import requests
-import sentry_sdk
 import sys
-import time
+
+import sentry_sdk
 from unipath import Path
 
 from modules import configuration, manage
+
 
 # Connect to the external configuration file
 CONFIG_PATH = Path(sys.argv[1])
@@ -44,6 +42,6 @@ CONFIG.read(CONFIG_PATH)
 logging.config.dictConfig(configuration.LOGGING_DICT)
 LOG = logging.getLogger(__name__)
 
-sentry_sdk.init(APP_CONFIG['sentry_dsn'])
+sentry_sdk.init(CONFIG['sentry_dsn'])
 
 manage.run_application(CONFIG)
