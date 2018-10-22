@@ -1,2 +1,9 @@
-abc_dbl_extraction_logs.json
-extracted_data
+
+# Application generated data
+/extracted_data
+
+# Testing Files
+.pytest_cache
+.coverage
+htmlcov/
+#reports/*
