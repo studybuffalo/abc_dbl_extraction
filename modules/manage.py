@@ -1,9 +1,10 @@
 """Functions to manage steps of application functioning."""
 import sys
+import time
 
 import logging
 import requests
-import time
+
 
 from modules import database, debugging, extraction, saving
 
@@ -11,43 +12,44 @@ from modules import database, debugging, extraction, saving
 log = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 def run_application(config):
+    """Runs the extraction application."""
     # Setup robot details and create session
-    user_agent = config.get("robot", "user_agent", raw=True)
-    user_from = config.get("robot", "from", raw=True)
-    crawl_delay = config.getfloat("misc", "crawl_delay")
+    user_agent = config.get('robot', 'user_agent', raw=True)
+    user_from = config.get('robot', 'from', raw=True)
+    crawl_delay = config.getfloat('misc', 'crawl_delay')
 
     session = requests.Session()
-    session.headers.update({"User-Agent": user_agent, "From": user_from})
+    session.headers.update({'User-Agent': user_agent, 'From': user_from})
 
-    from drug_price_calculator.models import ( # pylint: disable=import-error
+    from drug_price_calculator.models import ( # pylint: disable=import-error, unused-import
         ATC, Coverage, ExtraInformation, PTC, Price, special_authorization,
         ATCDescriptions, SubsBSRF, SubsGeneric, SubsManufacturer, SubsPTC,
         SubsUnit, PendBSRF, PendGeneric, PendManufacturer, PendPTC
     )
 
     db = { # pylint: disable=invalid-name
-        "atc": ATC,
-        "coverage": Coverage,
-        "extra": ExtraInformation,
-        "ptc": PTC,
-        "price": Price,
-        "special": special_authorization,
+        'atc': ATC,
+        'coverage': Coverage,
+        'extra': ExtraInformation,
+        'ptc': PTC,
+        'price': Price,
+        'special': special_authorization,
     }
 
     subs = {
-        "atc": ATCDescriptions,
-        "bsrf": SubsBSRF,
-        "generic": SubsGeneric,
-        "manufacturer": SubsGeneric,
-        "ptc": SubsPTC,
-        "unit": SubsUnit,
+        'atc': ATCDescriptions,
+        'bsrf': SubsBSRF,
+        'generic': SubsGeneric,
+        'manufacturer': SubsGeneric,
+        'ptc': SubsPTC,
+        'unit': SubsUnit,
     }
 
     pend = {
-        "bsrf": PendBSRF,
-        "generic": PendGeneric,
-        "manufacturer": PendManufacturer,
-        "ptc": PendPTC,
+        'bsrf': PendBSRF,
+        'generic': PendGeneric,
+        'manufacturer': PendManufacturer,
+        'ptc': PendPTC,
     }
 
     parse_data = database.collect_parse_data(subs)
@@ -56,20 +58,21 @@ def run_application(config):
     file_names = saving.collect_file_paths(config)
 
 
-    log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED")
+    log.info('ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION TOOL STARTED')
 
     # Create all save files
-    with open(file_names.url.absolute(), "w") as fURL, \
-            open(file_names.price.absolute(), "w") as fPrice, \
-            open(file_names.coverage.absolute(), "w") as fCoverage, \
-            open(file_names.special_auth.absolute(), "w") as fSpecial, \
-            open(file_names.ptc.absolute(), "w") as fPTC, \
-            open(file_names.atc.absolute(), "w") as fATC, \
-            open(file_names.extra.absolute(), "w") as fExtra:
+    with open(file_names.url.absolute(), 'w') as f_url, \
+            open(file_names.price.absolute(), 'w') as f_price, \
+            open(file_names.coverage.absolute(), 'w') as f_coverage, \
+            open(file_names.special_auth.absolute(), 'w') as f_special, \
+            open(file_names.ptc.absolute(), 'w') as f_ptc, \
+            open(file_names.atc.absolute(), 'w') as f_atc, \
+            open(file_names.extra.absolute(), 'w') as f_extra:
 
         # Save all opened files into on object for easier use
         save_files = saving.organize_save_files(
-            fURL, file_names.html, fPrice, fCoverage, fSpecial, fPTC, fATC, fExtra
+            f_url, file_names.html, f_price, f_coverage, f_special, f_ptc,
+            f_atc, f_extra
         )
 
         # Setup debugging
@@ -85,8 +88,8 @@ def run_application(config):
 
         # If crawling is permitted, run the program
         if can_crawl:
-            log.info("Permission granted to crawl site")
-            log.info("Starting URL extraction")
+            log.info('Permission granted to crawl site')
+            log.info('Starting URL extraction')
 
             # Set the start and end for loop
             if debug_data.scrape_url or debug_data.scrape_data:
@@ -109,25 +112,25 @@ def run_application(config):
                     # Apply delay before crawling URL
                     time.sleep(crawl_delay)
 
-                    urlData = extraction.scrape_url(i, session)
+                    url_data = extraction.scrape_url(i, session)
                 else:
                     # Program set to debug - use pre-set data
-                    urlData = url_list[i]
+                    url_data = url_list[i]
 
 
                 # SCRAPE DATA FROM ACTIVE URLS
-                if urlData.status == "active":
+                if url_data.status == 'active':
                     if debug_data.scrape_data:
                         # Apply delay before accessing page
                         time.sleep(crawl_delay)
 
                         content = extraction.collect_content(
-                            urlData, session, parse_data
+                            url_data, session, parse_data
                         )
                     else:
                         # Program set to debug - use pre-saved data
                         content = extraction.debug_data(
-                            urlData, debug_data.html_loc, parse_data, log
+                            url_data, debug_data.html_loc, parse_data, log
                         )
                 else:
                     content = None
@@ -143,4 +146,4 @@ def run_application(config):
                     # SAVE BACKUP COPY OF DATA
                     saving.save_data(content, save_files)
 
-    log.info("ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION COMPLETE")
+    log.info('ALBERTA BLUE CROSS DRUG BENEFIT LIST EXTRACTION COMPLETE')
