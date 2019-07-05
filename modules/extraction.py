@@ -1,28 +1,30 @@
 import logging
-log = logging.getLogger(__name__)
+
+
+log = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 class URLData(object):
-    def __init__(self, id, url, status):
-        self.id = id
+    def __init__(self, url_id, url, status):
+        self.id = url_id
         self.url = url
         self.status = status
 
 class PageContent(object):
-    def __init__(self, url, html, din, ptc, bsrf, genericName, dateListed, 
-                 dateDiscontinued, unitPrice, lca, unitIssue, 
-                 interchangeable, manufacturer, atc, schedule, coverage, 
-                 clients, coverageCriteria, specialAuth):
+    def __init__(self, url, html, din, ptc, bsrf, generic_name, date_listed,
+                 date_discontinued, unit_price, lca, unit_issue,
+                 interchangeable, manufacturer, atc, schedule, coverage,
+                 clients, coverageCriteria, special_auth):
         self.url = url
         self.html = html
         self.din = din
         self.ptc = ptc
         self.bsrf = bsrf
-        self.genericName = genericName
-        self.dateListed = dateListed
-        self.dateDiscontinued = dateDiscontinued
-        self.unitPrice = unitPrice
+        self.generic_name = generic_name
+        self.date_listed = date_listed
+        self.date_discontinued = date_discontinued
+        self.unit_price = unit_price
         self.lca = lca
-        self.unitIssue = unitIssue
+        self.unit_issue = unit_issue
         self.interchangeable = interchangeable
         self.manufacturer = manufacturer
         self.atc = atc
@@ -30,7 +32,7 @@ class PageContent(object):
         self.coverage = coverage
         self.clients = clients
         self.criteria = coverageCriteria
-        self.specialAuth = specialAuth
+        self.special_auth = special_auth
 
 class BasicParse(object):
     def __init__(self, parse, html):
@@ -119,25 +121,25 @@ class CoverageCriteria(object):
         self.palliative = criteriaP
         self.html = html
 
-class SpecialAuthorization(object):
+class special_authorization(object):
     def __init__(self, text, link, html):
         self.text = text
         self.link = link
         self.html = html
 
 # ROBOT PARSING FUNCTIONS
-def get_permission(userAgent):
+def get_permission(user_agent):
     """Checks robots.txt for permission to crawl site"""
     from urllib import robotparser
 
-    textURL = "https://www.ab.bluecross.ca/robots.txt"
-    pageURL = "https://idbl.ab.bluecross.ca/idbl/load.do"
+    textURL = 'https://www.ab.bluecross.ca/robots.txt'
+    pageURL = 'https://idbl.ab.bluecross.ca/idbl/load.do'
 
     robot = robotparser.RobotFileParser()
     robot.set_url(textURL)
     robot.read()
-    
-    can_crawl = robot.can_fetch(userAgent, pageURL)
+
+    can_crawl = robot.can_fetch(user_agent, pageURL)
 
     return can_crawl
 
@@ -146,11 +148,11 @@ def get_permission(userAgent):
 def assemble_url(id):
     """Constructs a valid iDBL url based on the drug ID"""
     # Base URL to construct final URL from
-    base = ("https://idbl.ab.bluecross.ca/idbl/"
-            "lookupDinPinDetail.do?productID=")
-        
+    base = ('https://idbl.ab.bluecross.ca/idbl/'
+            'lookupDinPinDetail.do?productID=')
+
     # Assembles the url form the base + 10 digit productID
-    url = "%s%010d" % (base, id)
+    url = '%s%010d' % (base, id)
 
     return url
 
@@ -160,22 +162,22 @@ def check_url(id, url, session):
     try:
         response = session.head(url, allow_redirects=False)
         code = response.status_code
-    except Exception as e:
-        log.warn("Unable to retriever header for %s: %s" % (url, e))
+    except Exception as error:
+        log.warning('Unable to retriever header for %s: %s', url, error)
         code = 0
-    
+
     # Check status and create the URL Status object
     if code == 200:
-        log.debug("URL %s: ACTIVE" % id)
-        status = URLData(id, url, "active")
+        log.debug('URL %s: ACTIVE' % id)
+        status = URLData(id, url, 'active')
 
     elif code == 302:
-        log.debug("URL %s: INACTIVE" % id)
-        status = URLData(id, url, "inactive")
+        log.debug('URL %s: INACTIVE' % id)
+        status = URLData(id, url, 'inactive')
 
     else:
-        log.warn("URL %s: Unexpected %d error" % (id, code))
-        status = URLData(id, url, "error")
+        log.warning('URL %s: Unexpected %d error' % (id, code))
+        status = URLData(id, url, 'error')
 
     return status
 
@@ -193,18 +195,18 @@ def scrape_url(id, session):
             none.
     """
     url = assemble_url(id)
-            
+
     data = check_url(id, url, session)
-            
+
     # Return the URL
     return data
 
 def debug_url(fileLoc):
     """Returns data from text file instead of website"""
-    with open(fileLoc.absolute(), "r") as file:
-        urls = file.read().split("\n")
+    with open(fileLoc.absolute(), 'r') as file:
+        urls = file.read().split('\n')
 
-    urlList = []
+    url_list = []
 
     for id in urls:
         if id:
@@ -213,14 +215,14 @@ def debug_url(fileLoc):
             url = assemble_url(id)
 
             # Create the URLData object and append it
-            urlList.append(URLData(id, url, "active"))
-        
-    return urlList
+            url_list.append(URLData(id, url, 'active'))
 
-def debug_url_data(htmlLoc):
-    """Builds a urlList out of the html file names"""
+    return url_list
+
+def debug_url_data(html_loc):
+    """Builds a url_list out of the html file names"""
     # Get all the file names in the directory
-    files = htmlLoc.listdir(pattern="*.html", names_only=True)
+    files = html_loc.listdir(pattern='*.html', names_only=True)
 
     # Extracts all the ids from the file names
     idList = []
@@ -232,15 +234,15 @@ def debug_url_data(htmlLoc):
     idList = sorted(idList, key=int)
 
     # Creates a URL list from the sorted IDs
-    urlList = []
+    url_list = []
 
     for id in idList:
         url = assemble_url(id)
 
         # Create the URLData object and append it
-        urlList.append(URLData(id, url, "active"))
+        url_list.append(URLData(id, url, 'active'))
 
-    return urlList
+    return url_list
 
 
 # DATA SCRAPING FUNCTIONS
@@ -248,11 +250,11 @@ def binary_search(term, lists):
     """Searches for term in provided list
         args:
             term:   the term to be found in the provided list
-            lists:  an object containg a search list (a list of search 
-                    terms to match against) and an return list (a 
-                    matching list to the search list that contains 
+            lists:  an object containg a search list (a list of search
+                    terms to match against) and an return list (a
+                    matching list to the search list that contains
                     the desired content to return
-        
+
         returns:
             on match:   the corresponding object to the match
             no match:   None
@@ -264,7 +266,7 @@ def binary_search(term, lists):
 
     searchList = lists.original
     returnList = lists.correction
-    
+
     # Look for match
     i = bisect_left(searchList, term)
 
@@ -278,19 +280,19 @@ def download_page(session, url):
     """Downloads the webpage at the provided URL"""
     response = session.get(url)
     status = response.status_code
-    
+
     if status == 200:
         return response.text
     else:
-        raise IOError("%s returned status code %d" % (url, status))
+        raise IOError('%s returned status code %d' % (url, status))
 
-def extract_page_content(url, page, parseData, log):
+def extract_page_content(url, page, parse_data, log):
     """Takes the provided HTML page and extracts all relevant content
         args:
             url:        url to extract data from
-            page:       A BeautifulSoup object with the content 
+            page:       A BeautifulSoup object with the content
                         to extract
-            parseData:  an object containing relevant data to parse 
+            parse_data:  an object containing relevant data to parse
                         extracted content
             log:        a logging object to send logs to
 
@@ -307,13 +309,13 @@ def extract_page_content(url, page, parseData, log):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
         try:
-            html = BeautifulSoup(page, "html.parser")
-            trunc = html.findAll("div", {"class": "columnLeftFull"})[0]
+            html = BeautifulSoup(page, 'html.parser')
+            trunc = html.findAll('div', {'class': 'columnLeftFull'})[0]
         except:
-            log.exception("URL %s: unable to create Soup" % url)
+            log.exception('URL %s: unable to create Soup' % url)
 
         return trunc
-    
+
     def convert_date(dateString):
         """Converts the ABC date to a MySQL date format"""
         from datetime import datetime
@@ -321,33 +323,33 @@ def extract_page_content(url, page, parseData, log):
         # If date is present, will be in form of dd-mmm-yyyy
         try:
             # Convert to date object
-            date = datetime.strptime(dateString, "%d-%b-%Y")
+            date = datetime.strptime(dateString, '%d-%b-%Y')
 
             # Format for MySQL (yyyy-mm-dd)
-            date = date.strftime("%Y-%m-%d")
+            date = date.strftime('%Y-%m-%d')
         except ValueError:
             # Expected behaviour for most situations without a date
             date = None
-        except Exception as e:
-            log.warn("URL %s: error trying to parse date: %s" % (url, e))
+        except Exception as error:
+            log.warning('URL %s: error trying to parse date: %s', url, error)
             date = None
 
         return date
-    
+
     def extract_din(html):
         """Extracts the DIN"""
 
         try:
             dinText = html.p.string
-            din = dinText.replace("DIN/PIN Detail - ", "")
+            din = dinText.replace('DIN/PIN Detail - ', '')
         except:
-            log.critical("URL %s: unable to extract DIN" % url)
-            din = ""
+            log.critical('URL %s: unable to extract DIN' % url)
+            din = ''
 
         # Extract the DIN
         # TO CONFIRM: is the DIN/PIN always 8 digits?
         # If so, would it be better to regex extract?
-        
+
         return BasicParse(din, dinText)
 
     def extract_ptc(html, subs):
@@ -355,7 +357,7 @@ def extract_page_content(url, page, parseData, log):
 
         def parse_ptc(ptcList):
             """Corrects formatting of description"""
-            
+
             i = 1
             original = []
             matchList = []
@@ -387,19 +389,19 @@ def extract_page_content(url, page, parseData, log):
 
         def collect_ptc_strings(ptcString):
             """Separates out each number and formats descriptions
-            
-                String is formatted with each number and description 
+
+                String is formatted with each number and description
                 on a single line. Sometimes a number will not have a
                 description. The raw string is formatted into a list
-                where each number is followed by the description, or 
-                None in cases where there is no description. The list 
+                where each number is followed by the description, or
+                None in cases where there is no description. The list
                 is then padded to 8 entries (the maximum amount).
             """
 
             # Removes blank list entries
             rawList = []
 
-            for line in ptcString.split("\n"):
+            for line in ptcString.split('\n'):
                 line = line.strip()
 
                 if line:
@@ -413,13 +415,13 @@ def extract_page_content(url, page, parseData, log):
             for line in rawList:
                 # Check if this entry is a number
                 # All codes have at least 4 digits
-                match = re.match(r"\d{4}", line)
+                match = re.match(r'\d{4}', line)
 
                 # Entry is number
                 if match:
                     # Check if the previous line was a number
                     if numPrev:
-                        # Previous entry was number, therefore it did 
+                        # Previous entry was number, therefore it did
                         # not have a text description
                         newList.append(None)
                         newList.append(line)
@@ -427,8 +429,8 @@ def extract_page_content(url, page, parseData, log):
                         # Previous line was text, can just add number
                         newList.append(line)
                         numPrev = True
-                
-                # Entry is text        
+
+                # Entry is text
                 else:
                     newList.append(line)
                     numPrev = False
@@ -438,12 +440,12 @@ def extract_page_content(url, page, parseData, log):
                 newList.append(None)
 
             return newList
-        
+
         try:
-            ptcString = html.find_all('tr', class_="idblTable")[0]\
+            ptcString = html.find_all('tr', class_='idblTable')[0]\
                             .td.div.p.get_text().strip()
         except:
-            log.critical("URL %s: unable to extract PTC string" % url)
+            log.critical('URL %s: unable to extract PTC string' % url)
 
         ptcStrings = collect_ptc_strings(ptcString)
         ptcList = parse_ptc(ptcStrings)
@@ -459,36 +461,36 @@ def extract_page_content(url, page, parseData, log):
             text = text.title()
 
             # Removes extra space characters
-            text = re.sub(r"\s{2,}", " ", text)
+            text = re.sub(r'\s{2,}', ' ', text)
 
-            # Correct errors with apostrophes and "s"
-            text = re.sub(r"'S\b", "'s", text)
+            # Correct errors with apostrophes and 's'
+            text = re.sub(r"'S\b'", "'s", text)
 
             return text
 
         def parse_strength(text):
-            '''Manually corrects errors not fixed by .lower().'''
+            """Manually corrects errors not fixed by .lower()."""
 
             # Converts the strength to lower case
             text = text.lower()
 
             # Removes any extra spaces
-            text = re.sub(r"\s{2,}", " ", text)
+            text = re.sub(r'\s{2,}', ' ', text)
 
             # Remove any spaces around slashes
-            text = re.sub(r"\s/\s", "/", text)
+            text = re.sub(r'\s/\s', '/', text)
 
             # Remove any spaces between numbers and %
-            text = re.sub(r"\s%", "%", text)
+            text = re.sub(r'\s%', '%', text)
 
             # Applies any remaining corrections
             for sub in unitSubs:
-                text = re.sub(r"\b%s\b" % sub.original, sub.correction, text)
+                text = re.sub(r'\b%s\b' % sub.original, sub.correction, text)
 
             return text
-        
+
         def parse_route(text):
-            '''Properly formats the route'''
+            """Properly formats the route"""
 
             # Convert route to lower case
             text = text.lower()
@@ -496,19 +498,19 @@ def extract_page_content(url, page, parseData, log):
             return text
 
         def parse_dosage_form(text):
-            '''Properly formats the dosage form'''
+            """Properly formats the dosage form"""
 
             # Convert route to lower case
             text = text.lower()
 
             return text
-        
+
         def split_brand_strength_route_form(text):
             """Extracts brand name, strength, route, dosage form"""
-            
+
             # Checks if the text has a substitution
             # Remove extra white space from searchText
-            searchText = re.sub(r"\s{2,}", " ", text)
+            searchText = re.sub(r'\s{2,}', ' ', text)
             sub = binary_search(searchText, bsrfSubs)
 
             if sub:
@@ -520,23 +522,23 @@ def extract_page_content(url, page, parseData, log):
 
             # If no substitution, apply regular processing
             else:
-                # Splits text multiple strings depending on the format 
+                # Splits text multiple strings depending on the format
                 # used
-                # Formats vary with number of white space between 
+                # Formats vary with number of white space between
                 # sections
-                match3 = r"\S\s{3}\S"
-                match4 = r"\S\s{4}\S"
+                match3 = r'\S\s{3}\S'
+                match4 = r'\S\s{4}\S'
 
                 # Format: B S    R   F
                 if re.search(match4, text) and re.search(match3, text):
                     try:
-                        text = text.split("   ")
-                
+                        text = text.split('   ')
+
                         brandStrength = text[0].strip()
                         route = text[1].strip()
                         dosageForm = text[2].strip()
                     except:
-                        log.critical("URL %s: Error extracting BSRF" % url)
+                        log.critical('URL %s: Error extracting BSRF' % url)
 
                         brandStrength = text
                         route = None
@@ -545,13 +547,13 @@ def extract_page_content(url, page, parseData, log):
                 # Format: B S    F
                 elif re.search(match4, text):
                     try:
-                        text = text.split("    ")
-                    
+                        text = text.split('    ')
+
                         brandStrength = text[0].strip()
                         route = None
                         dosageForm = text[1].strip()
                     except:
-                        log.critical("URL %s: Error extracting 4 space BSF" 
+                        log.critical('URL %s: Error extracting 4 space BSF'
                                       % url)
 
                         brandStrength = text
@@ -562,15 +564,15 @@ def extract_page_content(url, page, parseData, log):
                 # Note: cannot properly extract the B R   F cases
                 elif re.search(match3, text):
                     try:
-                        text = text.split("   ")
+                        text = text.split('   ')
 
                         brandStrength = text[0].strip()
                         route = None
                         dosageForm = text[1].strip()
                     except:
-                        log.critical("URL %s: Error extracting 3 space BSF" 
+                        log.critical('URL %s: Error extracting 3 space BSF'
                                       % url)
-                        
+
                         brandStrength = text
                         route = None
                         dosageForm = None
@@ -581,12 +583,12 @@ def extract_page_content(url, page, parseData, log):
                     brandStrength = text
                     route = None
                     dosageForm = None
-                
-                # Splits the brandStrength at the first number 
-                # encountered with a non-numeric character behind it 
+
+                # Splits the brandStrength at the first number
+                # encountered with a non-numeric character behind it
                 # (excluding commas in numbers, as this is assumed
                 # to be a unit)
-                search = re.search(r"\s\b[0-9,]+\D+", brandStrength)
+                search = re.search(r'\s\b[0-9,]+\D+', brandStrength)
 
                 if search:
                     split = search.start()
@@ -609,22 +611,22 @@ def extract_page_content(url, page, parseData, log):
 
                 if dosageForm:
                     dosageForm = parse_dosage_form(dosageForm)
-            
+
                 # Flags html as not having sub match
                 matched = False
 
 
-            output = BSRF(brandName, strength, route, dosageForm, 
+            output = BSRF(brandName, strength, route, dosageForm,
                           searchText, matched)
 
             return output
 
         try:
-            bsrf = html.find_all('tr', class_="idblTable")[1]\
+            bsrf = html.find_all('tr', class_='idblTable')[1]\
                        .td.div.string.strip()
         except:
-            log.critical("URL %s: unable to extract BSRF string" % url)
-        
+            log.critical('URL %s: unable to extract BSRF string' % url)
+
         bsrf = split_brand_strength_route_form(bsrf)
 
         return bsrf
@@ -643,75 +645,75 @@ def extract_page_content(url, page, parseData, log):
             if sub:
                 generic = sub
                 matched = True
-            
+
             # Otherwise apply regular processing
             else:
                 # Convert to lower case
                 generic = original.lower()
 
                 # Removes extra space characters
-                generic = re.sub(r"\s{2,}", " ", generic)
+                generic = re.sub(r'\s{2,}', ' ', generic)
 
                 # Remove spaces around slashes
-                generic = re.sub(r"/\s", "/", generic)
+                generic = re.sub(r'/\s', '/', generic)
 
                 matched = False
 
             return Generic(generic, original, matched)
-        
-        try:    
-            genericText = html.find_all('tr', class_="idblTable")[2]\
+
+        try:
+            genericText = html.find_all('tr', class_='idblTable')[2]\
                               .td.div.string.strip()
-        
+
             generic = parse_generic(genericText)
         except:
-            log.critical("URL %s: unable to extract generic name" % url)
+            log.critical('URL %s: unable to extract generic name' % url)
 
         return generic
 
     def extract_date_listed(html):
         """Extracts the listing date and returns MySQL date"""
         try:
-            dateText = html.find_all('tr', class_="idblTable")[3]\
+            dateText = html.find_all('tr', class_='idblTable')[3]\
                            .find_all('td')[1].string.strip()
-            dateListed = convert_date(dateText)
+            date_listed = convert_date(dateText)
         except:
-            log.critical("URL %s: unable to extract date listed" % url)
+            log.critical('URL %s: unable to extract date listed' % url)
 
-        return BasicParse(dateListed, dateText)
+        return BasicParse(date_listed, dateText)
 
     def extract_date_discontinued(html):
         """Extracts the discontinued date and returns MySQL date"""
         try:
-            dateText  = html.find_all('tr', class_="idblTable")[4]\
+            dateText  = html.find_all('tr', class_='idblTable')[4]\
                             .find_all('td')[1].string.strip()
-            dateDiscontinued = convert_date(dateText)
+            date_discontinued = convert_date(dateText)
         except:
-            log.critical("URL %s: unable to extract discontinued date" % url)
+            log.critical('URL %s: unable to extract discontinued date' % url)
 
-        return BasicParse(dateDiscontinued, dateText)
+        return BasicParse(date_discontinued, dateText)
 
     def extract_unit_price(html):
         """Extracts the unit price"""
         try:
-            priceText = html.find_all('tr', class_="idblTable")[5]\
+            priceText = html.find_all('tr', class_='idblTable')[5]\
                             .find_all('td')[1].string.strip()
 
-            if priceText == "N/A":
-                unitPrice = None
+            if priceText == 'N/A':
+                unit_price = None
             else:
-                unitPrice = priceText
+                unit_price = priceText
         except:
-            log.critical("URL %s: unable to extra unit price" % url)
+            log.critical('URL %s: unable to extra unit price' % url)
 
-        return BasicParse(unitPrice, priceText)
+        return BasicParse(unit_price, priceText)
 
     def extract_lca(html):
         """Extract LCA price and any accompanying text"""
         def parse_lca(lcaString):
             # If the string has a space, it will have LCA text
-            if " " in lcaString:
-                if "N/A" in lcaString:
+            if ' ' in lcaString:
+                if 'N/A' in lcaString:
                     # Note there is a weird case in the old code where
                     # a line with a space and N/A, but I could not find
                     # such an example; this is for theory only
@@ -719,7 +721,7 @@ def extract_page_content(url, page, parseData, log):
                     lcaText = lcaString[4:].strip()
                 else:
                     # LCA with text - split at first space to extract
-                    index = lcaString.find(" ")
+                    index = lcaString.find(' ')
 
                     lca = lcaString[0:index]
                     lcaText = lcaString[index + 1:].strip()
@@ -728,7 +730,7 @@ def extract_page_content(url, page, parseData, log):
                 lcaText = None
 
                 # Check if there is any price data
-                if "N/A" in lcaString:
+                if 'N/A' in lcaString:
                     lca = None
                 else:
                     lca = lcaString
@@ -736,34 +738,34 @@ def extract_page_content(url, page, parseData, log):
             return LCA(lca, lcaText, lcaString)
 
         try:
-            lcaString = html.find_all('tr', class_="idblTable")[6]\
+            lcaString = html.find_all('tr', class_='idblTable')[6]\
                             .find_all('td')[1].div.get_text().strip()
             lca = parse_lca(lcaString)
         except:
-            log.critical("URL: %s: unable to extract LCA" % url)
+            log.critical('URL: %s: unable to extract LCA' % url)
 
         return lca
 
     def extract_unit_issue(html, subs):
         """Extracts the unit of issue"""
         def parse_unit_issue(unitText):
-            unitIssue = unitText.lower()
+            unit_issue = unitText.lower()
 
-            return BasicParse(unitIssue, unitText)
+            return BasicParse(unit_issue, unitText)
 
         try:
-            unitText =  html.find_all('tr', class_="idblTable")[7]\
+            unitText =  html.find_all('tr', class_='idblTable')[7]\
                             .find_all('td')[1].string.strip()
-            unitIssue = parse_unit_issue(unitText)
+            unit_issue = parse_unit_issue(unitText)
         except:
-            log.critical("URL %s: unable to extract unit of issue" % url)
+            log.critical('URL %s: unable to extract unit of issue' % url)
 
-        return unitIssue
-        
+        return unit_issue
+
     def extract_interchangeable(html):
         """Extracts if drug is interchangeable or not"""
         def parse_interchange(text):
-            if "YES" in interText:
+            if 'YES' in interText:
                 interchangeable = 1
             else:
                 interchangeable = 0
@@ -771,19 +773,19 @@ def extract_page_content(url, page, parseData, log):
             return BasicParse(interchangeable, interText)
 
         try:
-            interText = html.find_all('tr', class_="idblTable")[8]\
+            interText = html.find_all('tr', class_='idblTable')[8]\
                             .find_all('td')[1].get_text()
             interchangeable = parse_interchange(interText)
         except:
-            log.critical("URL %s: unable to extract interchangeable" % url)
-         
+            log.critical('URL %s: unable to extract interchangeable' % url)
+
         return interchangeable
 
     def extract_manufacturer(html, subs):
         """Extracts and parses the manufacturer"""
         def parse_manufactuer(text):
-            '''Manually corrects errors that are not fixed by .title()'''
-            
+            """Manually corrects errors that are not fixed by .title()"""
+
             # Check if this text has a substitution
             sub = binary_search(text, subs)
 
@@ -791,55 +793,55 @@ def extract_page_content(url, page, parseData, log):
             if sub:
                 manufacturer = sub
                 matched = True
-            
+
             # Otherwise apply regular processing
             else:
                 manufacturer = text.title()
-            
+
                 # Removes extra space characters
-                manufacturer = re.sub(r"\s{2,}", " ", manufacturer)
+                manufacturer = re.sub(r'\s{2,}', ' ', manufacturer)
 
                 matched = False
-            
+
             return Manufacturer(manufacturer, text, matched)
 
         try:
-            manuText = html.find_all('tr', class_="idblTable")[9]\
+            manuText = html.find_all('tr', class_='idblTable')[9]\
                            .find_all('td')[1].a.string.strip()
             manufacturer = parse_manufactuer(manuText)
         except:
-            log.critical("URL %s: unable to extract manufacturer" % url)
+            log.critical('URL %s: unable to extract manufacturer' % url)
 
         return manufacturer
 
     def extract_atc(html, descriptions):
         """Extracts the ATC codes and assigns description"""
-        
+
         def parse_atc(text):
-            '''Splits text into a list containing ATC codes and titles.'''
+            """Splits text into a list containing ATC codes and titles."""
             atcList  = []
 
             # The regex matches to extract specific content
             searchList = [
                 # Level 1: Anatomical Main Group
-                r"([a-zA-Z]).*$",
+                r'([a-zA-Z]).*$',
 
                 # Level 2: Therapeutic Subgroup
-                r"([a-zA-Z]\d\d).*$",
+                r'([a-zA-Z]\d\d).*$',
 
                 # Level 3: Pharmacological Subgroup
-                r"([a-zA-Z]\d\d[a-zA-Z]).*$",
+                r'([a-zA-Z]\d\d[a-zA-Z]).*$',
 
                 # Level 4: Chemical Subgroup
-                r"([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]).*$",
+                r'([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]).*$',
 
                 # Level 5: Chemical Substance
-                r"([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]\d\d)*$"
+                r'([a-zA-Z]\d\d[a-zA-Z][a-zA-Z]\d\d)*$'
             ]
 
             for search in searchList:
                 match = re.match(search, text)
-                
+
                 if match:
                     code = match.group(1)
                     description = binary_search(code, descriptions)
@@ -850,26 +852,26 @@ def extract_page_content(url, page, parseData, log):
                 atcList.append(code)
                 atcList.append(description)
 
-            return atcList 
+            return atcList
 
         try:
-            atcText = html.find_all('tr', class_="idblTable")[10]\
+            atcText = html.find_all('tr', class_='idblTable')[10]\
                       .find_all('td')[1].string.strip()
             atcList = parse_atc(atcText)
             atc = ATC(atcList, atcText)
         except:
-            log.critical("URL %s: unable to extract ATC" % url)
+            log.critical('URL %s: unable to extract ATC' % url)
 
         return atc
 
     def extract_schedule(html):
         """Extracts the provincial drug schedule"""
         try:
-            schedText = html.find_all('tr', class_="idblTable")[11]\
+            schedText = html.find_all('tr', class_='idblTable')[11]\
                             .find_all('td')[1].string.strip()
             schedule = BasicParse(schedText, schedText)
         except:
-            log.critical("URL %s: unable to extract schedule" % url)
+            log.critical('URL %s: unable to extract schedule' % url)
 
         return schedule
 
@@ -881,11 +883,11 @@ def extract_page_content(url, page, parseData, log):
             return BasicParse(coverage, text)
 
         try:
-            coverageText = html.find_all('tr', class_="idblTable")[12]\
+            coverageText = html.find_all('tr', class_='idblTable')[12]\
                                .find_all('td')[1].string.strip()
             coverage = parse_coverage(coverageText)
         except:
-            log.critical("URL %s: unable to extract coverage" % url)
+            log.critical('URL %s: unable to extract coverage' % url)
 
         return coverage
 
@@ -893,11 +895,11 @@ def extract_page_content(url, page, parseData, log):
         """Extracts clients and converts to 1/0 representation"""
         def parse_clients(clientText):
             # List of strings to match against
-            stringList = ["(Group 1)", "(Group 66)", "(Group 66A", 
-                          "Income Support", "(AISH)", "(Group 19824", 
-                          "(Group 20400", "(Group 20403", "(Group 20514", 
-                          "(Group 22128", "(Group 23609"]
-        
+            stringList = ['(Group 1)', '(Group 66)', '(Group 66A',
+                          'Income Support', '(AISH)', '(Group 19824',
+                          '(Group 20400', '(Group 20403', '(Group 20514',
+                          '(Group 22128', '(Group 23609']
+
             # If string is found in clients text, return 1, otherwise 0
             clientList = []
 
@@ -910,11 +912,11 @@ def extract_page_content(url, page, parseData, log):
             return Clients(clientList, clientText)
 
         try:
-            clientText = html.find_all('tr', class_="idblTable")[13]\
+            clientText = html.find_all('tr', class_='idblTable')[13]\
                              .find_all('td')[1].get_text().strip()
             clients = parse_clients(clientText)
         except:
-            log.critical("URL %s: unable to extract clients" % url)
+            log.critical('URL %s: unable to extract clients' % url)
 
         return clients
 
@@ -926,102 +928,102 @@ def extract_page_content(url, page, parseData, log):
             criteriaSA = None
             criteriaP = None
 
-            if "coverage" in criteriaText:
+            if 'coverage' in criteriaText:
                 criteria = 1
 
                 # Extracts the link element
-                criteriaSA = html.find_all('tr', class_="idblTable")[14]\
+                criteriaSA = html.find_all('tr', class_='idblTable')[14]\
                                  .find_all('td')[1].p\
                                  .find_all('a')[0]['onclick']
 
                 # Extracts just the URL for the special auth criteria
-                criteriaSA = ("https://idbl.ab.bluecross.ca/idbl/%s" %
-                              re.search(r"\('(.+\d)','", criteriaSA).group(1))
-            
+                criteriaSA = ('https://idbl.ab.bluecross.ca/idbl/%s' %
+                              re.search(r"\('(.+\d)",'', criteriaSA).group(1))
 
-            if "program" in criteriaText:
+
+            if 'program' in criteriaText:
                 criteria = 1
 
                 # Palliative care link is always the same
-                criteriaP = ("http://www.health.alberta.ca/services/"
-                                "drugs-palliative-care.html")
+                criteriaP = ('http://www.health.alberta.ca/services/'
+                                'drugs-palliative-care.html')
 
-            return CoverageCriteria(criteria, criteriaSA, criteriaP, 
+            return CoverageCriteria(criteria, criteriaSA, criteriaP,
                                     criteriaText)
 
         try:
-            criteriaText = html.find_all('tr', class_="idblTable")[14]\
+            criteriaText = html.find_all('tr', class_='idblTable')[14]\
                                .find_all('td')[1].get_text()
             criteria = parse_criteria(criteriaText)
         except:
-            log.critical("URL %s: unable to extract criteria" % url)
-        
+            log.critical('URL %s: unable to extract criteria' % url)
+
         return criteria
 
     def extract_special_auth(html):
         """Extract any special authorization links"""
         def parse_special(elem):
-            specialAuth = []
-      
-            if "N/A" not in elem.get_text():
+            special_auth = []
+
+            if 'N/A' not in elem.get_text():
                 for a in elem.find_all('a'):
                     # Grab the text for the special auth link
                     text = a.string.strip()
 
                     # Grab and format the pdf link
                     link = a['onclick']
-                    link = ("https://idbl.ab.bluecross.ca%s" 
-                            % re.search(r"\('(.+\.pdf)','", link).group(1))
+                    link = ('https://idbl.ab.bluecross.ca%s'
+                            % re.search(r"\('(.+\.pdf)",'', link).group(1))
 
-                    specialAuth.append(
-                        SpecialAuthorization(text, link, elem)
+                    special_auth.append(
+                        special_authorization(text, link, elem)
                     )
 
-            return specialAuth
+            return special_auth
 
         try:
-            specialElem = html.find_all('tr', class_="idblTable")[15]\
+            specialElem = html.find_all('tr', class_='idblTable')[15]\
                               .find_all('td')[1]
-            specialAuth = parse_special(specialElem)
+            special_auth = parse_special(specialElem)
         except:
-            log.critical("URL %s: unable to extract special authorization"
+            log.critical('URL %s: unable to extract special authorization'
                          % url)
 
-        return specialAuth
-        
+        return special_auth
+
 
     # Truncate extra content to improve extraction
     html = truncate_content(page)
 
     din = extract_din(html)
-    ptc = extract_ptc(html, parseData.ptc)
-    bsrf = extract_brand_strength_route_form(html, parseData.bsrf, 
-                                             parseData.units)
-    genericName = extract_generic_name(html, parseData.generic)
-    dateListed = extract_date_listed(html)
-    dateDiscontinued = extract_date_discontinued(html)
-    unitPrice = extract_unit_price(html)
+    ptc = extract_ptc(html, parse_data.ptc)
+    bsrf = extract_brand_strength_route_form(html, parse_data.bsrf,
+                                             parse_data.units)
+    generic_name = extract_generic_name(html, parse_data.generic)
+    date_listed = extract_date_listed(html)
+    date_discontinued = extract_date_discontinued(html)
+    unit_price = extract_unit_price(html)
     lca = extract_lca(html)
-    unitIssue = extract_unit_issue(html, parseData.units)
+    unit_issue = extract_unit_issue(html, parse_data.units)
     interchangeable = extract_interchangeable(html)
-    manufacturer = extract_manufacturer(html, parseData.manufacturer)
-    atc = extract_atc(html, parseData.atc)
+    manufacturer = extract_manufacturer(html, parse_data.manufacturer)
+    atc = extract_atc(html, parse_data.atc)
     schedule = extract_schedule(html)
     coverage = extract_coverage(html)
     clients = extract_clients(html)
     coverageCriteria = extract_coverage_criteria(html)
-    specialAuth = extract_special_auth(html)
+    special_auth = extract_special_auth(html)
 
     # Generate the final object
     pageContent = PageContent(
-        url, page, din, ptc, bsrf, genericName, dateListed, dateDiscontinued, 
-        unitPrice, lca, unitIssue, interchangeable, manufacturer, atc, 
-        schedule, coverage, clients, coverageCriteria, specialAuth
+        url, page, din, ptc, bsrf, generic_name, date_listed, date_discontinued,
+        unit_price, lca, unit_issue, interchangeable, manufacturer, atc,
+        schedule, coverage, clients, coverageCriteria, special_auth
     )
 
     return pageContent
 
-def collect_content(urlData, session, parseData):
+def collect_content(urlData, session, parse_data):
     """Extracts the page content from the provided url
         args:
             urlData:    a URL data object with the url to extract
@@ -1035,41 +1037,41 @@ def collect_content(urlData, session, parseData):
         raises:
             none.
     """
-    
+
     # Download the page content
     try:
         page = download_page(session, urlData.url)
-        log.debug("URL %s: page downloaded successfully" % urlData.id)
-    except Exception as e:
-        log.warn("{} - URL {}: unable to download content".format(e, urlData.id))
+        log.debug('URL %s: page downloaded successfully' % urlData.id)
+    except Exception as error:
+        log.warning('{} - URL {}: unable to download content'.format(e, urlData.id))
         page = None
         pageContent = None
 
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(urlData.id, page, parseData, log)
-            log.debug("URL %s: content extracted successfully" % urlData.id)
+            pageContent = extract_page_content(urlData.id, page, parse_data, log)
+            log.debug('URL %s: content extracted successfully' % urlData.id)
         except:
-            log.exception("URL %s: unable to extract content" % urlData.id)
+            log.exception('URL %s: unable to extract content' % urlData.id)
             pageContent = None
 
     return pageContent
 
-def debug_data(urlData, htmlLoc, parseData, log):
+def debug_data(urlData, html_loc, parse_data, log):
     """Collects HTML data from provided location instead of website"""
-    htmlFile = htmlLoc.child("%s.html" % urlData.id).absolute()
-    log.debug("File %s.html: extracting data" % urlData.id)
+    htmlFile = html_loc.child('%s.html' % urlData.id).absolute()
+    log.debug('File %s.html: extracting data' % urlData.id)
 
-    with open(htmlFile, "r") as html:
+    with open(htmlFile, 'r') as html:
         page = html.read()
 
         try:
-            pageContent = extract_page_content(urlData.id, page, parseData, 
+            pageContent = extract_page_content(urlData.id, page, parse_data,
                                                log)
-        except Exception as e:
-            log.warn("File %s: unable to extract page content: %s" 
+        except Exception as error:
+            log.warning('File %s: unable to extract page content: %s'
                         % (urlData.id, e))
             pageContent = None
-    
+
     return pageContent

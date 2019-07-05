@@ -3,11 +3,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+
 [packages]
 bs4 = "*"  # https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 requests = "*"  # https://github.com/requests/requests
 sentry-sdk = "*"  # https://docs.sentry.io/quickstart/?platform=python
 Unipath = "*"  # https://github.com/mikeorr/Unipath
+
 
 [dev-packages]
 # Code quality
@@ -17,8 +19,8 @@ pylint = "*"  # https://github.com/PyCQA/pylint/
 # Testing
 # ------------------------------------------------------------------------------
 coverage = "*"  # https://github.com/nedbat/coveragepy
-pytest = "*"  # https://github.com/pytest-dev/pytest
+pytest = "*"  #  https://github.com/pytest-dev/pytest
 pytest-cov = "*"  # https://github.com/pytest-dev/pytest-cov
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
