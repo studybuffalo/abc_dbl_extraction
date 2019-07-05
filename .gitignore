@@ -1,3 +1,9 @@
+# VS Code Files
+*.code-workspace
+settings.json
+
+# Python Files
+__pycache__
 
 # Application generated data
 /extracted_data
