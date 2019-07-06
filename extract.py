@@ -104,8 +104,9 @@ def extract(**kwargs):
     end_id = configuration.settings['abc_end_id'] + 1
 
     with trange(start_id, end_id) as id_range:
+        id_range.set_description_str('Extracting iDBL')
+
         for i in id_range:
-            id_range.set_description('Extracting iDBL')
             extract_data(i, session, configuration)
 
     click.echo('----------------------------')
