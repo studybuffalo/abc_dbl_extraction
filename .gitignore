@@ -3,8 +3,7 @@
 !\.*ini
 
 # Application generated data
-/extracted_data
-abc_dbl_extraction_logs.json
+
 
 # Testing Files
 .pytest_cache
