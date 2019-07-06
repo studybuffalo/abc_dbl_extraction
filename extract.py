@@ -46,16 +46,10 @@ from modules.extraction import extract_data
     '--disable-sub-upload', is_flag=True, help='Disables "sub" API upload.'
 )
 @click.option(
-    '--save-url', is_flag=True, help='Save extracted URLs to file.'
-)
-@click.option(
     '--save-html', is_flag=True, help='Save extracted HTML data to file.'
 )
 @click.option(
     '--save-api', is_flag=True, help='Save API request data to file.'
-)
-@click.option(
-    '--use-url-file', is_flag=True, help='Uses extracted URL file.'
 )
 @click.option(
     '--use-html-file', is_flag=True, help='Uses extracted HTML file.'
@@ -70,15 +64,15 @@ def extract(**kwargs):
         various aspects of the tool. By default it looks for it in the
         root directory under the name 'extract.ini'.
     """
+    click.echo('--------------------------------')
     click.echo('Running ABC iDBL Extraction Tool')
     click.echo('--------------------------------')
+    click.echo()
 
     # Get application configuration
     try:
         click.echo('Setting up tool configuration...', nl=False)
-
         configuration = Configuration(kwargs)
-
         click.echo(click.style(' Complete!', fg='green'))
     except ImproperlyConfigured:
         click.echo(click.style(' ERROR', fg='red'))
@@ -87,9 +81,7 @@ def extract(**kwargs):
 
     # Setup Sentry error reporting
     click.echo('Setting up Sentry Error reporting...', nl=False)
-
     sentry_sdk.init(configuration.settings['sentry'])
-
     click.echo(click.style(' Complete!', fg='green'))
 
     # Setup a request session
@@ -109,8 +101,12 @@ def extract(**kwargs):
         for i in id_range:
             extract_data(i, session, configuration)
 
+    # End application
+    click.echo()
     click.echo('----------------------------')
     click.echo('ABC iDBL Extraction Complete')
+    click.echo('----------------------------')
+    sys.exit()
 
 if __name__ == '__main__':
     extract() # pylint: disable=no-value-for-parameter

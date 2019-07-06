@@ -33,7 +33,6 @@ class Configuration:
                 'from': config['robot']['from'],
             }
             settings['extracted_data'] = {
-                'url': config['locations']['url'],
                 'html': config['locations']['html'],
                 'api': config['locations']['api'],
             }
@@ -49,13 +48,11 @@ class Configuration:
             'sub': not command_line_args['disable_sub_upload'],
         }
         settings['save'] = {
-            'url': command_line_args['save_url'],
             'html': command_line_args['save_html'],
             'api': command_line_args['save_api'],
         }
         settings['source'] = {
-            'site_url': not command_line_args['use_html_file'],
-            'site_html': not command_line_args['use_url_file'],
+            'site_html': not command_line_args['use_html_file'],
         }
 
         return settings
