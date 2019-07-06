@@ -1,8 +1,11 @@
 """Functions and variables for configuration."""
+from pathlib import Path
+
 import configparser
 
 from modules.exceptions import ImproperlyConfigured
 
+# TODO: see if this should become a function
 class Configuration:
     """Handles all relevant settings/configuration details."""
     def __init__(self, command_line_args):
@@ -40,6 +43,19 @@ class Configuration:
         except (configparser.Error, KeyError) as error:
             raise ImproperlyConfigured(error)
 
+        # Check if use_html location is needed
+        files = {}
+        files['use_html'] = self._resolve_if_path_needed(
+            command_line_args['use_html_file'], config['locations']['html']
+        )
+        files['save_html'] = self._resolve_if_path_needed(
+            command_line_args['save_html'], config['locations']['html']
+        )
+        files['save_api'] = self._resolve_if_path_needed(
+            command_line_args['save_api'], config['locations']['api']
+        )
+        settings['files'] = files
+
         # Add the command line arguments
         settings['abc_start_id'] = command_line_args['start_id']
         settings['abc_end_id'] = command_line_args['end_id']
@@ -47,12 +63,20 @@ class Configuration:
             'data': not command_line_args['disable_data_upload'],
             'sub': not command_line_args['disable_sub_upload'],
         }
-        settings['save'] = {
-            'html': command_line_args['save_html'],
-            'api': command_line_args['save_api'],
-        }
-        settings['source'] = {
-            'site_html': not command_line_args['use_html_file'],
-        }
 
         return settings
+
+    @staticmethod
+    def _resolve_if_path_needed(use_flag, path_string):
+        """Determines if a path is needed and if it is valid."""
+        if use_flag:
+            path = Path(path_string)
+
+            if path.exists() and path.is_dir():
+                return path
+
+            raise ImproperlyConfigured(
+                'Invalid path string provided.'
+            )
+
+        return False
