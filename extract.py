@@ -28,7 +28,7 @@ import sentry_sdk
 from tqdm import trange
 
 from modules.configuration import Configuration
-from modules.exceptions import ImproperlyConfigured
+from modules.exceptions import ImproperlyConfigured, ExtractionError
 from modules.extraction import extract_data
 
 
@@ -99,7 +99,11 @@ def extract(**kwargs):
         id_range.set_description_str('Extracting iDBL')
 
         for i in id_range:
-            extract_data(i, session, configuration)
+            try:
+                extract_data(i, session, configuration.settings)
+            except ExtractionError as error:
+                # Capture exception, but do not end program
+                sentry_sdk.capture_exception(error)
 
     # End application
     click.echo()
