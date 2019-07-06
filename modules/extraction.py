@@ -86,32 +86,32 @@ class Manufacturer(object):
         self.matched = matched
 
 class ATC(object):
-    def __init__(self, atcList, html):
-        self.code1 = atcList[0]
-        self.text1 = atcList[1]
-        self.code2 = atcList[2]
-        self.text2 = atcList[3]
-        self.code3 = atcList[4]
-        self.text3 = atcList[5]
-        self.code4 = atcList[6]
-        self.text4 = atcList[7]
-        self.code5 = atcList[8]
-        self.text5 = atcList[9]
+    def __init__(self, atc_list, html):
+        self.code1 = atc_list[0]
+        self.text1 = atc_list[1]
+        self.code2 = atc_list[2]
+        self.text2 = atc_list[3]
+        self.code3 = atc_list[4]
+        self.text3 = atc_list[5]
+        self.code4 = atc_list[6]
+        self.text4 = atc_list[7]
+        self.code5 = atc_list[8]
+        self.text5 = atc_list[9]
         self.html = html
 
 class Clients(object):
-    def __init__(self, list, html):
-        self.g1 = list[0]
-        self.g66 = list[1]
-        self.g66a = list[2]
-        self.g19823 = list[3]
-        self.g19823a = list[4]
-        self.g19824 = list[5]
-        self.g20400 = list[6]
-        self.g20403 = list[7]
-        self.g20514 = list[8]
-        self.g22128 = list[9]
-        self.g23609 = list[10]
+    def __init__(self, coverage_list, html):
+        self.g1 = coverage_list[0]
+        self.g66 = coverage_list[1]
+        self.g66a = coverage_list[2]
+        self.g19823 = coverage_list[3]
+        self.g19823a = coverage_list[4]
+        self.g19824 = coverage_list[5]
+        self.g20400 = coverage_list[6]
+        self.g20403 = coverage_list[7]
+        self.g20514 = coverage_list[8]
+        self.g22128 = coverage_list[9]
+        self.g23609 = coverage_list[10]
         self.html = html
 
 class CoverageCriteria(object):
@@ -145,18 +145,18 @@ def get_permission(user_agent):
 
 
 # URL SCRAPING FUNCTIONS
-def assemble_url(id):
+def assemble_url(item_id):
     """Constructs a valid iDBL url based on the drug ID"""
     # Base URL to construct final URL from
     base = ('https://idbl.ab.bluecross.ca/idbl/'
             'lookupDinPinDetail.do?productID=')
 
     # Assembles the url form the base + 10 digit productID
-    url = '%s%010d' % (base, id)
+    url = '%s%010d' % (base, item_id)
 
     return url
 
-def check_url(id, url, session):
+def check_url(item_id, url, session):
     """Checks the provided URL for an active status code"""
     # Request the header for the provided url
     try:
@@ -168,20 +168,20 @@ def check_url(id, url, session):
 
     # Check status and create the URL Status object
     if code == 200:
-        log.debug('URL %s: ACTIVE' % id)
+        log.debug('URL %s: ACTIVE', item_id)
         status = URLData(id, url, 'active')
 
     elif code == 302:
-        log.debug('URL %s: INACTIVE' % id)
+        log.debug('URL %s: INACTIVE', item_id)
         status = URLData(id, url, 'inactive')
 
     else:
-        log.warning('URL %s: Unexpected %d error' % (id, code))
+        log.warning('URL %s: Unexpected %d error', item_id, code)
         status = URLData(id, url, 'error')
 
     return status
 
-def scrape_url(id, session):
+def scrape_url(item_id, session):
     """Takes the provided ID # and checks if it returns active URL
         args:
             session:    a requests session to request headers
@@ -189,14 +189,14 @@ def scrape_url(id, session):
             log:        a logging object to send logs to
 
         returns:
-            data:       a URLData object with server response data
+            data:       a url_data object with server response data
 
         raises:
             none.
     """
-    url = assemble_url(id)
+    url = assemble_url(item_id)
 
-    data = check_url(id, url, session)
+    data = check_url(item_id, url, session)
 
     # Return the URL
     return data
@@ -208,14 +208,14 @@ def debug_url(fileLoc):
 
     url_list = []
 
-    for id in urls:
-        if id:
+    for item_id in urls:
+        if item_id:
             # Construct the full URL
-            id = int(id)
-            url = assemble_url(id)
+            item_id = int(item_id)
+            url = assemble_url(item_id)
 
-            # Create the URLData object and append it
-            url_list.append(URLData(id, url, 'active'))
+            # Create the url_data object and append it
+            url_list.append(URLData(item_id, url, 'active'))
 
     return url_list
 
@@ -225,22 +225,22 @@ def debug_url_data(html_loc):
     files = html_loc.listdir(pattern='*.html', names_only=True)
 
     # Extracts all the ids from the file names
-    idList = []
+    id_list = []
 
     for file in files:
-        idList.append(int(file[:-5]))
+        id_list.append(int(file[:-5]))
 
     # Sorts the ids numerically
-    idList = sorted(idList, key=int)
+    id_list = sorted(id_list, key=int)
 
     # Creates a URL list from the sorted IDs
     url_list = []
 
-    for id in idList:
-        url = assemble_url(id)
+    for item_id in id_list:
+        url = assemble_url(item_id)
 
-        # Create the URLData object and append it
-        url_list.append(URLData(id, url, 'active'))
+        # Create the url_data object and append it
+        url_list.append(URLData(item_id, url, 'active'))
 
     return url_list
 
@@ -286,7 +286,7 @@ def download_page(session, url):
     else:
         raise IOError('%s returned status code %d' % (url, status))
 
-def extract_page_content(url, page, parse_data, log):
+def extract_page_content(url, page, parse_data):
     """Takes the provided HTML page and extracts all relevant content
         args:
             url:        url to extract data from
@@ -294,7 +294,6 @@ def extract_page_content(url, page, parse_data, log):
                         to extract
             parse_data:  an object containing relevant data to parse
                         extracted content
-            log:        a logging object to send logs to
 
         returns:
             pageContent:    object with all the extracted data
@@ -309,10 +308,11 @@ def extract_page_content(url, page, parse_data, log):
         """Extracts relevant HTML and returns a BeautifulSoup object"""
 
         try:
+            # Can hopefully extract on <div class="container printable">
             html = BeautifulSoup(page, 'html.parser')
             trunc = html.findAll('div', {'class': 'columnLeftFull'})[0]
-        except:
-            log.exception('URL %s: unable to create Soup' % url)
+        except Exception:
+            log.exception('URL %s: unable to create Soup', url)
 
         return trunc
 
@@ -338,12 +338,13 @@ def extract_page_content(url, page, parse_data, log):
 
     def extract_din(html):
         """Extracts the DIN"""
-
+        # Can search for DIN/NPN/PIN
+        # limit by table structure
         try:
             dinText = html.p.string
             din = dinText.replace('DIN/PIN Detail - ', '')
-        except:
-            log.critical('URL %s: unable to extract DIN' % url)
+        except Exception:
+            log.critical('URL %s: unable to extract DIN', url)
             din = ''
 
         # Extract the DIN
@@ -441,16 +442,19 @@ def extract_page_content(url, page, parse_data, log):
 
             return newList
 
+        # PTC is now in a table with code and description separated
+        # Also have to handle links within tables
+
         try:
-            ptcString = html.find_all('tr', class_='idblTable')[0]\
+            ptc_string = html.find_all('tr', class_='idblTable')[0]\
                             .td.div.p.get_text().strip()
-        except:
-            log.critical('URL %s: unable to extract PTC string' % url)
+        except Exception:
+            log.critical('URL %s: unable to extract PTC string', url)
 
-        ptcStrings = collect_ptc_strings(ptcString)
-        ptcList = parse_ptc(ptcStrings)
+        ptc_strings = collect_ptc_strings(ptc_string)
+        ptc_list = parse_ptc(ptc_strings)
 
-        return ptcList
+        return ptc_list
 
     def extract_brand_strength_route_form(html, bsrfSubs, unitSubs):
         """Extracts the brand name, strength, route, and dosage form"""
@@ -537,8 +541,8 @@ def extract_page_content(url, page, parse_data, log):
                         brandStrength = text[0].strip()
                         route = text[1].strip()
                         dosageForm = text[2].strip()
-                    except:
-                        log.critical('URL %s: Error extracting BSRF' % url)
+                    except Exception:
+                        log.critical('URL %s: Error extracting BSRF', url)
 
                         brandStrength = text
                         route = None
@@ -552,9 +556,10 @@ def extract_page_content(url, page, parse_data, log):
                         brandStrength = text[0].strip()
                         route = None
                         dosageForm = text[1].strip()
-                    except:
-                        log.critical('URL %s: Error extracting 4 space BSF'
-                                      % url)
+                    except Exception:
+                        log.critical(
+                            'URL %s: Error extracting 4 space BSF', url
+                        )
 
                         brandStrength = text
                         route = None
@@ -569,9 +574,10 @@ def extract_page_content(url, page, parse_data, log):
                         brandStrength = text[0].strip()
                         route = None
                         dosageForm = text[1].strip()
-                    except:
-                        log.critical('URL %s: Error extracting 3 space BSF'
-                                      % url)
+                    except Exception:
+                        log.critical(
+                            'URL %s: Error extracting 3 space BSF', url
+                        )
 
                         brandStrength = text
                         route = None
@@ -745,6 +751,8 @@ def extract_page_content(url, page, parse_data, log):
             log.critical('URL: %s: unable to extract LCA' % url)
 
         return lca
+
+    # TODO: MAC Pricing and comment now added - e.g. lansoprazole
 
     def extract_unit_issue(html, subs):
         """Extracts the unit of issue"""
@@ -981,6 +989,10 @@ def extract_page_content(url, page, parse_data, log):
 
             return special_auth
 
+        # the parent P containing the link has a data attribute data-pdf
+        # data-pdf contains the pdf name (e.g. 60001.pdf)
+        # https://idbl.ab.bluecross.ca/idbl/DBL/ + pdf name
+
         try:
             specialElem = html.find_all('tr', class_='idblTable')[15]\
                               .find_all('td')[1]
@@ -1023,10 +1035,10 @@ def extract_page_content(url, page, parse_data, log):
 
     return pageContent
 
-def collect_content(urlData, session, parse_data):
+def collect_content(url_data, session, parse_data):
     """Extracts the page content from the provided url
         args:
-            urlData:    a URL data object with the url to extract
+            url_data:    a URL data object with the url to extract
             session:    requests session object connected to the site
             cursor:     PyMySQL cursor to query database
             log:        a logging object to send logs to
@@ -1040,38 +1052,38 @@ def collect_content(urlData, session, parse_data):
 
     # Download the page content
     try:
-        page = download_page(session, urlData.url)
-        log.debug('URL %s: page downloaded successfully' % urlData.id)
+        page = download_page(session, url_data.url)
+        log.debug('URL %s: page downloaded successfully' % url_data.id)
     except Exception as error:
-        log.warning('{} - URL {}: unable to download content'.format(e, urlData.id))
+        log.warning('{} - URL {}: unable to download content'.format(e, url_data.id))
         page = None
         pageContent = None
 
     # Extract relevant information out from the page content
     if page:
         try:
-            pageContent = extract_page_content(urlData.id, page, parse_data, log)
-            log.debug('URL %s: content extracted successfully' % urlData.id)
+            pageContent = extract_page_content(url_data.id, page, parse_data, log)
+            log.debug('URL %s: content extracted successfully' % url_data.id)
         except:
-            log.exception('URL %s: unable to extract content' % urlData.id)
+            log.exception('URL %s: unable to extract content' % url_data.id)
             pageContent = None
 
     return pageContent
 
-def debug_data(urlData, html_loc, parse_data, log):
+def debug_data(url_data, html_loc, parse_data, log):
     """Collects HTML data from provided location instead of website"""
-    htmlFile = html_loc.child('%s.html' % urlData.id).absolute()
-    log.debug('File %s.html: extracting data' % urlData.id)
+    htmlFile = html_loc.child('%s.html' % url_data.id).absolute()
+    log.debug('File %s.html: extracting data' % url_data.id)
 
     with open(htmlFile, 'r') as html:
         page = html.read()
 
         try:
-            pageContent = extract_page_content(urlData.id, page, parse_data,
+            pageContent = extract_page_content(url_data.id, page, parse_data,
                                                log)
         except Exception as error:
             log.warning('File %s: unable to extract page content: %s'
-                        % (urlData.id, e))
+                        % (url_data.id, e))
             pageContent = None
 
     return pageContent

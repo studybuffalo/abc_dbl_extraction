@@ -45,3 +45,8 @@ LOG = logging.getLogger(__name__)
 sentry_sdk.init(CONFIG['sentry_dsn'])
 
 manage.run_application(CONFIG)
+
+# NEW URL https://idbl.ab.bluecross.ca/idbl/drugDetails?detailId=221589
+# TODO: set base URL to https://idbl.ab.bluecross.ca/idbl/drugDetails
+# TODO: add setting to control query string parameter (detailId)
+# Combine both parameters with "?"
