@@ -1087,3 +1087,6 @@ def debug_data(url_data, html_loc, parse_data, log):
             pageContent = None
 
     return pageContent
+
+def extract_data(abc_id, session, settings):
+    """Manages extraction of iDBL details."""
