@@ -20,13 +20,14 @@
     see <http://www.gnu.org/licenses/>.
 """
 import sys
+import traceback
 
 import click
 import requests
 import sentry_sdk
 from tqdm import trange
 
-from modules.configuration import Settings
+from modules.configuration import Configuration
 from modules.exceptions import ImproperlyConfigured
 from modules.extraction import extract_data
 
@@ -72,34 +73,40 @@ def extract(**kwargs):
     click.echo('Running ABC iDBL Extraction Tool')
     click.echo('--------------------------------')
 
-    # Get application settings
+    # Get application configuration
     try:
         click.echo('Setting up tool configuration...', nl=False)
-        settings = Settings(kwargs)
-        click.echo(' Complete!')
-    except ImproperlyConfigured as error:
-        sys.exit(str(error))
+
+        configuration = Configuration(kwargs)
+
+        click.echo(click.style(' Complete!', fg='green'))
+    except ImproperlyConfigured:
+        click.echo(click.style(' ERROR', fg='red'))
+
+        sys.exit(traceback.format_exc())
 
     # Setup Sentry error reporting
     click.echo('Setting up Sentry Error reporting...', nl=False)
-    sentry_sdk.init(settings.settings['sentry'])
-    click.echo(' Complete!')
+
+    sentry_sdk.init(configuration.settings['sentry'])
+
+    click.echo(click.style(' Complete!', fg='green'))
 
     # Setup a request session
     session = requests.Session()
     session.headers.update({
-        'User-Agent': settings.settings['robot']['user_agent'],
-        'From': settings.settings['robot']['from']
+        'User-Agent': configuration.settings['robot']['user_agent'],
+        'From': configuration.settings['robot']['from']
     })
 
     # Run the extraction process
-    start_id = settings.settings['abc_start_id']
-    end_id = settings.settings['abc_end_id'] + 1
+    start_id = configuration.settings['abc_start_id']
+    end_id = configuration.settings['abc_end_id'] + 1
 
     with trange(start_id, end_id) as id_range:
         for i in id_range:
             id_range.set_description('Extracting iDBL')
-            extract_data(i, session, settings)
+            extract_data(i, session, configuration)
 
     click.echo('----------------------------')
     click.echo('ABC iDBL Extraction Complete')

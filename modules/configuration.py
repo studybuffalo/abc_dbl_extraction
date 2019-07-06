@@ -3,7 +3,7 @@ import configparser
 
 from modules.exceptions import ImproperlyConfigured
 
-class Settings:
+class Configuration:
     """Handles all relevant settings/configuration details."""
     def __init__(self, command_line_args):
         self.settings = self._get_settings(command_line_args)
@@ -26,8 +26,8 @@ class Settings:
         try:
             settings['crawl_delay'] = config['settings']['crawl_delay']
             settings['api_url'] = config['settings']['api_url']
-            settings['apc_url'] = config['settings']['abc_url']
-            settings['apc_pdf_url'] = config['settings']['abc_pdf_url']
+            settings['abc_url'] = config['settings']['abc_url']
+            settings['abc_pdf_url'] = config['settings']['abc_pdf_url']
             settings['robot'] = {
                 'user_agent': config['robot']['user_agent'],
                 'from': config['robot']['from'],
@@ -38,7 +38,7 @@ class Settings:
                 'api': config['locations']['api'],
             }
             settings['sentry'] = config['sentry']['dsn']
-        except configparser.Error as error:
+        except (configparser.Error, KeyError) as error:
             raise ImproperlyConfigured(error)
 
         # Add the command line arguments
