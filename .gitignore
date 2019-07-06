@@ -1,9 +1,6 @@
-# VS Code Files
-*.code-workspace
-settings.json
-
-# Python Files
-__pycache__
+# Environment Files
+*.ini
+!\.*ini
 
 # Application generated data
 /extracted_data
@@ -14,3 +11,10 @@ abc_dbl_extraction_logs.json
 .coverage
 htmlcov/
 reports/*
+
+# VS Code Files
+*.code-workspace
+settings.json
+
+# Python Files
+__pycache__
