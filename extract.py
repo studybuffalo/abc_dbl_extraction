@@ -22,9 +22,10 @@
 import sys
 
 import click
+import requests
 import sentry_sdk
 
-from modules.configuration import get_settings
+from modules.configuration import Settings
 from modules.exceptions import ImproperlyConfigured
 from modules.extraction import extract_data
 
@@ -67,18 +68,38 @@ def extract(**kwargs):
         various aspects of the tool. By default it looks for it in the
         root directory under the name 'extract.ini'.
     """
+    click.echo('Running ABC iDBL Extraction Tool')
+    click.echo('--------------------------------')
+
     # Get application settings
     try:
-        settings = get_settings(kwargs)
+        click.echo('Setting up tool configuration...', nl=False)
+        settings = Settings(kwargs)
+        click.echo(' Complete!')
     except ImproperlyConfigured as error:
         sys.exit(str(error))
 
     # Setup Sentry error reporting
-    sentry_sdk.init(settings['sentry'])
+    click.echo('Setting up Sentry Error reporting...', nl=False)
+    sentry_sdk.init(settings.settings['sentry'])
+    click.echo(' Complete!')
+
+    # Setup a request session
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': settings.settings['robot']['user_agent'],
+        'From': settings.settings['robot']['from']
+    })
 
     # Run the extraction process
-    for i in range(settings['abc_start_id'], settings['abc_end_id'] + 1):
-        extract_data(i, settings)
+    start_id = settings.settings['abc_start_id']
+    end_id = settings.settings['abc_end_id'] + 1
+
+    for i in range(start_id, end_id):
+        extract_data(i, session, settings)
+
+    click.echo('----------------------------')
+    click.echo('ABC iDBL Extraction Complete')
 
 if __name__ == '__main__':
     extract() # pylint: disable=no-value-for-parameter
