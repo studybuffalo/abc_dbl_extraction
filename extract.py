@@ -24,6 +24,7 @@ import sys
 import click
 import requests
 import sentry_sdk
+from tqdm import trange
 
 from modules.configuration import Settings
 from modules.exceptions import ImproperlyConfigured
@@ -95,8 +96,10 @@ def extract(**kwargs):
     start_id = settings.settings['abc_start_id']
     end_id = settings.settings['abc_end_id'] + 1
 
-    for i in range(start_id, end_id):
-        extract_data(i, session, settings)
+    with trange(start_id, end_id) as id_range:
+        for i in id_range:
+            id_range.set_description('Extracting iDBL')
+            extract_data(i, session, settings)
 
     click.echo('----------------------------')
     click.echo('ABC iDBL Extraction Complete')
