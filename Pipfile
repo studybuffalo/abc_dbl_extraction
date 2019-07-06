@@ -19,8 +19,9 @@ pylint = "*"  # https://github.com/PyCQA/pylint/
 # Testing
 # ------------------------------------------------------------------------------
 coverage = "*"  # https://github.com/nedbat/coveragepy
-pytest = "*"  #  https://github.com/pytest-dev/pytest
+pytest = "*"  # https://github.com/pytest-dev/pytest
 pytest-cov = "*"  # https://github.com/pytest-dev/pytest-cov
+
 
 [requires]
 python_version = "3.7"
