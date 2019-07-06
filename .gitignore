@@ -1,10 +1,10 @@
 # Environment Files
 *.ini
-!\.*ini
+!.*ini
 
 # Application generated data
 /extracted_data
-!/extracted_data/\.gitkeep
+!/extracted_data/.gitkeep
 
 # Testing Files
 .pytest_cache
