@@ -1,11 +1,8 @@
 """Functions to handle data extraction from iDBL."""
 from datetime import datetime
 from pathlib import Path
-import re
 
 from bs4 import BeautifulSoup
-
-from modules.exceptions import ExtractionError
 
 
 class IDBLData:
