@@ -153,7 +153,7 @@ Tests can then be run with:
     $ pipenv run pytest
 
 Coverage is also available and can be added by including the following
-flags::
+flags:
 
 .. code:: shell
 
