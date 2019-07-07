@@ -20,6 +20,7 @@
     see <http://www.gnu.org/licenses/>.
 """
 import sys
+import time
 import traceback
 
 import click
@@ -95,16 +96,35 @@ def extract(**kwargs):
     start_id = configuration.settings['abc_start_id']
     end_id = configuration.settings['abc_end_id'] + 1
 
-    with trange(start_id, end_id) as id_range:
-        id_range.set_description_str('Extracting iDBL')
+    # with trange(start_id, end_id) as id_range:
+    #     id_range.set_description_str('Extracting iDBL')
 
-        for i in id_range:
-            try:
-                extract_data(i, session, configuration.settings)
-            except ExtractionError as error:
-                # Capture exception, but do not end program
-                sentry_sdk.capture_exception(error)
+    #     for i in id_range:
+    #         # Apply crawl delay
+    #         time.sleep(configuration.settings['crawl_delay'])
 
+    #         # Attempt to extract data
+    #         try:
+    #             data = extract_data(i, session, configuration.settings)
+    #         except ExtractionError as error:
+    #             # Capture exception, but do not end program
+    #             sentry_sdk.capture_exception(error)
+    for i in range(start_id, end_id):
+        # Apply crawl delay
+        time.sleep(configuration.settings['crawl_delay'])
+
+        # Attempt to extract data
+        try:
+            idbl_data = extract_data(i, session, configuration.settings)
+
+            if idbl_data:
+                print(idbl_data.abc_id)
+                print(idbl_data.raw_html)
+            else:
+                print(i)
+        except ExtractionError as error:
+            # Capture exception for audit/improvement purposes
+            sentry_sdk.capture_exception(error)
     # End application
     click.echo()
     click.echo('----------------------------')
