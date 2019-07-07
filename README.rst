@@ -100,15 +100,15 @@ explanations of the available settings:
 
 - ``[[settings]]``
 
-    - ``crawl_delay`` (**int**): The number of seconds to wait between
-      calls to the iDBL. Keep at at least 1 second to avoid triggering
-      a blacklist.
+  - ``crawl_delay`` (**int**): The number of seconds to wait between
+    calls to the iDBL. Keep at at least 1 second to avoid triggering
+    a blacklist.
 
-    - ``api_url`` (**str**): The root URL to make API calls from.
-      Include any trailing slashes (``/``) in this.
+  - ``api_url`` (**str**): The root URL to make API calls from.
+    Include any trailing slashes (``/``) in this.
 
-    - ``abc_url`` (**str**): The root URL to make iDBL calls from.
-      Include everything before the query ``?``.
+  - ``abc_url`` (**str**): The root URL to make iDBL calls from.
+    Include everything before the query ``?``.
 
 - ``[[robot]]``
 
