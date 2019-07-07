@@ -44,9 +44,6 @@ from modules import (
     '--disable-data-upload', is_flag=True, help='Disables "data" API upload.'
 )
 @click.option(
-    '--disable-sub-upload', is_flag=True, help='Disables "sub" API upload.'
-)
-@click.option(
     '--save-html', is_flag=True, help='Save extracted HTML data to file.'
 )
 @click.option(
@@ -111,9 +108,6 @@ def extract(**kwargs):
                 idbl_data = extract_data(i, idbl_session, settings)
 
             except exceptions.ExtractionError as error:
-                # Capture exception, but do not end program
-                sentry_sdk.capture_exception(error)
-            except exceptions.APIError as error:
                 # Capture exception, but do not end program
                 sentry_sdk.capture_exception(error)
 
