@@ -21,6 +21,7 @@ pylint = "*"  # https://github.com/PyCQA/pylint/
 
 # Testing
 # ------------------------------------------------------------------------------
+codecov = "*"  # https://github.com/codecov/codecov-python
 pytest = "*"  # https://github.com/pytest-dev/pytest
 pytest-cov = "*"  # https://github.com/pytest-dev/pytest-cov
 
