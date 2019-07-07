@@ -99,7 +99,7 @@ in the root directory under ``./extraction.ini``. The following are
 explanations of the available settings:
 
 ``[[settings]]``
----------------
+----------------
 
 - ``crawl_delay`` (**int**): The number of seconds to wait between
   calls to the iDBL. Keep at at least 1 second to avoid triggering a
@@ -132,9 +132,11 @@ explanations of the available settings:
 
 - ``dsn`` (**str**): the Sentry DSN to use for error reports.
 
-----------------------
-Developing Application
-----------------------
+--------------------------
+Developing the Application
+--------------------------
+
+TBD
 
 -------------
 Running Tests
@@ -165,6 +167,7 @@ Tests can be configured with the ``.coveragerc`` file in this
 repository. the ``--cov-report`` option accepts either ``xml``
 (machine-readable) or ``html`` (human-readable).
 
+-------
 Authors
 -------
 
@@ -172,6 +175,7 @@ Joshua Robert Torrance (StudyBuffalo_)
 
 .. _StudyBuffalo: https://github.com/studybuffalo
 
+-------
 License
 -------
 

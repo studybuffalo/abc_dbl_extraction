@@ -433,7 +433,7 @@ def extract_from_idbl(abc_id, session, settings):
     """Retrieves HTML data from iDBL."""
     # Assemble URL
     abc_url = '{}?detailId={}'.format(settings['abc_url'], abc_id)
-
+    print(abc_url)
     # Check for a 200 status code
     head_response = session.head(abc_url, allow_redirects=False)
 
