@@ -107,24 +107,16 @@ class IDBLData:
         return generic_name
 
     def _extract_ptc(self):
-        """Extracts the PTC numbers and descriptions"""
+        """Extracts the most accurate PTC code."""
         ptc_elements = self.html.find(
             class_='abc-drug-detail-table'
         ).tbody.find_all(
             'tr', recursive=False
         )[1].table.tbody.find_all(
             'tr'
-        )
+        )[-1].td
 
-        ptc = []
-
-        for row in ptc_elements:
-            cells = row.find_all('td')
-
-            ptc.append({
-                'code': cells[0].stripped_strings[0],
-                'description': cells[1].stripped_strings[0],
-            })
+        ptc = ptc_elements.stripped_strings()[0]
 
         return ptc
 
