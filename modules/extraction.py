@@ -29,23 +29,23 @@ class IDBLData:
 
     def extract_data(self): # pylint: disable=too-many-locals
         """Extracts data from the HTML page."""
-        din = self.extract_din()
-        bsrf = self.extract_bsrf()
-        generic_name = self.extract_generic_name()
-        ptc = self.extract_ptc()
-        date_listed = self.extract_date_listed()
-        unit_price = self.extract_unit_price()
-        lca_price = self.extract_lca_price()
-        mac_price, mac_text = self.extract_mac()
-        unit_of_issue = self.extract_unit_of_issue()
-        manufactuer = self.extract_manufacturer()
-        atc = self.extract_atc()
-        schedule = self.extract_schedule()
-        interchangeable = self.extract_interchangeable()
-        coverage_status = self.extract_coverage_status()
-        clients = self.extract_clients()
-        special_authorization = self.extract_special_authorization()
-        coverage_criteria = self.extract_coverage_criteria()
+        din = self._extract_din()
+        bsrf = self._extract_bsrf()
+        generic_name = self._extract_generic_name()
+        ptc = self._extract_ptc()
+        date_listed = self._extract_date_listed()
+        unit_price = self._extract_unit_price()
+        lca_price = self._extract_lca_price()
+        mac_price, mac_text = self._extract_mac()
+        unit_of_issue = self._extract_unit_of_issue()
+        manufactuer = self._extract_manufacturer()
+        atc = self._extract_atc()
+        schedule = self._extract_schedule()
+        interchangeable = self._extract_interchangeable()
+        coverage_status = self._extract_coverage_status()
+        clients = self._extract_clients()
+        special_authorization = self._extract_special_authorization()
+        coverage_criteria = self._extract_coverage_criteria()
 
         self.data = {
             'din': din,
@@ -68,7 +68,7 @@ class IDBLData:
             'coverage_criteria': coverage_criteria,
         }
 
-    def extract_din(self):
+    def _extract_din(self):
         """Extracts the DIN."""
         din_element = self.html.find(
             class_='abc-search-header'
@@ -82,7 +82,7 @@ class IDBLData:
 
         return din
 
-    def extract_bsrf(self):
+    def _extract_bsrf(self):
         """Extracts the brand name, strength, route, and form (BSRF)."""
         bsrf_element = self.html.find(
             class_='abc-search-header'
@@ -94,7 +94,7 @@ class IDBLData:
 
         return bsrf
 
-    def extract_generic_name(self):
+    def _extract_generic_name(self):
         """Extracts the generic name."""
         generic_element = self.html.find(
             class_='abc-search-header'
@@ -106,7 +106,7 @@ class IDBLData:
 
         return generic_name
 
-    def extract_ptc(self):
+    def _extract_ptc(self):
         """Extracts the PTC numbers and descriptions"""
         ptc_elements = self.html.find(
             class_='abc-drug-detail-table'
@@ -128,7 +128,7 @@ class IDBLData:
 
         return ptc
 
-    def extract_date_listed(self):
+    def _extract_date_listed(self):
         """Extracts the listing date.
 
             Dates are extracted in the format DD-MMM-YYYY and returned
@@ -147,7 +147,7 @@ class IDBLData:
 
         return date_listed
 
-    def extract_unit_price(self):
+    def _extract_unit_price(self):
         """Extracts the unit price"""
         unit_price_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -161,7 +161,7 @@ class IDBLData:
 
         return unit_price
 
-    def extract_lca_price(self):
+    def _extract_lca_price(self):
         """Extract LCA price and any accompanying text"""
         lca_price_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -175,7 +175,7 @@ class IDBLData:
 
         return lca_price
 
-    def extract_mac(self):
+    def _extract_mac(self):
         """Extracts the MAC price and any associated text."""
         mac_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -201,7 +201,7 @@ class IDBLData:
 
         return mac_price, mac_text
 
-    def extract_unit_of_issue(self):
+    def _extract_unit_of_issue(self):
         """Extracts the unit of issue."""
         unit_of_issue_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -215,7 +215,7 @@ class IDBLData:
 
         return unit_of_issue
 
-    def extract_manufacturer(self):
+    def _extract_manufacturer(self):
         """Extracts the manufacturer."""
         manufacturer_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -229,7 +229,7 @@ class IDBLData:
 
         return manufacturer
 
-    def extract_atc(self):
+    def _extract_atc(self):
         """Extracts the ATC code."""
         atc_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -243,7 +243,7 @@ class IDBLData:
 
         return atc
 
-    def extract_schedule(self):
+    def _extract_schedule(self):
         """Extracts the provincial drug schedule."""
         schedule_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -257,7 +257,7 @@ class IDBLData:
 
         return schedule
 
-    def extract_interchangeable(self):
+    def _extract_interchangeable(self):
         """Extracts if drug is interchangeable or not"""
         interchangeable_element = self.html.find(
             class_='abc-drug-detail-table'
@@ -274,7 +274,7 @@ class IDBLData:
 
         return interchangeable
 
-    def extract_coverage_status(self):
+    def _extract_coverage_status(self):
         """Extract the coverage status"""
         coverage_status_element = self.html.find_all(
             class_='abc-drug-detail-table'
@@ -288,7 +288,7 @@ class IDBLData:
 
         return coverage_status
 
-    def extract_clients(self):
+    def _extract_clients(self):
         """Extracts and determines which clients are present."""
         clients_elements = self.html.find_all(
             class_='abc-drug-detail-table'
@@ -339,7 +339,7 @@ class IDBLData:
 
         return clients
 
-    def extract_special_authorization(self):
+    def _extract_special_authorization(self):
         """Extract special authorization links and titles."""
         special_elements = self.html.find_all(
             class_='abc-drug-detail-table'
@@ -367,7 +367,7 @@ class IDBLData:
 
         return special_authorizations
 
-    def extract_coverage_criteria(self):
+    def _extract_coverage_criteria(self):
         """Extracts any coverage criteria data"""
         criteria_elements = self.html.find_all(
             class_='abc-drug-detail-table'
