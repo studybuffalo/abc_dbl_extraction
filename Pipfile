@@ -3,6 +3,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+
 [packages]
 bs4 = "*"  # https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 click = "*"  # https://click.palletsprojects.com/en/7.x/
@@ -12,16 +13,17 @@ requests = "*"  # https://github.com/requests/requests
 sentry-sdk = "*"  # https://docs.sentry.io/quickstart/?platform=python
 tqdm = "*"  # https://github.com/tqdm/tqdm
 
+
 [dev-packages]
 # Code quality
 # ------------------------------------------------------------------------------
 pylint = "*"  # https://github.com/PyCQA/pylint/
+
 # Testing
 # ------------------------------------------------------------------------------
-coverage = "*"  # https://github.com/nedbat/coveragepy
 pytest = "*"  # https://github.com/pytest-dev/pytest
 pytest-cov = "*"  # https://github.com/pytest-dev/pytest-cov
-v = {editable = true,version = "*"}
+
 
 [requires]
 python_version = "3.7"
