@@ -126,12 +126,6 @@ explanations of the available settings:
 
   - ``dsn`` (**str**): the Sentry DSN to use for error reports.
 
---------------------------
-Developing the Application
---------------------------
-
-TBD
-
 -------------
 Running Tests
 -------------
