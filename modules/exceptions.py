@@ -5,3 +5,6 @@ class ImproperlyConfigured(Exception):
 
 class ExtractionError(Exception):
     """Exception raised due to issue with HTML extraction."""
+
+class APIError(Exception):
+    """Exceptions raised due to issue with API."""
