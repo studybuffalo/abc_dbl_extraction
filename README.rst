@@ -40,13 +40,13 @@ everything `Pipenv`_.
 
 If you do not have Pipenv installed:
 
-..code:: shell
+.. code:: shell
 
     $ pip install pipenv
 
 You can then install all requirements:
 
-..code:: shell
+.. code:: shell
 
     $ pipenv install
 
@@ -98,39 +98,35 @@ frequently. A sample file is provided in the repo under
 in the root directory under ``./extraction.ini``. The following are
 explanations of the available settings:
 
-``[[settings]]``
-----------------
+- ``[[settings]]``
 
-- ``crawl_delay`` (**int**): The number of seconds to wait between
-  calls to the iDBL. Keep at at least 1 second to avoid triggering a
-  blacklist.
+    - ``crawl_delay`` (**int**): The number of seconds to wait between
+      calls to the iDBL. Keep at at least 1 second to avoid triggering
+      a blacklist.
 
-- ``api_url`` (**str**): The root URL to make API calls from. Include
-  any trailing slashes (``/``) in this.
+    - ``api_url`` (**str**): The root URL to make API calls from.
+      Include any trailing slashes (``/``) in this.
 
-- ``abc_url`` (**str**): The root URL to make iDBL calls from. Include
-  everything before the query ``?``.
+    - ``abc_url`` (**str**): The root URL to make iDBL calls from.
+      Include everything before the query ``?``.
 
-``[[robot]]``
--------------
+- ``[[robot]]``
 
-- ``user_agent`` (**str**): A User Agent string to identify the
-  application with.
+    - ``user_agent`` (**str**): A User Agent string to identify the
+      application with.
 
-- ``from`` (**str**): An email to contact you at.
+    - ``from`` (**str**): An email to contact you at.
 
-``[[locations]]``
------------------
+- ``[[locations]]``
 
-- ``html`` (**str**): Path to the directory to save and retrieve HTML
-  files from.
+    - ``html`` (**str**): Path to the directory to save and retrieve
+      HTML files from.
 
-- ``api`` (**str**): Path to the directory to save API files at.
+    - ``api`` (**str**): Path to the directory to save API files at.
 
-``[[sentry]]``
---------------
+- ``[[sentry]]``
 
-- ``dsn`` (**str**): the Sentry DSN to use for error reports.
+    - ``dsn`` (**str**): the Sentry DSN to use for error reports.
 
 --------------------------
 Developing the Application
@@ -145,14 +141,14 @@ Running Tests
 To run tests, you will need to ensure the development dependencies are
 installed. If not done already, you can do this by running:
 
-..code:: shell
+.. code:: shell
 
     $ pipenv install --dev
 
 
 Tests can then be run with:
 
-..code:: shell
+.. code:: shell
 
     $ pipenv run pytest
 
