@@ -2,7 +2,7 @@
 Alberta Blue Cross Drug Benefit List Extraction
 ===============================================
 
-|BuildStatus| |Coverage|_ |License|_
+|BuildStatus| |Coverage| |License|
 
 .. |BuildStatus| image:: https://travis-ci.com/studybuffalo/abc_dbl_extraction.svg?branch=master
    :target: https://travis-ci.com/studybuffalo/abc_dbl_extraction
@@ -13,10 +13,8 @@ Alberta Blue Cross Drug Benefit List Extraction
    :alt: Codecov test coverage
 
 .. |License| image:: https://img.shields.io/github/license/studybuffalo/abc_dbl_extraction.svg
+   :target: https://github.com/studybuffalo/abc_dbl_extraction/blob/master/LICENSE
    :alt: License
-
-.. _License: https://github.com/studybuffalo/abc_dbl_extraction/blob/master/LICENSE
-
 
 This is a tool that scrapes the `Alberta Blue Cross Interactive Drug Benefit
 List (ABC iDBL)`_ and formats it for saving in a database. This data is currently
