@@ -41,7 +41,7 @@ from modules import (
     help='Path to the .ini config file.'
 )
 @click.option(
-    '--disable-data-upload', is_flag=True, help='Disables "data" API upload.'
+    '--disable-data-upload', is_flag=True, help='Disables data API upload.'
 )
 @click.option(
     '--save-html', is_flag=True, help='Save extracted HTML data to file.'
