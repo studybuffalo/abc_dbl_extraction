@@ -28,9 +28,7 @@ import requests
 import sentry_sdk
 from tqdm import trange
 
-from modules.configuration import Configuration
-from modules.exceptions import ImproperlyConfigured, ExtractionError
-from modules.extraction import extract_data
+from modules import Configuration, extract_data, save_idbl_data, exceptions
 
 
 @click.command()
@@ -75,7 +73,7 @@ def extract(**kwargs):
         click.echo('Setting up tool configuration...', nl=False)
         configuration = Configuration(kwargs)
         click.echo(click.style(' Complete!', fg='green'))
-    except ImproperlyConfigured:
+    except exceptions.ImproperlyConfigured:
         click.echo(click.style(' ERROR', fg='red'))
 
         sys.exit(traceback.format_exc())
@@ -85,46 +83,44 @@ def extract(**kwargs):
     sentry_sdk.init(configuration.settings['sentry'])
     click.echo(click.style(' Complete!', fg='green'))
 
-    # Setup a request session
-    session = requests.Session()
-    session.headers.update({
+    # Setup a request session for the iDBL
+    idbl_session = requests.Session()
+    idbl_session.headers.update({
         'User-Agent': configuration.settings['robot']['user_agent'],
         'From': configuration.settings['robot']['from']
     })
+
+    # Setup a request session with the API
+    sb_session = requests.Session()
 
     # Run the extraction process
     start_id = configuration.settings['abc_start_id']
     end_id = configuration.settings['abc_end_id'] + 1
 
-    # with trange(start_id, end_id) as id_range:
-    #     id_range.set_description_str('Extracting iDBL')
+    with trange(start_id, end_id) as id_range:
+        id_range.set_description_str('Extracting iDBL')
 
-    #     for i in id_range:
-    #         # Apply crawl delay
-    #         time.sleep(configuration.settings['crawl_delay'])
+        for i in id_range:
+            # Apply crawl delay
+            time.sleep(configuration.settings['crawl_delay'])
 
-    #         # Attempt to extract data
-    #         try:
-    #             data = extract_data(i, session, configuration.settings)
-    #         except ExtractionError as error:
-    #             # Capture exception, but do not end program
-    #             sentry_sdk.capture_exception(error)
-    for i in range(start_id, end_id):
-        # Apply crawl delay
-        time.sleep(configuration.settings['crawl_delay'])
+            # Extract and save data (if applicable)
+            try:
+                idbl_data = extract_data(
+                    i, idbl_session, configuration.settings
+                )
 
-        # Attempt to extract data
-        try:
-            idbl_data = extract_data(i, session, configuration.settings)
+                if idbl_data:
+                    save_idbl_data(
+                        idbl_data, sb_session, configuration.settings
+                    )
+            except exceptions.ExtractionError as error:
+                # Capture exception, but do not end program
+                sentry_sdk.capture_exception(error)
+            except exceptions.APIError as error:
+                # Capture exception, but do not end program
+                sentry_sdk.capture_exception(error)
 
-            if idbl_data:
-                print(idbl_data.abc_id)
-                print(idbl_data.raw_html)
-            else:
-                print(i)
-        except ExtractionError as error:
-            # Capture exception for audit/improvement purposes
-            sentry_sdk.capture_exception(error)
     # End application
     click.echo()
     click.echo('----------------------------')
