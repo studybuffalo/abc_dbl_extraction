@@ -68,17 +68,17 @@ class IDBLData:
             'coverage_criteria': coverage_criteria,
         }
 
+        print(self.data)
+
     def _extract_din(self):
         """Extracts the DIN."""
         din_element = self.html.find(
             class_='abc-search-header'
-        ).table.tbody.tr.td.find_all(
+        ).table.tr.td.find_all(
             'span'
-        ).find(
-            string='DIN/NPN/PIN'
-        )
+        )[0]
 
-        din = str(din_element).strip().split()[1]
+        din = din_element.text.strip().split()[1]
 
         return din
 
@@ -86,11 +86,11 @@ class IDBLData:
         """Extracts the brand name, strength, route, and form (BSRF)."""
         bsrf_element = self.html.find(
             class_='abc-search-header'
-        ).table.tbody.tr.td.find_all(
+        ).table.tr.td.find_all(
             'span'
         )[1]
 
-        bsrf = str(bsrf_element).strip()
+        bsrf = bsrf_element.text.strip()
 
         return bsrf
 
@@ -98,11 +98,11 @@ class IDBLData:
         """Extracts the generic name."""
         generic_element = self.html.find(
             class_='abc-search-header'
-        ).table.tbody.tr.td.find_all(
+        ).table.tr.td.find_all(
             'span'
         )[2]
 
-        generic_name = str(generic_element).strip()
+        generic_name = generic_element.text.strip()
 
         return generic_name
 
@@ -110,13 +110,13 @@ class IDBLData:
         """Extracts the most accurate PTC code."""
         ptc_elements = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[1].table.tbody.find_all(
+        )[1].table.find_all(
             'tr'
         )[-1].td
 
-        ptc = ptc_elements.stripped_strings()[0]
+        ptc = list(ptc_elements.stripped_strings)[0]
 
         return ptc
 
@@ -128,13 +128,13 @@ class IDBLData:
         """
         date_listed_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
         )[2].find_all(
             'td', recursive=False
         )[1]
 
-        date_listed_text = str(date_listed_element).strip()
+        date_listed_text = date_listed_element.text.strip()
         date_listed = datetime.strptime(date_listed_text, '%d-%b-%Y')
 
         return date_listed
@@ -143,13 +143,13 @@ class IDBLData:
         """Extracts the unit price"""
         unit_price_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
         )[4].find_all(
             'td', recursive=False
         )[1]
 
-        unit_price = str(unit_price_element).strip()
+        unit_price = unit_price_element.text.strip()
 
         return unit_price
 
@@ -157,13 +157,13 @@ class IDBLData:
         """Extract LCA price and any accompanying text"""
         lca_price_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
         )[5].find_all(
             'td', recursive=False
         )[1]
 
-        lca_price = str(lca_price_element).strip()
+        lca_price = lca_price_element.text.strip()
 
         return lca_price
 
@@ -171,23 +171,23 @@ class IDBLData:
         """Extracts the MAC price and any associated text."""
         mac_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[5].find_all(
+        )[6].find_all(
             'td', recursive=False
         )[1].find_all(
             'p', recursive=False
         )
 
         # Extract MAC price (if available)
-        mac_price = str(mac_element[0]).strip()
+        mac_price = mac_element[0].text.strip()
 
         if mac_price == 'N/A':
             mac_price = None
 
         # Extract any MAC price comments (if available)
         try:
-            mac_text = str(mac_element[1]).strip()
+            mac_text = mac_element[1].text.strip()
         except IndexError:
             mac_text = None
 
@@ -197,13 +197,13 @@ class IDBLData:
         """Extracts the unit of issue."""
         unit_of_issue_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[7].find_all(
+        )[8].find_all(
             'td', recursive=False
         )[1]
 
-        unit_of_issue = str(unit_of_issue_element).strip()
+        unit_of_issue = unit_of_issue_element.text.strip()
 
         return unit_of_issue
 
@@ -211,13 +211,13 @@ class IDBLData:
         """Extracts the manufacturer."""
         manufacturer_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[8].find_all(
+        )[9].find_all(
             'td', recursive=False
         )[1]
 
-        manufacturer = manufacturer_element.stripped_strings()[0]
+        manufacturer = list(manufacturer_element.stripped_strings)[0]
 
         return manufacturer
 
@@ -225,13 +225,13 @@ class IDBLData:
         """Extracts the ATC code."""
         atc_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[9].find_all(
+        )[10].find_all(
             'td', recursive=False
         )[1]
 
-        atc = str(atc_element).strip()
+        atc = atc_element.text.strip()
 
         return atc
 
@@ -239,13 +239,13 @@ class IDBLData:
         """Extracts the provincial drug schedule."""
         schedule_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[10].find_all(
+        )[11].find_all(
             'td', recursive=False
         )[1]
 
-        schedule = str(schedule_element).strip()
+        schedule = schedule_element.text.strip()
 
         return schedule
 
@@ -253,13 +253,15 @@ class IDBLData:
         """Extracts if drug is interchangeable or not"""
         interchangeable_element = self.html.find(
             class_='abc-drug-detail-table'
-        ).tbody.find_all(
+        ).find_all(
             'tr', recursive=False
-        )[11].find_all(
+        )[12].find_all(
             'td', recursive=False
         )[1]
 
-        interchangeable_string = interchangeable_element.stripped_strings()[0]
+        interchangeable_string = list(
+            interchangeable_element.stripped_strings
+        )[0]
 
         # Convert response to boolean
         interchangeable = interchangeable_string.upper() == 'YES'
@@ -270,25 +272,27 @@ class IDBLData:
         """Extract the coverage status"""
         coverage_status_element = self.html.find_all(
             class_='abc-drug-detail-table'
-        )[1].tbody.find_all(
+        )[1].find_all(
             'tr', recursive=False
         )[0].find_all(
             'td', recursive=False
         )[1]
 
-        coverage_status = str(coverage_status_element).strip().title()
+        coverage_status = coverage_status_element.text.strip().title()
 
         return coverage_status
 
     def _extract_clients(self):
         """Extracts and determines which clients are present."""
-        clients_elements = self.html.find_all(
-            class_='abc-drug-detail-table'
-        )[1].tbody.find_all(
-            'tr', recursive=False
-        )[1].find_all(
-            'td', recursive=False
-        )[1].stripped_strings()
+        clients_elements = list(
+            self.html.find_all(
+                class_='abc-drug-detail-table'
+            )[1].find_all(
+                'tr', recursive=False
+            )[1].find_all(
+                'td', recursive=False
+            )[1].stripped_strings
+        )
 
         clients = {
             'group_1': False,
@@ -305,7 +309,7 @@ class IDBLData:
         }
 
         # Checks if any elements present
-        if clients_elements[0].stripped_strings[0] == 'N/A':
+        if clients_elements[0] == 'N/A':
             return clients
 
         # Strings to match upon to see if group is present
@@ -324,7 +328,7 @@ class IDBLData:
         ]
 
         # Loops through elements and checks which groups are present
-        for client in clients_elements():
+        for client in clients_elements:
             for match in client_matches:
                 if match[0] in client.lower():
                     clients[match[1]] = True
@@ -335,7 +339,7 @@ class IDBLData:
         """Extract special authorization links and titles."""
         special_elements = self.html.find_all(
             class_='abc-drug-detail-table'
-        )[1].tbody.find_all(
+        )[1].find_all(
             'tr', recursive=False
         )[2].find_all(
             'td', recursive=False
@@ -345,7 +349,7 @@ class IDBLData:
 
         special_authorizations = []
 
-        if special_elements[0].stripped_strings[0] == 'N/A':
+        if list(special_elements[0].stripped_strings)[0] == 'N/A':
             return special_authorizations
 
         for element in special_elements:
@@ -363,7 +367,7 @@ class IDBLData:
         """Extracts any coverage criteria data"""
         criteria_elements = self.html.find_all(
             class_='abc-drug-detail-table'
-        )[1].tbody.find_all(
+        )[1].find_all(
             'tr', recursive=False
         )[3].find_all(
             'td', recursive=False
@@ -372,7 +376,9 @@ class IDBLData:
         criteria = []
 
         # Extract all text from the first TD element
-        title_text = ''.join(criteria_elements[0].stripped_strings()).lower()
+        title_text = ''.join(
+            list(criteria_elements[0].stripped_strings)
+        ).lower()
 
         # Check for 'expand all' in first cell
         # If absent: single element to assess in sibling cell
@@ -389,7 +395,7 @@ class IDBLData:
             if len(criteria_paragraphs) == 2:
                 return criteria
 
-            criteria_text = str(criteria_paragraphs[0]).strip()
+            criteria_text = criteria_paragraphs[0].text.strip()
 
             criteria.append({
                 'header': None,
