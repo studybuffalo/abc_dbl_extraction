@@ -3,8 +3,15 @@ import json
 from pathlib import Path
 
 
-def upload_to_api(data, session, api_url):
+def upload_to_api(idbl_data, session, api_url):
     """Uploads the extracted data via the API."""
+    # Assemble the API url
+    api_url = '{}{}/'.format(api_url, idbl_data.abc_id)
+
+    # Make the request
+    response = session.post(api_url, data=idbl_data.data)
+
+    print(response)
 
 def save_html_to_file(html, path, abc_id):
     """Saves the HTML data to file."""
@@ -24,7 +31,7 @@ def save_idbl_data(idbl_data, session, settings):
     """Saves the provided iDBL data."""
     # Upload data via API (if enabled)
     if settings['data_upload']:
-        upload_to_api(idbl_data.data, session, settings['api_url'])
+        upload_to_api(idbl_data, session, settings['api_url'])
 
     # Save raw HTML data to file (if enabled)
     if settings['files']['save_html']:
@@ -41,4 +48,10 @@ def save_idbl_data(idbl_data, session, settings):
 def clear_old_record(abc_id, session, settings):
     """Removes any old records for provided ID from database."""
     if settings['data_upload']:
-        pass
+        # Assemble the API url
+        api_url = '{}{}/remove/'.format(settings['api_url'], abc_id)
+
+        # Make the request
+        response = session.post(api_url)
+
+        print(response)
