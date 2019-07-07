@@ -40,3 +40,5 @@ def save_idbl_data(idbl_data, session, settings):
 
 def clear_old_record(abc_id, session, settings):
     """Removes any old records for provided ID from database."""
+    if settings['data_upload']:
+        pass
