@@ -28,7 +28,9 @@ import requests
 import sentry_sdk
 from tqdm import trange
 
-from modules import get_settings, extract_data, save_idbl_data, exceptions
+from modules import (
+    get_settings, extract_data, save_idbl_data, exceptions, clear_old_record
+)
 
 
 @click.command()
@@ -104,15 +106,23 @@ def extract(**kwargs):
             # Apply crawl delay
             time.sleep(settings['crawl_delay'])
 
-            # Extract and save data (if applicable)
+            # Extract iDBL data (if applicable)
             try:
                 idbl_data = extract_data(i, idbl_session, settings)
 
-                if idbl_data:
-                    save_idbl_data(idbl_data, sb_session, settings)
             except exceptions.ExtractionError as error:
                 # Capture exception, but do not end program
                 sentry_sdk.capture_exception(error)
+            except exceptions.APIError as error:
+                # Capture exception, but do not end program
+                sentry_sdk.capture_exception(error)
+
+            # Save extracted data
+            try:
+                if idbl_data:
+                    save_idbl_data(idbl_data, sb_session, settings)
+                else:
+                    clear_old_record(i, sb_session, settings)
             except exceptions.APIError as error:
                 # Capture exception, but do not end program
                 sentry_sdk.capture_exception(error)
