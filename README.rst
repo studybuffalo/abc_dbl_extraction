@@ -112,21 +112,21 @@ explanations of the available settings:
 
 - ``[[robot]]``
 
-    - ``user_agent`` (**str**): A User Agent string to identify the
-      application with.
+  - ``user_agent`` (**str**): A User Agent string to identify the
+    application with.
 
-    - ``from`` (**str**): An email to contact you at.
+  - ``from`` (**str**): An email to contact you at.
 
 - ``[[locations]]``
 
-    - ``html`` (**str**): Path to the directory to save and retrieve
-      HTML files from.
+  - ``html`` (**str**): Path to the directory to save and retrieve
+    HTML files from.
 
-    - ``api`` (**str**): Path to the directory to save API files at.
+  - ``api`` (**str**): Path to the directory to save API files at.
 
 - ``[[sentry]]``
 
-    - ``dsn`` (**str**): the Sentry DSN to use for error reports.
+  - ``dsn`` (**str**): the Sentry DSN to use for error reports.
 
 --------------------------
 Developing the Application
