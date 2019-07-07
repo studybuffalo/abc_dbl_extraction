@@ -27,7 +27,7 @@ class Configuration:
         settings = {}
 
         try:
-            settings['crawl_delay'] = config['settings']['crawl_delay']
+            settings['crawl_delay'] = config.getint('settings', 'crawl_delay')
             settings['api_url'] = config['settings']['api_url']
             settings['abc_url'] = config['settings']['abc_url']
             settings['abc_pdf_url'] = config['settings']['abc_pdf_url']
