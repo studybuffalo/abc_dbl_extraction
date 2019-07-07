@@ -28,7 +28,7 @@ import requests
 import sentry_sdk
 from tqdm import trange
 
-from modules import Configuration, extract_data, save_idbl_data, exceptions
+from modules import get_settings, extract_data, save_idbl_data, exceptions
 
 
 @click.command()
@@ -70,8 +70,8 @@ def extract(**kwargs):
 
     # Get application configuration
     try:
-        click.echo('Setting up tool configuration...', nl=False)
-        configuration = Configuration(kwargs)
+        click.echo('Setting up tool settings...', nl=False)
+        settings = get_settings(kwargs)
         click.echo(click.style(' Complete!', fg='green'))
     except exceptions.ImproperlyConfigured:
         click.echo(click.style(' ERROR', fg='red'))
@@ -80,40 +80,36 @@ def extract(**kwargs):
 
     # Setup Sentry error reporting
     click.echo('Setting up Sentry Error reporting...', nl=False)
-    sentry_sdk.init(configuration.settings['sentry'])
+    sentry_sdk.init(settings['sentry'])
     click.echo(click.style(' Complete!', fg='green'))
 
     # Setup a request session for the iDBL
     idbl_session = requests.Session()
     idbl_session.headers.update({
-        'User-Agent': configuration.settings['robot']['user_agent'],
-        'From': configuration.settings['robot']['from']
+        'User-Agent': settings['robot']['user_agent'],
+        'From': settings['robot']['from']
     })
 
     # Setup a request session with the API
     sb_session = requests.Session()
 
     # Run the extraction process
-    start_id = configuration.settings['abc_start_id']
-    end_id = configuration.settings['abc_end_id'] + 1
+    start_id = settings['abc_start_id']
+    end_id = settings['abc_end_id'] + 1
 
     with trange(start_id, end_id) as id_range:
         id_range.set_description_str('Extracting iDBL')
 
         for i in id_range:
             # Apply crawl delay
-            time.sleep(configuration.settings['crawl_delay'])
+            time.sleep(settings['crawl_delay'])
 
             # Extract and save data (if applicable)
             try:
-                idbl_data = extract_data(
-                    i, idbl_session, configuration.settings
-                )
+                idbl_data = extract_data(i, idbl_session, settings)
 
                 if idbl_data:
-                    save_idbl_data(
-                        idbl_data, sb_session, configuration.settings
-                    )
+                    save_idbl_data(idbl_data, sb_session, settings)
             except exceptions.ExtractionError as error:
                 # Capture exception, but do not end program
                 sentry_sdk.capture_exception(error)
