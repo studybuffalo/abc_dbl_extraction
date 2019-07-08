@@ -68,8 +68,6 @@ class IDBLData:
             'coverage_criteria': coverage_criteria,
         }
 
-        print(self.data)
-
     def _extract_din(self):
         """Extracts the DIN."""
         din_element = self.html.find(
@@ -395,7 +393,9 @@ class IDBLData:
             if len(criteria_paragraphs) == 2:
                 return criteria
 
-            criteria_text = criteria_paragraphs[0].text.strip()
+            # Extract text and preserve <br> elements
+            criteria_text = criteria_paragraphs[0].contents
+            criteria_text = ''.join(str(text) for text in criteria_text)
 
             criteria.append({
                 'header': None,
@@ -439,7 +439,7 @@ def extract_from_idbl(abc_id, session, settings):
     """Retrieves HTML data from iDBL."""
     # Assemble URL
     abc_url = '{}?detailId={}'.format(settings['abc_url'], abc_id)
-    print(abc_url)
+
     # Check for a 200 status code
     head_response = session.head(abc_url, allow_redirects=False)
 
