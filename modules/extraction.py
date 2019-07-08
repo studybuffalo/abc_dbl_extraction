@@ -133,7 +133,11 @@ class IDBLData:
         )[1]
 
         date_listed_text = date_listed_element.text.strip()
-        date_listed = datetime.strptime(date_listed_text, '%d-%b-%Y')
+
+        try:
+            date_listed = datetime.strptime(date_listed_text, '%d-%b-%Y')
+        except ValueError:
+            date_listed = None
 
         return date_listed
 
@@ -352,7 +356,7 @@ class IDBLData:
 
         for element in special_elements:
             pdf_name = element['data-pdf']
-            pdf_title = element.stripped_strings()[0]
+            pdf_title = list(element.stripped_strings)[0]
 
             special_authorizations.append({
                 'pdf_name': pdf_name,
@@ -407,7 +411,7 @@ class IDBLData:
         # Otherwise, handle multiple criteria elements
         criteria_elements = self.html.find_all(
             class_='abc-drug-detail-table'
-        )[1].tbody.find_all(
+        )[1].find_all(
             'tr', recursive=False
         )[4].td.find_all(
             'div', recursive=False
@@ -416,7 +420,7 @@ class IDBLData:
         # Loop over all elements and extract details
         for element in criteria_elements:
             criteria_divs = element.find_all('div', recursive=False)
-            criteria_header = criteria_divs[0].stripped_strings()[0]
+            criteria_header = list(criteria_divs[0].stripped_strings)[0]
             criteria_text = str(criteria_divs[1].div).strip()
             criteria.append({
                 'header': criteria_header,
