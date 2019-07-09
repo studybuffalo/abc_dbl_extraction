@@ -299,7 +299,6 @@ class IDBLData:
         clients = {
             'group_1': False,
             'group_66': False,
-            'group_66a': False,
             'group_19823': False,
             'group_19823a': False,
             'group_19824': False,
@@ -318,7 +317,6 @@ class IDBLData:
         client_matches = [
             ['non-group coverage', 'group_1'],
             ['coverage for seniors', 'group_66'],
-            ['alberta widows\' pension plan', 'group_66a'],
             ['income support', 'group_19823'],
             ['alberta human services', 'group_19823a'],
             ['children and youth services', 'group_19824'],
