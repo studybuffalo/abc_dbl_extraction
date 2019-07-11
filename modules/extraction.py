@@ -49,6 +49,7 @@ class IDBLData:
 
         self.data = {
             'din': din,
+            'abc_id': self.abc_id,
             'bsrf': bsrf,
             'generic_name': generic_name,
             'ptc': ptc,
