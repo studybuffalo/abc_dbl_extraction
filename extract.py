@@ -115,8 +115,6 @@ def extract(**kwargs):
             try:
                 if idbl_data:
                     save_idbl_data(idbl_data, sb_session, settings)
-                else:
-                    clear_old_record(i, sb_session, settings)
             except exceptions.APIError as error:
                 # Capture exception, but do not end program
                 sentry_sdk.capture_exception(error)

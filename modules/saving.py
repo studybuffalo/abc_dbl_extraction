@@ -15,7 +15,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 def upload_to_api(idbl_data, session, api_url):
     """Uploads the extracted data via the API."""
     # Assemble the API url
-    api_url = '{}{}/'.format(api_url, idbl_data.abc_id)
+    api_url = '{}{}/upload/'.format(api_url, idbl_data.abc_id)
 
     # Make the request
     response = session.post(api_url, data=idbl_data.data)
@@ -57,14 +57,3 @@ def save_idbl_data(idbl_data, session, settings):
             settings['files']['save_html'],
             idbl_data.abc_id
         )
-
-def clear_old_record(abc_id, session, settings):
-    """Removes any old records for provided ID from database."""
-    if settings['data_upload']:
-        # Assemble the API url
-        api_url = '{}{}/remove/'.format(settings['api_url'], abc_id)
-
-        # Make the request
-        response = session.post(api_url)
-
-        print(response)
