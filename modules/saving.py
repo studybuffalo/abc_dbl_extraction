@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 from pathlib import Path
 
+from sentry_sdk import capture_message
+
 
 class CustomJSONEncoder(json.JSONEncoder):
     """Extending JSONEncoder to support datetimes."""
@@ -14,13 +16,19 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 def upload_to_api(idbl_data, session, api_url):
     """Uploads the extracted data via the API."""
-    # Assemble the API url
+    # Assemble the API URL
     api_url = '{}{}/upload/'.format(api_url, idbl_data.abc_id)
 
     # Make the request
     response = session.post(api_url, data=idbl_data.data)
 
-    print(response)
+    if response.status_code == 200:
+        print(response)
+
+    error_message = 'STATUS CODE: {}\nERROR CONTENT:{}'.format(
+        response.status_code, response.content
+    )
+    capture_message(error_message, level=30)
 
 def save_html_to_file(html, path, abc_id):
     """Saves the HTML data to file."""
