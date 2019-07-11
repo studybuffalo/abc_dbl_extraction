@@ -99,7 +99,7 @@ def extract(**kwargs):
     end_id = settings['abc_end_id'] + 1
 
     with trange(start_id, end_id) as id_range:
-        id_range.set_description_str('Extracting iDBL')
+        id_range.set_description_str('Extracting and uploading iDBL data')
 
         for i in id_range:
             # Apply crawl delay
