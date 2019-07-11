@@ -28,9 +28,7 @@ import requests
 import sentry_sdk
 from tqdm import trange
 
-from modules import (
-    get_settings, extract_data, save_idbl_data, exceptions, clear_old_record
-)
+from modules import get_settings, extract_data, save_idbl_data, exceptions
 
 
 @click.command()
@@ -113,6 +111,7 @@ def extract(**kwargs):
 
             # Save extracted data
             try:
+                print(idbl_data)
                 if idbl_data:
                     save_idbl_data(idbl_data, sb_session, settings)
             except exceptions.APIError as error:
