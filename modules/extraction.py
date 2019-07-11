@@ -140,7 +140,7 @@ class IDBLData:
         except ValueError:
             date_listed = None
 
-        return date_listed
+        return date_listed.strftime('%Y-%m-%d')
 
     def _extract_unit_price(self):
         """Extracts the unit price"""
@@ -167,6 +167,9 @@ class IDBLData:
         )[1]
 
         lca_price = lca_price_element.text.strip()
+
+        if lca_price == 'N/A':
+            lca_price = None
 
         return lca_price
 
