@@ -89,6 +89,10 @@ def extract(**kwargs):
 
     # Setup a request session with the API
     sb_session = requests.Session()
+    sb_session.headers.update({
+        'User-Agent': 'abc-dbl-extraction',
+        'Authorization': settings['api_authorization'],
+    })
 
     # Run the extraction process
     start_id = settings['abc_start_id']
@@ -111,7 +115,6 @@ def extract(**kwargs):
 
             # Save extracted data
             try:
-                print(idbl_data)
                 if idbl_data:
                     save_idbl_data(idbl_data, sb_session, settings)
             except exceptions.APIError as error:
