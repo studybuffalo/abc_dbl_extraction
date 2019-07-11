@@ -32,7 +32,7 @@ def get_settings(command_line_args):
         settings['crawl_delay'] = config.getint('settings', 'crawl_delay')
         settings['api_url'] = config['settings']['api_url']
         settings['api_authorization'] = 'Token {}'.format(
-            config['settings', 'api_token']
+            config['settings']['api_token']
         )
         settings['abc_url'] = config['settings']['abc_url']
         settings['robot'] = {
