@@ -429,11 +429,14 @@ class IDBLData:
 
 def extract_from_file(abc_id, path):
     """Retrieves HTML data from file."""
-    file_path = Path(path, abc_id).with_suffix('html')
+    file_path = Path(path, str(abc_id)).with_suffix('.html')
 
-    if file_path.exists:
+    try:
         with open(file_path, 'rb') as idbl_file:
             return idbl_file.read()
+    except FileNotFoundError:
+        # Expected errors if files don't exist
+        pass
 
     return None
 
