@@ -1,34 +1,23 @@
 """Functions to manage saving of iDBL data."""
-from datetime import datetime
 import json
 from pathlib import Path
 
 from sentry_sdk import capture_message
 
 
-class CustomJSONEncoder(json.JSONEncoder):
-    """Extending JSONEncoder to support datetimes."""
-    def default(self, o): # pylint: disable=method-hidden
-        if isinstance(o, datetime):
-            return o.strftime('%Y-%m-%d')
-
-        return json.JSONEncoder.default(self, o)
-
 def upload_to_api(idbl_data, session, api_url):
     """Uploads the extracted data via the API."""
     # Assemble the API URL
-    api_url = '{}{}/upload/'.format(api_url, idbl_data.abc_id)
+    api_url = '{}{}/upload/'.format(api_url, idbl_data.data['din'])
 
     # Make the request
     response = session.post(api_url, data=idbl_data.data)
 
-    if response.status_code == 200:
-        print(response)
-
-    error_message = 'STATUS CODE: {}\nERROR CONTENT:{}'.format(
-        response.status_code, response.content
-    )
-    capture_message(error_message, level=30)
+    if response.status_code != 201:
+        error_message = 'STATUS CODE: {}\nERROR CONTENT:{}'.format(
+            response.status_code, response.content
+        )
+        capture_message(error_message, level=30)
 
 def save_html_to_file(html, path, abc_id):
     """Saves the HTML data to file."""
@@ -42,7 +31,7 @@ def save_api_data_to_file(data, path, abc_id):
     file_path = Path(path, str(abc_id)).with_suffix('.json')
 
     with open(file_path, 'w+') as api_file:
-        json.dump(data, api_file, cls=CustomJSONEncoder)
+        json.dump(data, api_file)
 
 def save_idbl_data(idbl_data, session, settings):
     """Saves the provided iDBL data."""
