@@ -361,11 +361,11 @@ class IDBLData:
             return special_authorizations
 
         for element in special_elements:
-            pdf_name = element['data-pdf']
+            file_name = element['data-pdf']
             pdf_title = list(element.stripped_strings)[0]
 
             special_authorizations.append({
-                'pdf_name': pdf_name,
+                'file_name': file_name,
                 'pdf_title': pdf_title,
             })
 
@@ -409,7 +409,7 @@ class IDBLData:
 
             criteria.append({
                 'header': None,
-                'text': criteria_text,
+                'criteria': criteria_text,
             })
 
             return criteria
@@ -430,7 +430,7 @@ class IDBLData:
             criteria_text = str(criteria_divs[1].div).strip()
             criteria.append({
                 'header': criteria_header,
-                'text': criteria_text,
+                'criteria': criteria_text,
             })
 
         return criteria
