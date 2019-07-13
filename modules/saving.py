@@ -14,7 +14,7 @@ def upload_to_api(idbl_data, session, api_url):
 
     # Make the request
     try:
-        response = session.post(api_url, data=idbl_data.data)
+        response = session.post(api_url, data=json.dumps(idbl_data.data))
     except ConnectionError as error:
         return APIError(error)
 
