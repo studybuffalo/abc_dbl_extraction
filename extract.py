@@ -33,8 +33,6 @@ from modules import (
 )
 
 @click.command()
-@click.argument('start-id', type=click.INT)
-@click.argument('end-id', type=click.INT)
 @click.option(
     '--config', default='extraction.ini', type=click.Path(exists=True),
     help='Path to the .ini config file.'
@@ -96,15 +94,10 @@ def extract(**kwargs):
     })
 
     # Determine the start and stop IDs
-    click.echo('Identifying start and end IDs...', nl=False)
     start_id, end_id = identify_endpoints(idbl_session, settings)
-    click.echo(click.style(' Complete!', fg='green'))
 
     # Run the extraction process
-    start_id = settings['abc_start_id']
-    end_id = settings['abc_end_id'] + 1
-
-    with trange(start_id, end_id) as id_range:
+    with trange(start_id, end_id + 1) as id_range:
         id_range.set_description_str('Extracting and uploading iDBL data')
 
         for i in id_range:
