@@ -2,8 +2,10 @@
 import json
 from pathlib import Path
 
+from requests.exceptions import ConnectionError # pylint: disable=redefined-builtin
 from sentry_sdk import capture_message
 
+from modules.exceptions import APIError
 
 def upload_to_api(idbl_data, session, api_url):
     """Uploads the extracted data via the API."""
@@ -11,7 +13,10 @@ def upload_to_api(idbl_data, session, api_url):
     api_url = '{}{}/upload/'.format(api_url, idbl_data.data['din'])
 
     # Make the request
-    response = session.post(api_url, data=idbl_data.data)
+    try:
+        response = session.post(api_url, data=idbl_data.data)
+    except ConnectionError as error:
+        return APIError(error)
 
     if response.status_code != 201:
         error_message = 'STATUS CODE: {}\nERROR CONTENT:{}'.format(
