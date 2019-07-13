@@ -91,6 +91,7 @@ def extract(**kwargs):
     sb_session.headers.update({
         'User-Agent': 'abc-dbl-extraction',
         'Authorization': settings['api_authorization'],
+        'Content-Type': 'application/json',
     })
 
     # Determine the start and stop IDs
