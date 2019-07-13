@@ -28,8 +28,9 @@ import requests
 import sentry_sdk
 from tqdm import trange
 
-from modules import get_settings, extract_data, save_idbl_data, exceptions
-
+from modules import (
+    get_settings, extract_data, save_idbl_data, exceptions, identify_endpoints
+)
 
 @click.command()
 @click.argument('start-id', type=click.INT)
@@ -93,6 +94,11 @@ def extract(**kwargs):
         'User-Agent': 'abc-dbl-extraction',
         'Authorization': settings['api_authorization'],
     })
+
+    # Determine the start and stop IDs
+    click.echo('Identifying start and end IDs...', nl=False)
+    start_id, end_id = identify_endpoints(idbl_session, settings)
+    click.echo(click.style(' Complete!', fg='green'))
 
     # Run the extraction process
     start_id = settings['abc_start_id']
