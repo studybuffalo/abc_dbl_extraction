@@ -35,9 +35,11 @@ def get_settings(command_line_args):
             config['settings']['api_token']
         )
         settings['abc_url'] = config['settings']['abc_url']
-        settings['abc_id_start'] = config['settings']['abc_id_start']
-        settings['abc_id_end'] = config['settings']['abc_id_end']
-        settings['abc_id_increment'] = config['settings']['abc_id_increment']
+        settings['abc_id_start'] = config.getint('settings', 'abc_id_start')
+        settings['abc_id_end'] = config.getint('settings', 'abc_id_end')
+        settings['abc_id_increment'] = config.getint(
+            'settings', 'abc_id_increment'
+        )
         settings['robot'] = {
             'user_agent': config['robot']['user_agent'],
             'from': config['robot']['from'],

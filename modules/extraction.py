@@ -1,8 +1,12 @@
 """Functions to handle data extraction from iDBL."""
 from datetime import datetime
 from pathlib import Path
+import time
 
+import click
 from bs4 import BeautifulSoup
+
+from modules.exceptions import ExtractionError
 
 
 class IDBLData:
@@ -431,6 +435,10 @@ class IDBLData:
 
         return criteria
 
+def assemble_idbl_url(settings, abc_id):
+    """Assembles a URL to query the iDBL."""
+    return '{}?detailId={}'.format(settings['abc_url'], abc_id)
+
 def extract_from_file(abc_id, path):
     """Retrieves HTML data from file."""
     file_path = Path(path, str(abc_id)).with_suffix('.html')
@@ -477,39 +485,88 @@ def extract_data(abc_id, session, settings):
 
     return None
 
-def identify_endpoint(session, base_url, lower, upper):
+def assemble_console_message(base, counter):
+    """Updates console to show program still running."""
+    spinner = ['.  ', '.. ', '...']
+
+    click.echo('\r{}{}'.format(base, spinner[counter % 3]), nl=False)
+
+    return counter + 1
+
+def overflow_check(counter):
+    """Runs check that the overflow condition is not triggered."""
+    if counter > 20:
+        raise ExtractionError(
+            'Endpoint extraction overflow counter triggered.'
+        )
+
+    return counter + 1
+
+def identify_endpoint(target, session, settings, lower, upper):
     """Identifies exact endpoint between  upper and lower limits."""
-    endpoint = None
+    endpoint = None # Records the last iDBL hit
+    overflow_counter = 0 # Counter to prevent a infinite loop
+
+    # Setup console messaging
+    echo_message = 'Identifying initial {} point ID'.format(target)
+    echo_counter = 0
 
     while upper - lower > 1:
+        # Check program has not entered infinite loop
+        overflow_counter = overflow_check(overflow_counter)
+
+        # Apply crawl delay and update console
+        time.sleep(settings['crawl_delay'])
+        echo_counter = assemble_console_message(echo_message, echo_counter)
+
+        # Get the midpoint
         mid = int((upper + lower) / 2)
 
-        # Assemble URL
-        abc_url = '{}{}'.format(base_url, mid)
-
         # Check for a 200 status code
+        abc_url = assemble_idbl_url(settings, mid)
         head_response = session.head(abc_url, allow_redirects=False)
 
         if head_response.status_code == 200:
-            # Positive hit - upper becomes this point
-            upper = mid
+            # Positive hit
             endpoint = mid
+
+            if target == 'start':
+                # Looking for start point - upper needs to be lowered
+                upper = mid
+            else:
+                # Looking for end point - lower needs to be increased
+                lower = mid
         else:
-            # Negative hit - lower becomes this point
-            lower = mid
+            # Negative hit
+            if target == 'start':
+                # Looking for start point - lower needs to be increased
+                lower = mid
+            else:
+                # Looking for end point - upper needs to be decreased
+                upper = mid
+
+    # Update console
+    click.echo('\r{}{}'.format(echo_message, '...'), nl=False)
+    click.echo(click.style(' {}'.format(endpoint), fg='green'))
 
     return endpoint
 
-def identify_payload(session, base_url, start, end, step):
+def identify_payload(session, settings, start, end, step):
     """Identifies location of the iDBL payload."""
     idbl_hit = None
 
+    # Setup console messaging
+    echo_message = 'Identifying initial payload'
+    echo_counter = 0
+
     # Increment from start ID until a 200 response obtained
     for i in range(start, end, step):
-        # Assemble URL
-        abc_url = '{}{}'.format(base_url, i)
+        # Apply crawl delay and update console
+        time.sleep(settings['crawl_delay'])
+        echo_counter = assemble_console_message(echo_message, echo_counter)
 
         # Check for a 200 status code
+        abc_url = assemble_idbl_url(settings, i)
         head_response = session.head(abc_url, allow_redirects=False)
 
         if head_response.status_code == 200:
@@ -517,7 +574,14 @@ def identify_payload(session, base_url, start, end, step):
             idbl_hit = i
             break
 
-    return idbl_hit
+    if idbl_hit:
+        # Update console
+        click.echo('\r{}{}'.format(echo_message, '...'), nl=False)
+        click.echo(click.style(' {}'.format(idbl_hit), fg='green'))
+
+        return idbl_hit
+
+    raise ExtractionError('No initial iDBL payload identified.')
 
 def identify_endpoints(session, settings):
     """Identifies the start and endpoints for extractions."""
@@ -526,17 +590,18 @@ def identify_endpoints(session, settings):
     step = settings['abc_id_increment']
 
     # If using HTML files, can just use start and stop IDs
-    if settings['use_html']:
+    if settings['files']['use_html']:
         return start, end
 
-    # Assemble the iDBL URL
-    base_url = '{}?detailId='.format(settings['abc_url'])
-
     # Find a valid iDBL ID to start narrowing from
-    idbl_hit = identify_payload(session, base_url, start, end, step)
+    idbl_hit = identify_payload(session, settings, start, end, step)
 
     # Find the specific start and end points
-    start_id = identify_endpoint(session, base_url, idbl_hit - step, idbl_hit)
-    end_id = identify_endpoint(session, base_url, idbl_hit, idbl_hit + step)
+    start_id = identify_endpoint(
+        'start', session, settings, idbl_hit - step, idbl_hit
+    )
+    end_id = identify_endpoint(
+        'end', session, settings, idbl_hit, idbl_hit + step
+    )
 
     return start_id, end_id
