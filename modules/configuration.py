@@ -29,12 +29,15 @@ def get_settings(command_line_args):
     settings = {}
 
     try:
-        settings['crawl_delay'] = config.getint('settings', 'crawl_delay')
+        settings['crawl_delay'] = config.getfloat('settings', 'crawl_delay')
         settings['api_url'] = config['settings']['api_url']
         settings['api_authorization'] = 'Token {}'.format(
             config['settings']['api_token']
         )
         settings['abc_url'] = config['settings']['abc_url']
+        settings['abc_id_start'] = config['settings']['id_start']
+        settings['abc_id_end'] = config['settings']['id_end']
+        settings['abc_id_increment'] = config['settings']['id_increment']
         settings['robot'] = {
             'user_agent': config['robot']['user_agent'],
             'from': config['robot']['from'],
@@ -44,6 +47,7 @@ def get_settings(command_line_args):
             'api': config['locations']['api'],
         }
         settings['sentry'] = config['sentry']['dsn']
+
     except (configparser.Error, KeyError) as error:
         raise ImproperlyConfigured(error)
 
@@ -60,9 +64,7 @@ def get_settings(command_line_args):
     )
     settings['files'] = files
 
-    # Add the command line arguments
-    settings['abc_start_id'] = command_line_args['start_id']
-    settings['abc_end_id'] = command_line_args['end_id']
+    # Add the other command line arguments
     settings['data_upload'] = not command_line_args['disable_data_upload']
 
     return settings

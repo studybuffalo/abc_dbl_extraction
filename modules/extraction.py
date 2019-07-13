@@ -458,7 +458,6 @@ def extract_from_idbl(abc_id, session, settings):
         if body_response.status_code == 200:
             return body_response.text
 
-
     return None
 
 def extract_data(abc_id, session, settings):
@@ -477,3 +476,67 @@ def extract_data(abc_id, session, settings):
         return idbl_data
 
     return None
+
+def identify_endpoint(session, base_url, lower, upper):
+    """Identifies exact endpoint between  upper and lower limits."""
+    endpoint = None
+
+    while upper - lower > 1:
+        mid = int((upper + lower) / 2)
+
+        # Assemble URL
+        abc_url = '{}{}'.format(base_url, mid)
+
+        # Check for a 200 status code
+        head_response = session.head(abc_url, allow_redirects=False)
+
+        if head_response.status_code == 200:
+            # Positive hit - upper becomes this point
+            upper = mid
+            endpoint = mid
+        else:
+            # Negative hit - lower becomes this point
+            lower = mid
+
+    return endpoint
+
+def identify_payload(session, base_url, start, end, step):
+    """Identifies location of the iDBL payload."""
+    idbl_hit = None
+
+    # Increment from start ID until a 200 response obtained
+    for i in range(start, end, step):
+        # Assemble URL
+        abc_url = '{}{}'.format(base_url, i)
+
+        # Check for a 200 status code
+        head_response = session.head(abc_url, allow_redirects=False)
+
+        if head_response.status_code == 200:
+            # Record the hit and break loop
+            idbl_hit = i
+            break
+
+    return idbl_hit
+
+def identify_endpoints(session, settings):
+    """Identifies the start and endpoints for extractions."""
+    start = settings['abc_id_start']
+    end = settings['abc_id_end']
+    step = settings['abc_id_increment']
+
+    # If using HTML files, can just use start and stop IDs
+    if settings['use_html']:
+        return start, end
+
+    # Assemble the iDBL URL
+    base_url = '{}?detailId='.format(settings['abc_url'])
+
+    # Find a valid iDBL ID to start narrowing from
+    idbl_hit = identify_payload(session, base_url, start, end, step)
+
+    # Find the specific start and end points
+    start_id = identify_endpoint(session, base_url, idbl_hit - step, idbl_hit)
+    end_id = identify_endpoint(session, base_url, idbl_hit, idbl_hit + step)
+
+    return start_id, end_id
