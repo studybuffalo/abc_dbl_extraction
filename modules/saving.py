@@ -56,6 +56,6 @@ def save_idbl_data(idbl_data, session, settings):
     if settings['files']['save_api']:
         save_api_data_to_file(
             idbl_data.data,
-            settings['files']['save_html'],
+            settings['files']['save_api'],
             idbl_data.abc_id
         )
