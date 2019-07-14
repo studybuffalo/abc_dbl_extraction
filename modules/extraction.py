@@ -140,11 +140,13 @@ class IDBLData:
         date_listed_text = date_listed_element.text.strip()
 
         try:
-            date_listed = datetime.strptime(date_listed_text, '%d-%b-%Y')
-        except ValueError:
+            date_listed = datetime.strptime(
+                date_listed_text, '%d-%b-%Y'
+            ).strftime('%Y-%m-%d')
+        except (ValueError, AttributeError):
             date_listed = None
 
-        return date_listed.strftime('%Y-%m-%d')
+        return date_listed
 
     def _extract_unit_price(self):
         """Extracts the unit price"""
