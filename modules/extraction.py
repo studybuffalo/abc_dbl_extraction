@@ -158,7 +158,7 @@ class IDBLData:
             'td', recursive=False
         )[1]
 
-        unit_price = unit_price_element.text.strip()
+        unit_price = unit_price_element.text.strip().replace(',', '')
 
         return unit_price
 
@@ -172,7 +172,7 @@ class IDBLData:
             'td', recursive=False
         )[1]
 
-        lca_price = lca_price_element.text.strip()
+        lca_price = lca_price_element.text.strip().replace(',', '')
 
         if lca_price == 'N/A':
             lca_price = None
@@ -192,7 +192,7 @@ class IDBLData:
         )
 
         # Extract MAC price (if available)
-        mac_price = mac_element[0].text.strip()
+        mac_price = mac_element[0].text.strip().replace(',', '')
 
         if mac_price == 'N/A':
             mac_price = None
