@@ -160,6 +160,9 @@ class IDBLData:
 
         unit_price = unit_price_element.text.strip().replace(',', '')
 
+        if unit_price == 'N/A':
+            unit_price = None
+
         return unit_price
 
     def _extract_lca_price(self):
