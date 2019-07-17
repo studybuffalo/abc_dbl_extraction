@@ -41,7 +41,7 @@ class IDBLData:
         unit_price = self._extract_unit_price()
         lca_price = self._extract_lca_price()
         mac_price, mac_text = self._extract_mac()
-        unit_of_issue = self._extract_unit_of_issue()
+        unit_issue = self._extract_unit_issue()
         manufactuer = self._extract_manufacturer()
         atc = self._extract_atc()
         schedule = self._extract_schedule()
@@ -62,7 +62,7 @@ class IDBLData:
             'lca_price': lca_price,
             'mac_price': mac_price,
             'mac_text': mac_text,
-            'unit_of_issue': unit_of_issue,
+            'unit_issue': unit_issue,
             'manufacturer': manufactuer,
             'atc': atc,
             'schedule': schedule,
@@ -208,9 +208,9 @@ class IDBLData:
 
         return mac_price, mac_text
 
-    def _extract_unit_of_issue(self):
+    def _extract_unit_issue(self):
         """Extracts the unit of issue."""
-        unit_of_issue_element = self.html.find(
+        unit_issue_element = self.html.find(
             class_='abc-drug-detail-table'
         ).find_all(
             'tr', recursive=False
@@ -218,9 +218,9 @@ class IDBLData:
             'td', recursive=False
         )[1]
 
-        unit_of_issue = unit_of_issue_element.text.strip()
+        unit_issue = unit_issue_element.text.strip()
 
-        return unit_of_issue
+        return unit_issue
 
     def _extract_manufacturer(self):
         """Extracts the manufacturer."""
@@ -403,9 +403,9 @@ class IDBLData:
             )
 
             # Check number of paragraphs
-            # If 2: this is "N/A" and can return empty list
+            # If > 1: this is "N/A" and can return empty list
             # if 1: this has extractable content
-            if len(criteria_paragraphs) == 2:
+            if len(criteria_paragraphs) > 1:
                 return criteria
 
             # Extract text and preserve <br> elements
