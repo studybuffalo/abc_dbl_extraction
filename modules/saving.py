@@ -1,193 +1,61 @@
-import logging
-log = logging.getLogger(__name__)
+"""Functions to manage saving of iDBL data."""
+import json
+from pathlib import Path
 
-class FileNames(object):
-    def __init__(self, url, html, price, coverage, 
-                 specialAuth, ptc, atc, extra):
-        self.url = url
-        self.html = html
-        self.price = price
-        self.coverage = coverage
-        self.specialAuth = specialAuth
-        self.ptc = ptc
-        self.atc = atc
-        self.extra = extra
+from requests.exceptions import ConnectionError # pylint: disable=redefined-builtin
+from sentry_sdk import capture_message
 
-class SaveFiles(object):
-    def __init__(self, url, html, price, coverage, special, ptc, 
-                 atc, extra):
-        self.url = url
-        self.html = html
-        self.price = price
-        self.coverage = coverage
-        self.special = special
-        self.ptc = ptc
-        self.atc = atc
-        self.extra = extra
+from modules.exceptions import APIError
 
-def get_today():
-    import datetime
+def upload_to_api(idbl_data, session, api_url):
+    """Uploads the extracted data via the API."""
+    # Assemble the API URL
+    api_url = '{}{}/upload/'.format(api_url, idbl_data.data['din'])
 
-    today = datetime.date.today()
-    year = today.year
-    month = "%02d" % today.month
-    day = "%02d" % today.day
-    
-    today = "%s-%s-%s" % (year, month, day)
-    
-    return today
-
-def collect_file_paths(con):
-    from unipath import Path
-
-    """Collects extraction file paths and creates needed directories"""
-    # Get Current today
-    today = get_today()
-
-    # Assemble URL filepath
-    url = Path(con.get("locations", "url")).child(today, "url.txt")
-    url.parent.mkdir(parents=True)
-
-    # Assemble HTML file path
-    html = Path(con.get("locations", "html")).child(today, "html")
-    html.mkdir(parents=True)
-
-    # Assemble price file path
-    price = Path(con.get("locations", "price")).child(today, "price.csv")
-    price.parent.mkdir(parents=True)
-
-    # Assemble coverage file path
-    cov = Path(con.get("locations", "coverage")).child(today, "coverage.csv")
-    cov.parent.mkdir(parents=True)
-
-    # Assemble special authorization file path
-    special = Path(con.get("locations", "special")).child(today, "special.csv")
-    special.parent.mkdir(parents=True)
-
-    # Assemble PTC file path
-    ptc = Path(con.get("locations", "ptc")).child(today, "ptc.csv")
-    ptc.parent.mkdir(parents=True)
-
-    # Assemble ATC file path
-    atc = Path(con.get("locations", "atc")).child(today, "atc.csv")
-    atc.parent.mkdir(parents=True)
-
-    # Assemble extra information file path
-    extra = Path(con.get("locations", "extra")).child(today, "extra.csv")
-    extra.parent.mkdir(parents=True)
-
-    return FileNames(url, html, price, cov, special, ptc, atc, extra)
-
-def create_csv_writer(path):
-    import csv
-
-    writer = csv.writer(path, 
-                        quoting=csv.QUOTE_NONNUMERIC, 
-                        lineterminator="\n")
-
-    return writer
-
-def organize_save_files(url, html, price, coverage, special, ptc, atc, extra):
-    # Create appropriate CSV writers
-    cPrice = create_csv_writer(price)
-    cCoverage = create_csv_writer(coverage)
-    cSpecial = create_csv_writer(special)
-    cPTC = create_csv_writer(ptc)
-    cATC = create_csv_writer(atc)
-    cExtra = create_csv_writer(extra)
-
-    saveFiles = SaveFiles(url, html, cPrice, cCoverage, cSpecial, cPTC, 
-                          cATC, cExtra)
-
-    return saveFiles
-
-def save_data(content, save):
-    """Saves the information in content to respective files"""
-    log.debug("URL %s: Saving data to file" % content.url)
-
-    # Save URL data
+    # Make the request
     try:
-        save.url.write("%s\n" % content.url)
-    except Exception as e:
-        log.warn("Unable to write %s to url.txt: %s" % (content.url, e))
+        response = session.post(api_url, data=json.dumps(idbl_data.data))
+    except ConnectionError as error:
+        return APIError(error)
 
-    # Save the price data
-    price = [content.url, content.din.parse, content.bsrf.brand, 
-             content.bsrf.strength, content.bsrf.route, content.bsrf.form, 
-             content.genericName.parse, content.unitPrice.parse, 
-             content.lca.value, content.lca.text, content.unitIssue.parse]
+    if response.status_code != 201:
+        error_message = 'STATUS CODE: {}\nERROR CONTENT:{}'.format(
+            response.status_code, response.content
+        )
+        capture_message(error_message, level=30)
 
-    try:
-        save.price.writerow(price)
-    except Exception as e:
-        log.warn("Unable to write %s to price.csv: %s" % (content.url, e))
+def save_html_to_file(html, path, abc_id):
+    """Saves the HTML data to file."""
+    file_path = Path(path, str(abc_id)).with_suffix('.html')
 
-    # Save the coverage data
-    coverage = [content.url, content.coverage.parse, 
-                content.criteria.criteria, content.criteria.special, 
-                content.criteria.palliative, content.clients.g1, 
-                content.clients.g66, content.clients.g66a,
-                content.clients.g19823, content.clients.g19823a, 
-                content.clients.g19824, content.clients.g20400, 
-                content.clients.g20403, content.clients.g20514, 
-                content.clients.g22128, content.clients.g23609]
-    
-    try:
-        save.coverage.writerow(coverage)
-    except Exception as e:
-        log.warn("Unable to write %s to coverage.csv: %s" % 
-                      (content.url, e))
+    with open(file_path, 'w+') as html_file:
+        html_file.write(html)
 
-    # Save the special authorization data
-    special = []
-    
-    for item in content.specialAuth:
-        special.append([content.url, item.text, item.link])
+def save_api_data_to_file(data, path, abc_id):
+    """Saves the extracted API data to file."""
+    file_path = Path(path, str(abc_id)).with_suffix('.json')
 
-    try:
-        save.special.writerows(special)
-    except Exception as e:
-        log.warn("Unable to write %s to special.csv: %s" 
-                      % (content.url, e))
+    with open(file_path, 'w+') as api_file:
+        json.dump(data, api_file)
 
-    # Save the PTC data
-    ptc = [content.url, content.ptc.code1, content.ptc.text1, 
-           content.ptc.code2, content.ptc.text2, 
-           content.ptc.code3, content.ptc.text3, 
-           content.ptc.code4, content.ptc.text4]
+def save_idbl_data(idbl_data, session, settings):
+    """Saves the provided iDBL data."""
+    # Upload data via API (if enabled)
+    if settings['data_upload']:
+        upload_to_api(idbl_data, session, settings['api_url'])
 
-    try:
-        save.ptc.writerow(ptc)
-    except Exception as e:
-        log.warn("Unable to write %s to ptc.csv: %s" % (content.url, e))
+    # Save raw HTML data to file (if enabled)
+    if settings['files']['save_html']:
+        save_html_to_file(
+            idbl_data.raw_html,
+            settings['files']['save_html'],
+            idbl_data.abc_id
+        )
 
-    # Save the ATC data
-    atc = [content.url, content.atc.code1, content.atc.text1, 
-           content.atc.code2, content.atc.text2, 
-           content.atc.code3, content.atc.text3, 
-           content.atc.code4, content.atc.text4, 
-           content.atc.code5, content.atc.text5]
-
-    try:
-        save.atc.writerow(atc)
-    except Exception as e:
-        log.warn("Unable to write %s to atc.csv: %s" % (content.url, e))
-
-    # Save the extra information data
-    extra = [content.url, content.dateListed.parse, 
-             content.dateDiscontinued.parse, content.manufacturer.parse, 
-             content.schedule.parse, content.interchangeable.parse]
-
-    try:
-        save.extra.writerow(extra)
-    except Exception as e:
-        log.warn("Unable to write %s to extra.csv: %s" % (content.url, e))
-
-    # Save a copy of the HTML page
-    htmlPath = save.html.child("%s.html" % content.url).absolute()
-
-    try:
-        with open(htmlPath, "w") as fHTML:
-            fHTML.write(content.html)
-    except Exception as e:
-        log.critical("Unable to save HTML for %s: %s" % (content.url, e))
+    # Save API data to file (if enabled)
+    if settings['files']['save_api']:
+        save_api_data_to_file(
+            idbl_data.data,
+            settings['files']['save_api'],
+            idbl_data.abc_id
+        )

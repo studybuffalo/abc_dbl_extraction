@@ -1,0 +1,11 @@
+[run]
+data_file = reports/coverage_report
+omit =
+    tests/*
+    modules/__init__.py
+
+[html]
+directory = reports/htmlcov
+
+[xml]
+output = reports/coverage.xml
